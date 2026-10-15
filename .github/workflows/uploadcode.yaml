@@ -45,5 +45,5 @@ jobs:
         shell: bash
         run: |
           pac pages upload \
-            --path "./cmds-next-gen-provider-barreldev \
+            --path "./cmds-next-gen-provider-barreldev" \
             --url "${{ secrets.POC_DEV_ENV_URL }}"
