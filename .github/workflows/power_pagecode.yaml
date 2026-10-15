@@ -1,9 +1,11 @@
 name: Download Power Pages from DEV
+
 on:
   workflow_dispatch:
+
 permissions:
   contents: write
-  
+
 env:
   PAC_CLI_VERSION: "2.9.3"
   SOURCE_BRANCH: Power_PageCode
@@ -36,15 +38,15 @@ jobs:
             --url "${{ secrets.POC_DEV_ENV_URL }}" \
             --applicationId "${{ secrets.CLIENT_ID }}" \
             --clientSecret "${{ secrets.CLIENT_SECRET }}" \
-            --tenant "${{ secrets.TENANT_ID }}"      
-            
+            --tenant "${{ secrets.TENANT_ID }}"
+
       - name: Download Power Pages
         run: |
           pac pages download \
             --path "." \
             --webSiteId "${{ secrets.POWERPAGES_WEBSITE_ID }}" \
             --environment "${{ secrets.POC_DEV_ENV_URL }}"
-            
+
       - name: Commit changes
         run: |
           git config user.name "github-actions"
@@ -54,4 +56,3 @@ jobs:
             git commit -m "Download Power Pages from DEV" &&
             git push origin powerpages-dev-sync
           )
- 
