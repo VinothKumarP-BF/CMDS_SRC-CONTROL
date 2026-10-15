@@ -1,0 +1,38 @@
+name: Download Power Pages from DEV
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  download:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: powerpages-dev-sync
+      - name: Install Power Platform CLI
+        uses: microsoft/powerplatform-actions/actions-install@v1
+      - name: Authenticate
+        uses: microsoft/powerplatform-actions/actions-auth@v1
+        with:
+          app-id: ${{ secrets.POWERPLATFORM_APP_ID }}
+          client-secret: ${{ secrets.POWERPLATFORM_CLIENT_SECRET }}
+          tenant-id: ${{ secrets.POWERPLATFORM_TENANT_ID }}
+          environment-url: ${{ secrets.POWERPLATFORM_DEV_URL }}
+      - name: Download Power Pages
+        run: |
+          pac pages download \
+            --path "./CMdSProviderPortal" \
+            --webSiteId "${{ secrets.POWERPAGES_WEBSITE_ID }}" \
+            --environment "${{ secrets.POWERPLATFORM_DEV_URL }}"
+      - name: Commit changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add CMdSProviderPortal
+          git diff --cached --quiet || (
+            git commit -m "Download Power Pages from DEV" &&
+            git push origin powerpages-dev-sync
+          )
+ 
