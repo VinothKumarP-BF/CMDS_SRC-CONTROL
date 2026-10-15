@@ -21,12 +21,6 @@ jobs:
           ref: ${{ env.SOURCE_BRANCH }}
           fetch-depth: 0
 
-      - name: Checkout YAML Branch
-        uses: actions/checkout@v4
-        with:
-          ref: yaml
-          path: yaml-config
-
       - name: Install .NET
         uses: actions/setup-dotnet@v4
         with:
