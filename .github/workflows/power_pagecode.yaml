@@ -41,7 +41,7 @@ jobs:
       - name: Authenticate Test
         shell: bash
         run: |
-          pac auth create \
+          pac auth login \
             --url "${{ secrets.POC_DEV_ENV_URL }}" \
             --applicationId "${{ secrets.CLIENT_ID }}" \
             --clientSecret "${{ secrets.CLIENT_SECRET }}" \
