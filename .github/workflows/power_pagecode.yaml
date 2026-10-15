@@ -27,7 +27,7 @@ jobs:
           path: yaml-config
 
       - name: Install PAC CLI
-        shell: powershell
+        shell: bash
         run: |
           dotnet tool install --global Microsoft.PowerApps.CLI.Tool --version $env:PAC_CLI_VERSION
           echo "$env:USERPROFILE\.dotnet\tools" | Out-File -FilePath $env:GITHUB_PATH -Append
