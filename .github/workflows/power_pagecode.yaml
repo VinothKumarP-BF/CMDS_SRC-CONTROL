@@ -38,12 +38,6 @@ jobs:
           dotnet tool install --global Microsoft.PowerApps.CLI.Tool --version $PAC_CLI_VERSION
           echo "$HOME/.dotnet/tools" >> $GITHUB_PATH
 
-      - name: Verify PAC Installation
-        shell: bash
-        run: |
-          pac --version
-          pac auth help
-
       - name: Authenticate Test
         shell: bash
         run: |
