@@ -7,7 +7,7 @@ permissions:
   contents: write
 
 env:
-  PAC_CLI_VERSION: "2.9.3"
+  PAC_CLI_VERSION: "2.10.1"
   SOURCE_BRANCH: Power_PageCode
 
 jobs:
@@ -41,7 +41,7 @@ jobs:
       - name: Authenticate Test
         shell: bash
         run: |
-          pac auth login \
+          pac auth create \
             --url "${{ secrets.POC_DEV_ENV_URL }}" \
             --applicationId "${{ secrets.CLIENT_ID }}" \
             --clientSecret "${{ secrets.CLIENT_SECRET }}" \
