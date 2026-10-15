@@ -42,6 +42,7 @@ jobs:
             --tenant "${{ secrets.TENANT_ID }}"
 
       - name: Download Power Pages
+        shell: bash
         run: |
           pac pages download \
             --path "." \
@@ -49,6 +50,7 @@ jobs:
             --environment "${{ secrets.POC_DEV_ENV_URL }}"
 
       - name: Commit changes
+        shell: bash
         run: |
           git config user.name "github-actions"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
