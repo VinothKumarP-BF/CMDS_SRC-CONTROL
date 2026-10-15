@@ -32,8 +32,6 @@ jobs:
 
       - name: Authenticate Test
         run: |
-          export PATH="$PATH:$HOME/.dotnet/tools"
-
           pac auth create \
             --url "${{ secrets.POC_DEV_ENV_URL }}" \
             --applicationId "${{ secrets.CLIENT_ID }}" \
