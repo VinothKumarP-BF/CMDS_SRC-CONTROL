@@ -1,0 +1,532 @@
+<!-- ---------- Header HTML ---------- -->
+<div class="page-header">
+  <!-- Breadcrumb Navigation -->
+  <div class="breadcrumb">
+    <span>Smart Intake</span>
+    <span class="separator">&gt;</span>
+    <span class="current" id="mmainContentcurrent">Identifying Information</span>
+  </div>
+
+  <!-- Title Row -->
+  <div class="header-row">
+    <h1>
+      <span id="cmdspp-enroll-id">--</span> -
+      <span id="cmdspp-enroll-type">&lt;Enrollment Type&gt;</span>
+    </h1>
+
+
+    <div class="header-actions">
+  <div class="upload-doc-icon" id="cmdspp-upload-doc-icon">
+    <img src="/cmdspp_uploadDocWhite"/>
+  </div>
+</div>
+
+
+    <!-- Submit Application button is added dynamically
+         only when URL contains "attachments" -->
+  </div>
+  <div class="subtext-icon-wrapper">
+  <!-- Subtext -->
+  <p class="subtext">
+    Complete all required fields marked with an asterisk
+    (<span class="text-danger" style="color: #d9534f;">*</span>)
+  </p>
+  </div>
+</div>
+
+
+<!-- ---------- Header CSS ---------- -->
+<style>
+  /* .subtext-icon-wrapper{
+    display:flex;
+    justify-content:space-between; */
+    .upload-doc-icon{
+      display: flex;
+      align-items: center;
+      width: 44px;
+      height: 36px;
+      padding: 8px 10px;
+      border-radius: 8px;
+      border: 1px solid #274463;
+      cursor: pointer;
+    }
+
+  /* } */
+
+  .page-header {
+    background: #fff;
+    border-bottom: 2px solid #274463;
+    padding: 0px;
+    margin: 14px 24px;
+  }
+
+  .breadcrumb {
+    margin-bottom: 0px;
+    padding: 0px !important;
+    font-weight: 400;
+    font-size: 12px;
+    line-height: 24px;
+    letter-spacing: 0px;
+    text-align: left;
+    color: #5A7099;
+  }
+
+  .breadcrumb .separator {
+    margin: 0 4px;
+    color: #5A7099;
+  }
+
+  .breadcrumb span.current {
+    color: #274463;
+    font-weight: 400;
+    font-size: 12px;
+    letter-spacing: 0px;
+  }
+
+  .header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 4px;
+    font-weight: 400;
+    font-size: 28px;
+    line-height: 34px;
+    letter-spacing: 0px;
+  }
+
+  .header-row h1 {
+    margin: 0;
+    font-weight: 400;
+    font-size: 28px;
+    line-height: 34px;
+    letter-spacing: 0px;
+    color: #274463;
+  }
+
+  .submit-application-btn {
+    padding: 8px 20px;
+    background: #274463;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 400;
+    font-size: 13px;
+    line-height: 19.5px;
+    letter-spacing: 0px;
+    text-align: center;
+  }
+
+  .submit-application-btn:hover {
+    opacity: 0.9;
+  }
+
+  .subtext {
+    color: #5A7099;
+    margin-top: 4px;
+    margin-bottom: 12px;
+    font-weight: 400;
+    font-size: 13px;
+    line-height: 19.5px;
+    letter-spacing: 0px;
+  }
+
+  .header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+}
+
+.back-section-btn {
+  width: 80px;
+  height: 36px;
+  padding: 0;
+  background: #ffffff;
+  color: #274463;
+  border: 1px solid #274463;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 400;
+  font-size: 13px;
+  line-height: 19.5px;
+  text-align: center;
+  margin-right: 10px;
+}
+
+.back-section-btn:disabled {
+  background: #f5f5f5;
+  color: #999999;
+  border-color: #cccccc;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+</style>
+
+
+<!-- ---------- Header JavaScript ---------- -->
+<script>
+  function selectItem(el) {
+    // clear active state from all items
+    document
+      .querySelectorAll('#processList li')
+      .forEach(li => li.classList.remove('active'));
+
+    // set clicked item active
+    el.classList.add('active');
+
+    // update main content heading to match selection
+    const label = el.getAttribute('data-target');
+    const currentBreadcrumb =
+      document.querySelector('#mmainContentcurrent');
+
+    if (currentBreadcrumb) {
+      currentBreadcrumb.textContent = label;
+    }
+  }
+
+function addBackButton() {
+
+  const headerActions =
+    document.querySelector(".header-actions");
+
+  if (!headerActions) {
+    return;
+  }
+
+  if (document.getElementById("backSectionBtn")) {
+    return;
+  }
+
+  const backButton = document.createElement("button");
+
+  backButton.id = "backSectionBtn";
+  backButton.type = "button";
+  backButton.className = "back-section-btn";
+  backButton.textContent = "Back";
+
+  if (window.history.length <= 1) {
+    backButton.disabled = true;
+  }
+
+  backButton.addEventListener("click", function () {
+
+    if (backButton.disabled) {
+      return;
+    }
+
+    window.history.go(-1);
+
+  });
+
+  const uploadIcon =
+    document.getElementById("cmdspp-upload-doc-icon");
+
+  if (uploadIcon) {
+
+    headerActions.insertBefore(
+      backButton,
+      uploadIcon
+    );
+
+  } else {
+
+    headerActions.appendChild(backButton);
+
+  }
+}
+
+
+  /*
+   * Adds Submit Application button only when the URL
+   * contains "attachments".
+   */
+  function addSubmitApplicationButton() {
+
+    const currentUrl = window.location.href;
+
+    if (!currentUrl.toLowerCase().includes("attachments")) {
+      return;
+    }
+
+    const headerRow = document.querySelector(".header-row");
+
+    if (!headerRow) {
+      return;
+    }
+
+    // Prevent duplicate button
+    if (document.getElementById("submitApplicationBtn")) {
+      return;
+    }
+
+    const submitButton = document.createElement("button");
+
+    submitButton.id = "submitApplicationBtn";
+    submitButton.type = "button";
+    submitButton.className = "submit-application-btn";
+    submitButton.textContent = "Submit Application";
+
+    submitButton.addEventListener("click", function () {
+
+      console.log("Submit Application clicked");
+
+      /*
+       * Add your final submission logic here.
+       *
+       * Example:
+       * submitApplication();
+       */
+
+    });
+
+    headerRow.appendChild(submitButton);
+  }
+
+
+  document.addEventListener("DOMContentLoaded", async function () {
+
+    /*
+     * Add button based on URL.
+     *
+     * Example URL:
+     * ?id=12547&section=attachments
+     *
+     * The button will be displayed.
+     */
+    addSubmitApplicationButton();
+    addBackButton();
+
+    const params = new URLSearchParams(window.location.search);
+    const applicationId = params.get("id");
+    // Map page URLs to process display names
+const pageTitleMap = {
+    "Enroll-Form": "Identifying Information",
+    "Speciality-Licenses": "License / Certification",
+    "Provider-Identifier-Number": "Provider Identifier Number",
+    "Service-Location": "Service Location / Billing Information",
+    "Exclusion-Sanction": "Exclusion / Sanction",
+    "Group-Affiliation": "Group Affiliation",
+    "Electronic-Claims-Submission": "Electronic Claims Submission",
+    "ownership": "Ownership",
+    "Service-Loc-EFT": "Service Location/Billing Information",
+    "Service-Loc-ERA": "Service Location/Billing Information",
+    "Attachments": "Attachments",
+    "E-signature": "E-Signature"
+};
+
+const pathParts = window.location.pathname
+    .split("/")
+    .filter(Boolean);
+
+const currentPage =
+    pathParts[pathParts.indexOf("Enrollment-PP") + 1];
+
+const breadcrumbElement =
+    document.getElementById("mmainContentcurrent");
+
+if (breadcrumbElement) {
+    breadcrumbElement.textContent =
+        pageTitleMap[currentPage] || currentPage || "";
+}
+
+    if (!applicationId) {
+      console.error("applicationId is missing");
+      return;
+    }
+
+    try {
+
+      if (typeof showLoader === 'function') {
+        showLoader();
+      }
+
+      // Configure Power Pages safeAjax utility
+      (function (webapi, $) {
+
+        function safeAjax(ajaxOptions) {
+
+          var deferredAjax = $.Deferred();
+
+          shell.getTokenDeferred().done(function (token) {
+
+            if (!token) {
+
+              deferredAjax.rejectWith(this, [{
+                status: 403,
+                statusText: "No CSRF Token"
+              }]);
+
+              return;
+            }
+
+            if (!ajaxOptions.headers) {
+              ajaxOptions.headers = {};
+            }
+
+            ajaxOptions.headers[
+              "__RequestVerificationToken"
+            ] = token;
+
+            $.ajax(ajaxOptions)
+
+              .done(function (
+                data,
+                textStatus,
+                jqXHR
+              ) {
+
+                deferredAjax.resolveWith(
+                  this,
+                  [data, textStatus, jqXHR]
+                );
+
+              })
+
+              .fail(function (
+                jqXHR,
+                textStatus,
+                errorThrown
+              ) {
+
+                deferredAjax.rejectWith(
+                  this,
+                  [jqXHR, textStatus, errorThrown]
+                );
+
+              });
+
+          }).fail(function () {
+
+            deferredAjax.rejectWith(this, [{
+              status: 403,
+              statusText: "Token retrieval failed"
+            }]);
+
+          });
+
+          return deferredAjax.promise();
+        }
+
+        webapi.safeAjax = safeAjax;
+
+      })(window.webapi = window.webapi || {}, jQuery);
+
+
+      let flowURL =
+        `/_api/cmdspp_p_dtl_tbs` +
+        `?$filter=cmdspp_p_sys_id eq '${applicationId}'` +
+        ` and statecode eq 0` +
+        `&$select=cmdspp_p_dtl_tbid,cmdspp_p_enrolment_type,cmdspp_p_appln_status`;
+
+
+      webapi.safeAjax({
+
+        type: "GET",
+
+        url: flowURL,
+
+        contentType: "application/json",
+
+        success: function (res) {
+
+          let data = res?.value?.[0];
+
+          console.log(
+            "Header Data retrieved:",
+            data
+          );
+
+          let enrollId =
+            document.getElementById(
+              "cmdspp-enroll-id"
+            );
+
+          let enrollType =
+            document.getElementById(
+              "cmdspp-enroll-type"
+            );
+          let submitAppButton =
+            document.getElementById(
+              "submitApplicationBtn"
+            );
+
+
+          if (enrollId) {
+            enrollId.innerHTML = applicationId;
+          }
+
+          if (
+            enrollType &&
+            data?.cmdspp_p_enrolment_type
+          ) {
+            enrollType.innerHTML =
+              data.cmdspp_p_enrolment_type;
+          }
+          if (
+            submitAppButton &&
+            data?.cmdspp_p_appln_status == 2
+          ) {
+            submitAppButton.style.display="none";
+          }
+
+
+          if (
+            typeof hideLoader === 'function'
+          ) {
+            hideLoader();
+          }
+
+        },
+
+        error: function (err) {
+
+          if (
+            typeof hideLoader === 'function'
+          ) {
+            hideLoader();
+          }
+
+          console.error(
+            "API Fetch Error:",
+            err
+          );
+
+        }
+
+      });
+
+    } catch (error) {
+
+      if (
+        typeof hideLoader === 'function'
+      ) {
+        hideLoader();
+      }
+
+      console.error(
+        "Error calling Dataverse:",
+        error
+      );
+    }
+
+    const uploadIcon = document.getElementById('cmdspp-upload-doc-icon');
+
+  if (uploadIcon) {
+    uploadIcon.addEventListener('click', () => {
+      // Captures current URL query string (e.g., "?record=123&enrollmentId=456")
+      const currentParams = window.location.search;
+      
+      // Redirects to /attachments preserving all URL parameters
+      window.location.href = `/Enrollment-PP/Attachments${currentParams}`;
+    });
+
+    const currentUrl = window.location.href;
+
+    if (currentUrl.toLowerCase().includes("attachments")) {
+      uploadIcon.style.display="none";
+    }
+  }
+  });
+</script>

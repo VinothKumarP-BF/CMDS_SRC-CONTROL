@@ -1,0 +1,352 @@
+.cmdspp-inbox-container{
+    display:flex;
+    height:calc(100vh - 65px);
+    background:#f8fafc;
+}
+
+.cmdspp-thread-panel{
+    width:320px;
+    height: 100vh;
+    border-right:1px solid #e5e7eb;
+    background:#fff;
+    overflow-y:auto;
+}
+
+.cmdspp-search-container{
+    padding:12px;
+    border-bottom: 1px solid #F9FAFB;
+    img{
+        position: absolute;
+        left: 24px;
+        top: 23px;
+    }
+}
+
+.cmdspp-search-container input{
+    width:100%;
+    border:1px solid #F3F4F6;
+    border-radius:10px;
+    background: #F9FAFB;
+    padding:12px;
+    height: 34px;
+    font-weight: 400 !important;
+    font-size: 12px;
+    line-height: 100%;
+    letter-spacing: 0px;
+    padding-left: 35px !important;
+    outline: none;
+}
+
+#cmdspp-search::placeholder{
+    color: #5A709999;
+    opacity:1;
+}
+
+.cmdspp-search-container input:focus{
+    box-shadow: 0px 0px 0px 1px #6C8EEF inset, 0px 0px 0px 2px #D6ECFF;
+}
+
+.cmdspp-thread-item{
+    display:flex;
+    gap:10px;
+    padding: 12px 14px;
+    cursor:pointer;
+    border-bottom:1px solid #F9FAFB;
+    height: 102px;
+    overflow:hidden;
+}
+
+.cmdspp-thread-item:hover,
+.cmdspp-thread-item-unread
+{
+    background: #0B3A6F0F;
+}
+
+.cmdspp-thread-item.active{
+    background: #0B3A6F0F;
+}
+
+.cmdspp-avatar{
+    color:#ffffff;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    flex-shrink:0;
+    width: 32px;
+    height: 32px;
+    opacity: 1;
+    border-radius: 33554400px;
+    background: #274463;
+}
+
+.cmdspp-thread-content{
+    flex:1;
+    min-width:0; /* critical */
+    overflow:hidden;
+}
+
+.cmdspp-thread-name,
+.cmdspp-thread-subject{
+font-weight: 400 !important;
+font-size: 11px;
+line-height: 16.5px;
+letter-spacing: 0px;
+color: #0B3A6F;
+}
+
+.cmdspp-thread-subject{
+    margin-top:2px;
+}
+
+.cmdspp-thread-preview{
+    font-weight: 400 !important;
+font-size: 10px;
+line-height: 15px;
+letter-spacing: 0px;
+color: #5A7099;
+}
+
+.cmdspp-thread-subject,
+.cmdspp-thread-preview{
+width:100%;
+white-space:nowrap;
+overflow:hidden;
+text-overflow:ellipsis;
+}
+
+.cmdspp-thread-bottom{
+    display: flex;
+    justify-content: space-between;
+    margin-top: 6px;
+}
+
+.cmdspp-thread-messageType{
+    width: 38px;
+height: 19px;
+opacity: 1;
+padding-top: 2px;
+padding-right: 6px;
+padding-bottom: 2px;
+padding-left: 6px;
+border-radius: 33554400px;
+background: #0B3A6F12;
+font-weight: 400 !important;
+font-style: Regular;
+font-size: 10px;
+line-height: 15px;
+letter-spacing: 0px;
+color: #0B3A6F;
+}
+
+.cmdspp-thread-time{
+    font-weight: 400 !important;
+font-size: 10px;
+line-height: 15px;
+letter-spacing: 0px;
+color: #5A7099;
+    flex-shrink:0;
+}
+
+.cmdspp-message-panel{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+}
+
+.cmdspp-toolbar{
+    display:flex;
+    justify-content:flex-end;
+    height: 59px;
+    padding:15px;
+    background:#ffffff;
+    border-bottom:1px solid #F3F4F6;
+}
+
+.cmdspp-toolbar-btn{
+    border:none;
+    background:none;
+    cursor:pointer;
+    font-weight: 400 !important;
+font-style: Regular;
+font-size: 12px;
+line-height: 16px;
+letter-spacing: 0px;
+text-align: center;
+color: #5A7099;
+    img{
+        margin-right: 1.5px;
+        margin-bottom: 2px;
+    }
+}
+
+.cmdspp-danger{
+    color:#FB2C36;
+}
+
+#cmdspp-message-view{
+    display: contents;
+}
+.cmdspp-empty-state{
+    height:100%;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+    color:#64748b;
+    h3{
+        margin-top: 16px;
+        margin-bottom: 0px;
+        font-weight: 600 !important;
+        font-style: Semi Bold;
+        font-size: 16px;
+        line-height: 24px;
+        letter-spacing: 0px;
+        text-align: center;
+        color: #0B3A6F;
+    }
+    p{
+        font-weight: 400 !important;
+        font-style: Regular;
+        font-size: 14px;
+        line-height: 20px;
+        letter-spacing: 0px;
+        text-align: center;
+        color: #5A7099;
+    }
+}
+
+.cmdspp-empty-icon{
+    width: 64px;
+    height: 64px;
+    opacity: 1;
+    border-radius: 16px;
+    background: #0B3A6F0F;
+    padding: 18px;
+}
+
+.cmdspp-message-card{
+    margin:21px;
+    background:#ffffff;
+    border-radius: 16px;
+    border: 1px solid #0000000D;
+    box-shadow: 0px 1px 2px -1px #0000001A,0px 1px 3px 0px #0000001A;
+    padding:20px;
+}
+
+.cmdspp-message-subject{
+    font-weight: 400 !important;
+    font-size: 16px;
+line-height: 22px;
+letter-spacing: 0px;
+color: #0B3A6F;
+    margin-bottom:10px;
+}
+
+.cmdspp-message-meta{
+    display:flex;
+    gap:10px;
+    align-items:center;
+    margin-bottom:16px;
+}
+
+.cmdspp-message-info{
+display:flex;
+align-items:center;
+height: 42px;
+opacity: 1;
+gap: 12px;
+padding-top: 12px;
+padding-bottom: 12px;
+border-top: 1px solid #F3F4F6;
+border-bottom: 1px solid #F3F4F6;
+margin-bottom:16px;
+font-weight: 400 !important;
+font-size: 12px;
+line-height: 16px;
+letter-spacing: 0px;
+color: #5A7099;
+img{
+    margin-right: 6px;
+}
+}
+
+.cmdspp-message-body{
+    font-weight: 400 !important;
+font-size: 14px;
+line-height: 22.75px;
+letter-spacing: 0px;
+color: #0B3A6F;
+white-space: pre-wrap;
+}
+
+.cmdspp-section-title{
+    margin-top:20px;
+    margin-bottom:10px;
+    color:#64748b;
+    font-size:12px;
+    font-weight:600;
+}
+
+.cmdspp-attachment-list{
+    display:flex;
+    gap:12px;
+}
+
+.cmdspp-attachment{
+    border:1px solid #e5e7eb;
+    border-radius:10px;
+    padding:10px;
+    min-width:220px;
+}
+
+.cmdspp-reply-box{
+    margin:20px;
+    background:#fff;
+    border:1px solid #e5e7eb;
+    border-radius:18px;
+}
+
+.cmdspp-reply-header{
+    display:flex;
+    justify-content:space-between;
+    padding:15px 20px;
+    border-bottom:1px solid #e5e7eb;
+}
+
+.cmdspp-reply-text{
+    width:100%;
+    min-height:180px;
+    border:none;
+    outline:none;
+    resize:none;
+    padding:20px;
+}
+
+.cmdspp-reply-footer{
+    display:flex;
+    gap:10px;
+    padding:15px;
+}
+
+.cmdspp-send-btn{
+    border:none;
+    background:#21417a;
+    color:#fff;
+    padding:10px 20px;
+    border-radius:25px;
+}
+
+.cmdspp-attach-btn{
+    border:1px solid #21417a;
+    background:#fff;
+    color:#21417a;
+    padding:10px 20px;
+    border-radius:25px;
+}
+
+#cmdspp-btn-reply,
+.cmdspp-inline-reply-btn,
+.cmdspp-section-title,
+.cmdspp-attachment-list{
+    display: none !important;
+}

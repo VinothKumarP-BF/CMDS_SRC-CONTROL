@@ -1,0 +1,98 @@
+<!--<link rel="stylesheet" href="cmdsspp_enrollment_styles.css"/> -->
+<link rel="stylesheet" href="cmdspp_enrollment_styles.css">
+{% include 'cmdspp_Loader' %}
+   {% include 'cmdspp_ToastModal' %}
+<div class="cmdspp-enrollment-page">
+    
+    <!-- Enrollment -->
+    <div class="cmdspp-enroll-page-title">{{ pageTitle }}</div>
+
+    <!-- Container -->
+    <div class="cmdspp-main-container">
+
+        <!-- Heading 2 + Paragraph -->
+        <div class="cmdspp-info-container">
+            <div class="cmdspp-enroll-subtitle">
+                {{ pageSubtitle }}
+            </div>
+
+            <div class="cmdspp-enroll-description">
+                {{ pageDescription }}
+            </div>
+        </div>
+
+        <!-- Container:margin -->
+        <div class="cmdspp-grid-wrapper">
+            <div id="cmdsppEnrollmentGrid"
+                 class="cmdspp-enrollment-grid">
+            </div>
+        </div>
+
+    </div>
+    <div id="cmdspp-enroll-provider-modal"
+     class="cmdspp-enroll-modal-overlay">
+
+    <div class="cmdspp-enroll-modal">
+
+        <div class="cmdspp-enroll-modal-header">
+            <span>Provider Type</span>
+            <span class="cmdspp-enroll-close">&times;</span>
+        </div>
+
+        <div class="cmdspp-enroll-modal-body">
+
+            <div class="cmdspp-enroll-modal-description">
+                Please select the provider type to continue
+            </div>
+
+            <label class="cmdspp-enroll-modal-label">
+                Select Provider Type
+            </label>
+
+            <select id="cmdspp-enroll-provider-type"
+                    class="cmdspp-enroll-provider-select">
+                <option value="">Select</option>
+                <option value="Hospital">Hospital</option>
+                <option value="Clinic">Clinic</option>
+                <option value="Physician">Physician</option>
+                <option value="Laboratory">Laboratory</option>
+            </select>
+
+        </div>
+
+        <div class="cmdspp-enroll-modal-footer">
+            <button id="cmdspp-enroll-cancel-btn"
+                    class="cmdspp-enroll-cancel-btn">
+                Cancel
+            </button>
+
+            <button id="cmdspp-enroll-submit-btn"
+                    class="cmdspp-enroll-submit-btn">
+                Submit
+            </button>
+        </div>
+
+    </div>
+
+</div>
+</div>
+
+<script>
+  // Safely embed the raw JSON string using the `json` filter (escapes quotes/HTML properly)
+  var cmdsppRaw = {{ settings["cmdspp_ENV_Automate_Flow_Url"] | json }};
+   var currentUserId = window.cmdsppUserId ;
+   var currentEmailId = window.cmdsppEmailId ;
+  // If the setting value comes through as a string, parse it; if Liquid already gave an object, use as-is
+  var cmdsppUrls = typeof cmdsppRaw === "string" ? JSON.parse(cmdsppRaw) : cmdsppRaw;
+  
+  window.cmdsppConfig = {
+    pageTitle: "{{ pageTitle }}",
+    pageSubtitle: "{{ pageSubtitle }}",
+    pageDescription: "{{ pageDescription }}",
+    enrollmentApiUrl: cmdsppUrls?.cmdspp_Enrollmenttype,
+    currentUserId: currentUserId,
+    currentEmailId:currentEmailId
+  };
+</script>
+
+<script src="/cmdspp_enrollmentTypes.js"></script>

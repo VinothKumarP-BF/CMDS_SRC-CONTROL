@@ -1,0 +1,145 @@
+<style>
+.cmdspp-modal-overlay{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.45);
+    display:none;
+    justify-content:center;
+    align-items:center;
+    z-index:9999;
+}
+
+.cmdspp-modal{
+    width:420px;
+    background:#fff;
+    border-radius:12px;
+    padding:24px;
+    position:relative;
+    box-shadow:0 12px 30px rgba(0,0,0,.2);
+}
+
+.cmdspp-modal-close{
+    position:absolute;
+    top:12px;
+    right:12px;
+    border:none;
+    background:none;
+    cursor:pointer;
+    font-size:16px;
+}
+
+.cmdspp-modal-title{
+    font-size:18px;
+    font-weight:600;
+    margin-bottom:8px;
+    color:#23466a;
+}
+
+.cmdspp-modal-message{
+    font-size:14px;
+    margin-bottom:24px;
+    color:#6b7280;
+}
+
+.cmdspp-modal-actions{
+    display:flex;
+    gap:12px;
+}
+
+.cmdspp-btn-secondary{
+    flex:1;
+    height:40px;
+    border:1px solid #23466a;
+    background:#fff;
+    color:#23466a;
+    border-radius:8px;
+    cursor:pointer;
+}
+
+.cmdspp-btn-primary{
+    flex:1;
+    height:40px;
+    border:none;
+    background:#23466a;
+    color:#fff;
+    border-radius:8px;
+    cursor:pointer;
+}
+</style>
+
+<div id="cmdsppCommonModal" class="cmdspp-modal-overlay">
+    <div class="cmdspp-modal">
+
+        <button class="cmdspp-modal-close"
+                onclick="closeCmdsppModal()">
+            ✕
+        </button>
+
+        <div class="cmdspp-modal-title"
+             id="cmdsppModalTitle"></div>
+
+        <div class="cmdspp-modal-message"
+             id="cmdsppModalMessage"></div>
+
+        <div class="cmdspp-modal-actions">
+
+            <button id="cmdsppModalSecondaryBtn"
+                    class="cmdspp-btn-secondary">
+            </button>
+
+            <button id="cmdsppModalPrimaryBtn"
+                    class="cmdspp-btn-primary">
+            </button>
+
+        </div>
+
+    </div>
+</div>
+
+<script>
+window.cmdsppModalCallback = null;
+
+function openCmdsppModal(config) {
+
+    document.getElementById("cmdsppModalTitle").innerText =
+        config.title || "";
+
+    document.getElementById("cmdsppModalMessage").innerText =
+        config.message || "";
+
+    document.getElementById("cmdsppModalPrimaryBtn").innerText =
+        config.primaryText || "Submit";
+
+    document.getElementById("cmdsppModalSecondaryBtn").innerText =
+        config.secondaryText || "Cancel";
+
+    window.cmdsppModalCallback =
+        config.onConfirm || null;
+
+    document.getElementById("cmdsppCommonModal").style.display =
+        "flex";
+}
+
+function closeCmdsppModal() {
+    document.getElementById("cmdsppCommonModal").style.display =
+        "none";
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    document
+        .getElementById("cmdsppModalSecondaryBtn")
+        .addEventListener("click", closeCmdsppModal);
+
+    document
+        .getElementById("cmdsppModalPrimaryBtn")
+        .addEventListener("click", function () {
+
+            if (typeof window.cmdsppModalCallback === "function") {
+                window.cmdsppModalCallback();
+            }
+
+            closeCmdsppModal();
+        });
+});
+</script>

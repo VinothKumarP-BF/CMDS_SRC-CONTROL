@@ -1,0 +1,608 @@
+{% include 'cmdspp_Enrollment-PP-commonPopUP' %}
+  {% include 'cmdspp_Loader' %}
+
+<div class="side-col">
+    <div class="process-card">
+      <div class="process-header">APPLICATION PROCESSES</div>
+      <ul class="process-list" id="processList">
+        <li class="active"  data-target="Identifying Information" onclick="selectItem(this)">
+          <span class="step-num">1</span> Identifying Information
+        </li>
+        <li data-target="License / Certification" onclick="selectItem(this)">
+          <span class="step-num">2</span> License / Certification
+        </li>
+         <li data-target="Provider Identifier Number" onclick="selectItem(this)">
+          <span class="step-num">3</span> Provider Identifier Number
+        </li>
+          <li data-target="Service Location" onclick="selectItem(this)">
+          <span class="step-num">4</span> Service Location/Billing Information
+        </li>
+         <li data-target="Exclusion / Sanction" onclick="selectItem(this)">
+          <span class="step-num">5</span> Exclusion / Sanction
+        </li>
+         <li data-target="Group Affiliation" onclick="selectItem(this)">
+          <span class="step-num">6</span> Group Affiliation
+        </li>
+         <li data-target="Electronic Claims Submission" onclick="selectItem(this)">
+          <span class="step-num">7</span> Electronic Claims Submission 
+        </li>
+         <li data-target="ownership" onclick="selectItem(this)">
+          <span class="step-num">8</span> Ownership
+        </li>
+        <li data-target="Attachment" id="attachmentItem" onclick="selectItem(this)">
+          <span class="step-num">9</span> Attachment
+        </li>
+        <li data-target="E-Signature" id="eSignatureProcessItem" onclick="selectItem(this)">
+          <span class="step-num">10</span> E-Signature
+        </li>
+      </ul>
+    </div>
+        <!-- Progress Card -->
+<div class="progress-card">
+    <div class="progress-header">
+        <span>Progress</span>
+        <span id="progressPercent">25%</span>
+    </div>
+
+    <div class="progress-bar">
+        <div class="progress-fill" id="progressFill"></div>
+    </div>
+</div>
+
+<!-- Cancel Enrollment Card -->
+<div class="cancel-card">
+    <p class="cancel-text">
+        Don't want to process the application? -
+        <span class="cancel-link" id="cancelEnrollmentBtn">Cancel Enrollment</span>
+    </p>
+</div>
+  </div>
+
+<style>
+  /* ---------- Layout ---------- */
+  /* Removes the connector line when E-Signature is hidden */
+.process-list li.no-line::after {
+    display: none !important;
+}
+  .layout{
+    display:flex;
+    gap:20px;
+    padding:20px 30px 60px;
+    align-items:flex-start;
+  }
+  /* ---------- Progress Card ---------- */
+.progress-card {
+    background: #ffffff;
+    border: 1px solid #F0F0F0;
+    border-radius: 10px;
+    width: 238px;
+    padding: 12px 16px;
+    margin-top: 12px;
+}
+.cancel-text .cancel-link.disabled {
+    color: #AAAAAA;
+    cursor: not-allowed;
+    pointer-events: none;
+    opacity: 0.65;
+    text-decoration: none;
+}
+
+.cancel-text .cancel-link.disabled:hover {
+    text-decoration: none;
+}
+
+.progress-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #274463;
+}
+
+.progress-header span:last-child {
+    font-size: 13px;
+    font-weight: 600;
+    color: #274463;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 6px;
+    background: #E5E7EB;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    /* gradient matches the navy-to-teal fill in Figma */
+    background: linear-gradient(90deg, #274463 0%, #1AA3A3 100%);
+    width: 25%;              /* set dynamically via JS */
+    border-radius: 10px;
+    transition: width 0.3s ease;
+}
+
+/* ---------- Cancel Enrollment Card ---------- */
+.cancel-card {
+    background: #ffffff;
+    border: 1px solid #F0F0F0;
+    border-radius: 10px;
+    width: 238px;
+    padding: 12px 16px;
+    margin-top: 12px;
+}
+
+/* Single text block, 206 fill x 33 hug per Figma */
+.cancel-text {
+    width: 206px;
+    font-weight: 400;
+    font-size: 11px;
+    line-height: 16.5px;
+    letter-spacing: 0px;
+    color: #697386;   /* base text color */
+}
+
+/* Inline span for "Cancel Enrollment" */
+.cancel-text .cancel-link {
+    color: #0196F3;
+    cursor: pointer;
+    font-weight: 400;
+    font-size: 11px;
+    line-height: 16.5px;
+    letter-spacing: 0px;
+}
+
+.cancel-text .cancel-link:hover {
+    text-decoration: underline;
+}
+  .main-col{
+    flex:1;
+    min-width:0;
+    background:#fff;
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:24px;
+    min-height:400px;
+  }
+  .main-col h2{
+    margin-top:0;
+    color:var(--navy-dark);
+  }
+  .side-col{ flex-shrink:0;}
+
+  /* ---------- Sidebar / Navigation ---------- */
+  .process-card{
+    background:#fff;
+    border: 1px solid #F0F0F0;
+    border-radius:10px;
+    overflow:hidden;
+        width: 238px;
+  }
+  .process-header{
+   color: #fff;
+    background: #274463;
+    width: 238px;
+    height: 42px;
+    angle: 0 deg;
+    opacity: 1;
+    padding-top: 12px;
+    padding-right: 16px;
+    padding-bottom: 12px;
+    padding-left: 16px;
+    border-bottom-width: 1px;
+    font-weight: 400;
+    font-size: 11px;
+    line-height: 16.5px;
+    letter-spacing: 1px;
+    color: #FFFFFF;
+  }
+  .process-list{
+    list-style:none;
+    margin:0;
+    padding:8px 0;
+    position:relative;
+  }
+  .process-list li{
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    min-height: 20px;
+        padding-left: 13px;
+    padding-top: 11px;
+    padding-bottom: 11px;
+    font-weight: 400;
+    font-size: 12px;
+    line-height: 18px;
+    letter-spacing: 0px;
+    color: #AAAAAA;
+  }
+
+  /* connecting line: starts at THIS circle's center, runs one full row-height
+     down, landing exactly on the NEXT circle's center — no gaps, no overlap */
+  .process-list li:not(:last-child)::after{
+    content:"";
+    position:absolute;
+    left: 18px; /* padding-left(18) + circle-width/2(9) */
+    top:50%;
+    width:2px;
+    height:100%;
+    background:#c7cfd8;
+    z-index:30;
+  }
+  .process-list li.done:not(:last-child)::after{
+    background:#1AA3A3;
+  }
+
+  .process-list li:hover{background:#f5f8fb;}
+
+  .step-num{
+   
+    border-radius:50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:#eef0f3;
+    position:relative;
+    z-index: 40;
+    background: #D9D9D9;
+    color: white;
+
+
+        width: 12px;
+    height: 12px;
+    angle: 0 deg;
+    opacity: 1;
+    border-width: 0.2px;
+    border-radius: 6px;
+    font-weight: 400;
+    font-size: 8px;
+    line-height: 100%;
+    letter-spacing: 0px;
+  }
+
+  /* completed steps - teal */
+  .process-list li.done{color:#1AA3A3;}
+  .process-list li.done .step-num{
+    background:#1AA3A3;
+    border-color:#1AA3A3;
+    color:#fff;
+  }
+
+  /* current step - navy (#274463), bold */
+  .process-list li.active{
+    color: #274463;
+    background: #EEF0F3;
+  }
+  .process-list li.active .step-num{
+    background:#274463;
+    border-color:#274463;
+    color:#fff;
+  }
+
+  @media (max-width: 860px){
+    .layout{flex-direction:column;}
+    .side-col{width:100%;}
+  }
+</style>
+<script>
+  // Helper to preserve 'id' and 'record' URL parameters during navigation
+  function buildTargetUrl(basePath) {
+    const urlParams = new URLSearchParams(window.location.search);
+    const currentQueryParams = window.location.search; 
+    // const id = urlParams.get('id');
+    // const record = urlParams.get('record');
+    
+    // const params = new URLSearchParams();
+    // if (id) params.set('id', id);
+    // if (record) params.set('record', record);
+    
+    // const queryString = params.toString();
+    // return queryString ? `${basePath}?${queryString}` : basePath;
+    return `${basePath}${currentQueryParams}`
+  }
+
+  // Cancel Enrollment
+function cancelEnrollmentApplication() {
+
+    const urlParams = new URLSearchParams(window.location.search);
+
+    const applicationId =
+        urlParams.get("record") ||
+        urlParams.get("id");
+
+    if (!applicationId) {
+        alert("Application ID not found.");
+        return $.Deferred().reject().promise();
+    }
+
+    return webapi.safeAjax({
+        type: "PATCH",
+        url: "/_api/cmdspp_p_dtl_tbs(" + applicationId + ")",
+        contentType: "application/json",
+        data: JSON.stringify({
+            cmdspp_p_appln_status: 7
+        })
+    });
+}
+//disable cancel enrollment button
+function updateCancelEnrollmentState(applicationStatus) {
+    const cancelBtn =
+        document.getElementById("cancelEnrollmentBtn");
+
+    if (!cancelBtn) return;
+
+    // 2 = Submitted, 5 = Awaiting Signature
+    const disabledStatuses = [2, 5, ];
+
+    const shouldDisable =
+        disabledStatuses.includes(
+            Number(applicationStatus)
+        );
+
+    cancelBtn.classList.toggle(
+        "disabled",
+        shouldDisable
+    );
+
+    cancelBtn.dataset.disabled =
+        shouldDisable ? "true" : "false";
+
+    cancelBtn.setAttribute(
+        "aria-disabled",
+        shouldDisable ? "true" : "false"
+    );
+}
+// cancel enrollment logic
+document.addEventListener("DOMContentLoaded", function () {
+    const cancelBtn =
+        document.getElementById("cancelEnrollmentBtn");
+
+    if (!cancelBtn) return;
+
+    cancelBtn.addEventListener("click", function (event) {
+        event.preventDefault();
+
+        // Do not open popup when cancel is disabled
+        if (cancelBtn.dataset.disabled === "true") {
+            return;
+        }
+
+        showConfirmationPopup({
+            title: "Cancel Enrollment",
+            message:
+                "Are you sure you want to cancel this application?",
+            confirmText: "Yes",
+            cancelText: "No",
+
+            onConfirm: function () {
+                showLoader("");
+
+                cancelEnrollmentApplication()
+                    .done(function () {
+                        window.location.href = "/Dashboard/";
+                    })
+                    .fail(function (xhr) {
+                        hideLoader();
+
+                        console.error(
+                            "Failed to cancel application",
+                            xhr
+                        );
+
+                        alert(
+                            "Failed to cancel application."
+                        );
+                    });
+            }
+        });
+    });
+});
+// progress bar logic
+function getVisibleProcessItems() {
+    return Array.from(
+        document.querySelectorAll('#processList li')
+    ).filter(function (li) {
+        return li.style.display !== 'none';
+    });
+}
+
+function updateProgressBar(activeIndex) {
+    const visibleItems = getVisibleProcessItems();
+    const totalSteps = visibleItems.length || 1;
+    let completedSteps = Math.max(0, activeIndex);
+    if(activeIndex==9){
+        completedSteps=10
+    }
+    const percent = Math.round((completedSteps / totalSteps) * 100);
+
+    const fillEl = document.getElementById('progressFill');
+    const percentEl = document.getElementById('progressPercent');
+
+    if (fillEl) fillEl.style.width = percent + '%';
+    if (percentEl) percentEl.textContent = percent + '%';
+}
+
+function loadESignatureProcessItem() {
+    const cfg = window.cmdsppConfig || {};
+
+    let applicationId =
+        cfg.applicationId ||
+        new URLSearchParams(window.location.search).get("record") ||
+        new URLSearchParams(window.location.search).get("id") ||
+        "";
+
+    applicationId = String(applicationId).replace(/[{}]/g, "").trim();
+
+    if (!applicationId) {
+        console.warn("Application ID not found. E-Signature item remains hidden.");
+        return $.Deferred().resolve().promise();
+    }
+
+    const url =
+        "/_api/cmdspp_p_dtl_tbs" +
+        "?$select=cmdspp_p_appln_status,modifiedon" +
+        "&$filter=cmdspp_p_dtl_tbid eq " +
+        applicationId;
+
+    return webapi.safeAjax({
+        type: "GET",
+        url: url,
+        contentType: "application/json"
+    })
+    .done(function (res) {
+        const record =
+            res &&
+            Array.isArray(res.value) &&
+            res.value.length
+                ? res.value[0]
+                : null;
+
+        const status = Number(
+            record?.cmdspp_p_appln_status
+        );
+      // Disable Cancel Enrollment based on status
+        updateCancelEnrollmentState(status);
+
+        const eSignatureItem =
+            document.getElementById(
+                "eSignatureProcessItem"
+            );
+        const AttachmentItem =
+            document.getElementById(
+                "attachmentItem"
+            );
+
+       if (eSignatureItem) {
+    const isESignVisible = status === 2;
+    eSignatureItem.style.display = isESignVisible ? "flex" : "none";
+
+    // If E-Signature is hidden, remove line from Attachment item
+    if (AttachmentItem) {
+        if (!isESignVisible) {
+            AttachmentItem.classList.add("no-line");
+        } else {
+            AttachmentItem.classList.remove("no-line");
+        }
+    }
+}
+
+        console.log("[E-Signature process status]", {
+            status: status,
+            modifiedOn: record?.modifiedon
+        });
+    })
+    .fail(function (xhr) {
+        console.error(
+            "Failed to fetch application status for E-Signature item:",
+            xhr
+        );
+    });
+}
+
+  // Click handler bound to onclick="selectItem(this)" in your HTML
+  function selectItem(el) {
+    const target = el.getAttribute('data-target');
+    let destinationPath = '';
+
+    switch (target) {
+      case 'Identifying Information':
+        destinationPath = '/Enrollment-PP/Enroll-Form/';
+        break;
+      case  'Group Affiliation':
+      destinationPath = '/Enrollment-PP/Group-Affiliation/';
+        break;
+      case  'Electronic Claims Submission':
+      destinationPath = '/Enrollment-PP/Electronic-Claims-Submission/';
+        break;
+      case 'License / Certification':
+        destinationPath = '/Enrollment-PP/Speciality-Licenses/';
+        break;
+      case 'Provider Identifier Number':
+      destinationPath = '/Enrollment-PP/Provider-Identifier-Number/';
+      break;
+       case 'Service Location':
+      destinationPath = '/Enrollment-PP/Service-Location/';
+      break;
+      case 'Exclusion / Sanction':
+      destinationPath = '/Enrollment-PP/Exclusion-Sanction/';
+      break;
+      case 'ownership':
+      destinationPath = '/Enrollment-PP/ownership/';
+      break;
+      case 'Attachment':
+        destinationPath = '/Enrollment-PP/Attachments/';
+        break;
+      case 'E-Signature':
+        destinationPath = '/Enrollment-PP/E-signature/';
+        break;
+    }
+
+    if (destinationPath) {
+      window.location.href = buildTargetUrl(destinationPath);
+    }
+  }
+
+  // Automatically applies .active and .done CSS classes based on the current page URL
+  document.addEventListener('DOMContentLoaded', function () {
+
+    loadESignatureProcessItem()
+      .always(function () {
+
+        const currentPath =
+            window.location.pathname.toLowerCase();
+
+        const items =
+            getVisibleProcessItems();
+
+        let activeTarget =
+            'Identifying Information';
+
+        if (currentPath.includes('speciality-licenses')) {
+          activeTarget = 'License / Certification';
+        } else if (currentPath.includes('provider-identifier-number')) {
+          activeTarget = 'Provider Identifier Number';
+        } else if (currentPath.includes('exclusion-sanctio')) {
+          activeTarget = 'Exclusion / Sanction';
+        } else if (currentPath.includes('service-location')) {
+          activeTarget = 'Service Location';
+        } else if (currentPath.includes('group-affiliation')) {
+          activeTarget = 'Group Affiliation';
+        } else if (currentPath.includes('electronic-claims-submission')) {
+          activeTarget = 'Electronic Claims Submission';
+        } else if (currentPath.includes('attachments')) {
+          activeTarget = 'Attachment';
+        } else if (currentPath.includes('ownership')) {
+          activeTarget = 'ownership';
+        } else if (currentPath.includes('e-signature')) {
+          activeTarget = 'E-Signature';
+        }
+
+        let activeIndex =
+            items.findIndex(
+                li =>
+                    li.getAttribute('data-target') ===
+                    activeTarget
+            );
+
+        if (activeIndex < 0) {
+            activeIndex = 0;
+        }
+
+        items.forEach((li, idx) => {
+          li.classList.remove('active', 'done');
+
+          if (idx < activeIndex) {
+            li.classList.add('done');
+          } else if (idx === activeIndex) {
+            li.classList.add('active');
+          }
+        });
+
+        updateProgressBar(activeIndex);
+      });
+  });
+</script>

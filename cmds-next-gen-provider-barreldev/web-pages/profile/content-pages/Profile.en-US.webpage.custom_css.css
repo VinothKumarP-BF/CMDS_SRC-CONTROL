@@ -1,0 +1,8 @@
+.row{
+    .col-lg-4{
+        display: none !important;
+    }
+    .col-lg-8{
+        display: none !important;
+    }
+}

@@ -1,0 +1,195 @@
+/* HERO */
+
+
+
+.cmdspp-home-hero-section {
+    padding-top: 60px !important;
+    padding: 132px 92px;
+     background-image: url("/cmdspp_Langing_page_bg.png");
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    display: flex;
+    height: 524px;
+    
+}
+
+.cmdspp-home-hero-content {
+    width: 700px;
+    color: #ffffff;
+}
+
+.cmdspp-home-gov-badge {
+    display: inline-block;
+    padding: 8px 18px;
+    border-radius: 20px;
+    background: rgba(0, 61, 130, 0.45);
+    border: 1px solid rgba(255,255,255,.15);
+    font-size: 12px;
+    font-weight: 400;
+    letter-spacing: .5px;
+    margin-bottom: 30px;
+    img{
+        margin-bottom: 3px;
+        margin-right: 8px;
+    }
+}
+
+.cmdspp-home-hero-content h1 {
+    line-height: 1.1;
+    font-weight: 400 !important;
+    margin-bottom: 25px;
+    font-size: 57.6px;
+    line-height: 64.51px;
+    letter-spacing: 0px;
+    margin-bottom: 12px;
+}
+
+.cmdspp-home-hero-content p {
+    width: 670px;
+    font-size: 16px;
+    font-weight: 400 !important;
+    line-height: 1.6;
+    margin-bottom: 28px;
+    color: #ffffff;
+        line-height: 26px;
+    letter-spacing: 0px;
+}
+
+.cmdspp-home-hero-buttons {
+    display: flex;
+    gap: 15px;
+}
+
+.cmdspp-home-btn{
+    height: 46px;
+    font-size: 14px;
+    font-weight: 400 !important;
+    line-height: 20px;
+    border: none !important;
+    box-shadow: none !important;
+
+}
+
+.cmdspp-home-btn-primary {
+    display: inline-block;
+    padding: 12px 25px;
+    background: #0B3A6F;
+    color: #FFFFFF;
+    border-radius: 8px;
+    text-decoration: none;
+}
+
+.cmdspp-home-btn-secondary {
+    display: inline-block;
+    padding: 12px 25px;
+    background: #FFFFFF;
+    color: #0B3A6F;
+    border-radius: 8px;
+    text-decoration: none;
+}
+
+/* SERVICES */
+
+.cmdspp-home-services-section {
+    max-width: 1200px;
+    margin: -60px auto 33px;
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    flex-wrap: nowrap;
+    position: relative;
+    z-index: 10;
+}
+
+.cmdspp-home-service-card {
+    width: 327px;
+    height: 139px;
+    background: #fff;
+    border: 1px solid #d8e2ea;
+    border-radius: 6px;
+    padding: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,.08);
+}
+
+.cmdspp-home-service-text {
+    width: 48%;
+    .cmdspp-home-service-text-learnmore {
+        color: #1AA3A3;
+        font-size: 14px;
+        font-weight: 400 !important;
+    }
+}
+
+.cmdspp-home-service-card h3 {
+    font-size: 16px;
+    font-weight: 400 !important;
+    color: #0B3A6F;
+    margin-bottom: 10px;
+    margin-top: 0px !important;
+}
+
+.cmdspp-home-service-card p {
+    font-size: 12px;
+    line-height: 100%;
+    margin-bottom: 10px;
+    color: #060606;
+}
+
+.cmdspp-home-service-card img {
+    width: 140px;
+    height: 104px;
+}
+
+
+/* AI SECTION */
+.cmdspp-home-ai-section {
+    text-align: center;
+    padding: 0px 20px 0px;
+    margin-bottom: 29px !important;
+}
+
+.cmdspp-home-ai-section h2 {
+    font-weight: 400 !important;
+    margin-bottom: 16px;
+    color: #292A30;
+    font-size: 26px;
+    line-height: 100%;
+    letter-spacing: -0.75px;
+    text-align: center;
+}
+
+.cmdspp-home-ai-section p {
+    color: #686677;
+    font-size: 17px;
+    line-height: 29px;
+    margin-bottom: 0px !important;
+    font-weight: 400 !important;
+}
+
+/* RESPONSIVE */
+
+@media (max-width: 960px) {
+
+    .cmdspp-home-hero-content {
+        width: 100%;
+    }
+
+    .cmdspp-home-hero-content h1 {
+        font-size: 42px;
+    }
+
+    .cmdspp-home-hero-content p {
+        width: 100%;
+    }
+
+    .cmdspp-home-services-section {
+        flex-direction: column;
+        align-items: center;
+    }
+
+}

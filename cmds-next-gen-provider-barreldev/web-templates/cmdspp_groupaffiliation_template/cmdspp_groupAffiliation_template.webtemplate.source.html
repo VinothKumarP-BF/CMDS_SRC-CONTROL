@@ -1,0 +1,82 @@
+{% block main %}
+
+{% assign appId = request.params['record'] | default: request.params['id'] %}
+{% assign pageName = 'group_affiliation' %}
+
+{% fetchxml schema_fetch %}
+<fetch version="1.0" output-format="xml-platform" mapping="logical" top="1">
+    <entity name="cmdspp_pc_enrol_page_json_tb">
+        <attribute name="cmdspp_p_jsontxt" />
+        <filter type="and">
+            <condition attribute="cmdspp_p_page_nam"
+                       operator="eq"
+                       value="{{ pageName }}" />
+        </filter>
+    </entity>
+</fetch>
+{% endfetchxml %}
+
+{% assign serverPageSchema = "" %}
+
+{% if schema_fetch.results.entities.size > 0 %}
+    {% assign serverPageSchema = schema_fetch.results.entities[0].cmdspp_p_jsontxt %}
+{% endif %}
+
+<script id="wizardSchemaData" type="application/json">
+[
+{{ serverPageSchema }}
+]
+</script>
+
+<script>
+(function () {
+
+    var schemaElement =
+        document.getElementById("wizardSchemaData");
+
+    if (!schemaElement) {
+
+        console.error(
+            "wizardSchemaData element not found."
+        );
+
+        return;
+    }
+
+    var wizardSchema = JSON.parse(
+        schemaElement.textContent || "[]"
+    );
+
+    wizardSchema.sort(function (a, b) {
+
+        var prefixA = String(
+            a.headerPrefix || ""
+        ).trim();
+
+        var prefixB = String(
+            b.headerPrefix || ""
+        ).trim();
+
+        return prefixA.localeCompare(
+            prefixB,
+            undefined,
+            {
+                numeric: true,
+                sensitivity: "base"
+            }
+        );
+    });
+
+    window.wizardSchema = wizardSchema;
+
+    console.log(
+        "Group Affiliation Schema:",
+        wizardSchema
+    );
+
+})();
+</script>
+
+{% include 'common_page_template' %}
+
+{% endblock %}

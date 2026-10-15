@@ -1,0 +1,16 @@
+adx_accountrelationship: 
+adx_append: true
+adx_appendto: true
+adx_contactrelationship: 
+adx_create: true
+adx_delete: true
+adx_entitylogicalname: cmdspp_p_ser_sev_inf_tb
+adx_entityname: cmdspp_p_ser_sev_inf_tb
+adx_entitypermission_webrole:
+- 3e0eed5c-e2e0-46fa-a82c-1f6c985badca
+adx_entitypermissionid: c011ceec-9803-4f32-be13-7b6809fcdf83
+adx_parententitypermission: 
+adx_parentrelationship: 
+adx_read: true
+adx_scope: 756150000
+adx_write: true

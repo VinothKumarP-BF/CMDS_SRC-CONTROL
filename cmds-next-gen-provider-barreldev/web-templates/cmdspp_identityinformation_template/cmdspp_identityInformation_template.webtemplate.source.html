@@ -1,0 +1,1534 @@
+{% comment %} Server Context Setup {% endcomment %}
+{% assign appId = request.params.record %}
+{% assign cleanEnrolmentId = request.params.enrollmentId | default: request.params.id | replace: '=', '' | strip %}
+
+{% comment %} 1. Read passed prop first, then URL query param, then default fallback {% endcomment %}
+{% assign pageName = page_name | default: request.params.page | default: 'identity_Information' %}
+
+{% fetchxml schema_fetch %}
+<fetch version="1.0" output-format="xml-platform" mapping="logical" top="1">
+  <entity name="cmdspp_pc_enrol_page_json_tb">
+    <attribute name="cmdspp_p_jsontxt" />
+    <filter type="and">
+      <condition attribute="cmdspp_p_page_nam" operator="eq" value="{{ pageName }}" />
+    </filter>
+  </entity>
+</fetch>
+{% endfetchxml %}
+
+{% assign serverPageSchema = "" %}
+{% if schema_fetch.results.entities.size > 0 %}
+  {% assign serverPageSchema = schema_fetch.results.entities[0].cmdspp_p_jsontxt %}
+{% endif %}
+
+<!-- DYNAMIC FORM CONTAINER 
+<div id="cmdspp-dynamic-form" class="cmdspp-form-container"></div>-->
+
+<!-- LOADER CONTAINER -->
+<div id="cmdspp-loader-wrapper">
+  {% include 'cmdspp_Loader' %}
+</div>
+
+<!-- DYNAMIC FORM CONTAINER -->
+<div id="cmdspp-dynamic-form" class="cmdspp-form-container" style="display: none;"></div>
+
+<style>
+.cmdspp-form-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    font-family: var(--cmdspp-font-family);
+    color: var(--cmdspp-text-dark);
+}
+
+.cmdspp-accordion-section {
+    background: #fff;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    box-shadow: 0px 1px 3px 0px #0000000F;
+    border-radius: 14px;
+}
+
+.cmdspp-accordion-section.cmdspp-completed { border: 2px solid #1AA3A3; }
+.cmdspp-accordion-section.cmdspp-active { border: 2px solid #274463; }
+.cmdspp-accordion-section.cmdspp-inactive { border-top: 2px solid #0000000F; }
+
+.cmdspp-accordion-header {
+    display: flex;
+    height: 72px;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 24px;
+    cursor: pointer;
+    user-select: none;
+}
+
+.cmdspp-header-left {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.cmdspp-status-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 33554400px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 400 !important;
+    font-size: 12px;
+    color: #ffffff;
+}
+
+.cmdspp-completed .cmdspp-status-icon { background-color: #1AA3A3; }
+.cmdspp-active .cmdspp-status-icon { background-color: #274463; }
+.cmdspp-inactive .cmdspp-status-icon { background-color: #F0F0F0; color: #8F8F8F; }
+
+.cmdspp-header-text h2 {
+    margin: 0;
+    font-weight: 400 !important;
+    font-size: 16px;
+    line-height: 20px;
+    color: #274463;
+}
+
+.cmdspp-inactive .cmdspp-header-text h2 { color: #8F8F8F; }
+.cmdspp-chevron { color: var(--cmdspp-text-light); }
+
+.cmdspp-accordion-body {
+    padding: 20px 24px;
+    display: none; 
+    border-top: 1px solid #f0f0f0;
+}
+
+.cmdspp-info-text {
+    font-weight: 400 !important;
+    font-size: 12px;
+    line-height: 16.5px;
+    color: #274463;
+    margin-bottom: 20px;
+    margin-top: 0;
+}
+
+.cmdspp-form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.cmdspp-single-col { max-width: 50%; }
+
+.cmdspp-form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.cmdspp-form-group label {
+    font-weight: 400 !important;
+    font-size: 12px;
+    line-height: 16px;
+    color: #0B3A6F;
+    margin-bottom: 0px !important;
+}
+
+.cmdspp-required span {
+    font-weight: 400 !important;
+    font-size: 12px;
+    line-height: 16px;
+    color: #C50F12;
+}
+
+.cmdspp-form-control {
+    height: 40px;
+    border-radius: 4px;
+    padding: 8px;
+    border: 1px solid #E3E8EE;
+    outline: none;
+    transition: border-color 0.2s;
+    color: #274463 !important;
+    max-width: none !important;
+}
+
+.cmdspp-form-control:focus {
+    box-shadow: 0px 0px 0px 1px #6C8EEF inset, 0px 0px 0px 2px #D6ECFF;
+}
+
+.cmdspp-form-control::placeholder {
+    font-weight: 400 !important;
+    font-size: 16px;
+    line-height: 24px;
+    color: #697386;
+    opacity: 0.3;
+}
+
+/* Placeholder color when empty option is selected */
+/* select.cmdspp-form-control:has(option[value=""]:checked) {
+    color: rgba(39, 68, 99, 0.3) !important;
+}
+select.cmdspp-form-control option {
+    color: #274463 !important;
+} */
+
+.cmdspp-radio-group-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 60px;
+    padding: 9px 12px;
+    border-radius: 5px;
+    border: 1px solid #E3E8EE;
+    margin-bottom: 20px;
+}
+
+.cmdspp-radio-group-container label {
+    font-weight: 400 !important;
+    font-size: 12px;
+    line-height: 16px;
+    color: #0B3A6F;
+    margin-bottom: 0px !important;
+}
+
+.cmdspp-radio-options {
+    height: 40px;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    justify-content: center;
+}
+
+.cmdspp-radio-label {
+    height: 40px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-weight: normal !important;
+    background: #fff;
+    border: 1px solid #ccc;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-bottom: 0px !important;
+}
+
+.cmdspp-radio-label input[type=radio] {
+    margin-top: 0px !important;
+    accent-color: #274463;
+    width: 15px;
+    height: 15px;
+    cursor: pointer;
+}
+
+/* Highlights the label when the nested radio input is checked */
+.cmdspp-radio-label:has(input[type="radio"]:checked) {
+    background-color: #F3F4F5 !important; /* Replace with your desired color */
+}
+
+.cmdspp-note-text {
+    color: #5A7099;
+    margin-top: 16px;
+    font-weight: 400 !important;
+    font-size: 10px;
+    line-height: 16.5px;
+    letter-spacing: 0px;
+}
+
+.cmdspp-button-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid #eee;
+}
+
+.cmdspp-right-buttons { display: flex; gap: 10px; }
+
+.cmdspp-btn {
+    height: 38px;
+    padding-right: 20px;
+    padding-left: 20px;
+    border-radius: 8px;
+    font-weight: 400 !important;
+    font-size: 13px;
+    line-height: 19.5px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.cmdspp-btn-reset {
+    background: #DC26260A;
+    border: 1px solid #DC26264D;
+    color: #DC2626;
+}
+
+.cmdspp-btn-reset:hover { background: #fff0f0; }
+
+.cmdspp-btn-back {
+    background: #ffffff;
+    border: 1px solid #274463;
+    color: #274463;
+}
+
+.cmdspp-btn-back:hover { background: #f4f6f8; }
+
+.cmdspp-btn-continue {
+    background: #274463;
+    color: #ffffff;
+}
+
+.cmdspp-btn-continue:hover { background: #1a252f; }
+
+.cmdspp-form-control.cmdspp-invalid,
+select.cmdspp-invalid,
+input.cmdspp-invalid,
+.cmdspp-radio-group-container.cmdspp-invalid {
+    box-shadow: inset 0 0 0 1px #CD3D64, 0 0 0 2px #FDE2DD !important;
+    border-color: #CD3D64 !important;
+}
+
+.cmdspp-error-msg {
+    font-weight: 400 !important;
+    font-size: 10px;
+    line-height: 16.5px;
+    color: #C50F12;
+}
+
+.cmdspp-accordion-section.cmdspp-disabled .cmdspp-accordion-header {
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+/* Active style overrides completed border when open */
+.cmdspp-accordion-section.cmdspp-active { 
+    border: 2px solid #274463 !important; 
+}
+
+/* Smoothly rotate chevron when parent section is active */
+.cmdspp-chevron {
+    transition: transform 0.25s ease;
+}
+
+.cmdspp-accordion-section.cmdspp-active .cmdspp-chevron {
+    transform: rotate(180deg);
+}
+
+/* Label container: pushes Left Title group to start and Tooltip to end */
+.cmdspp-label-with-tooltip {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    width: 100% !important;
+}
+
+/* Left Group: Keeps text and asterisk together */
+.cmdspp-label-title {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px; /* Small gap between label text and star */
+}
+
+/* Red Asterisk Styling */
+/* .cmdspp-asterisk {
+    color: #e53935;
+    font-weight: bold;
+} */
+/* Tooltip wrapper */
+.cmdspp-tooltip-wrapper {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+}
+
+.cmdspp-tooltip-icon {
+    object-fit: contain;
+}
+
+/* Light card tooltip container matching design */
+.cmdspp-tooltip-text {
+    visibility: hidden;
+    opacity: 0;
+    width: max-content;
+    max-width: 198px;
+    background-color: #ffffff;
+    font-weight: 400 !important;
+font-size: 12px;
+leading-trim: NONE;
+line-height: 17px;
+letter-spacing: 0px;
+color: #274463 !important;                   
+   border: 1px solid #C2C2C2;
+box-shadow: 0px 4px 4px 0px #0000001F;
+    border-radius: 5px;
+    padding: 10px;
+    position: absolute;
+    z-index: 100;
+    bottom: 125%;                           /* Floating right above icon */
+    right: 0;                               /* Right-aligned to icon */
+    transition: opacity 0.2s ease, visibility 0.2s ease;
+    pointer-events: none;
+    white-space: normal;
+}
+
+/* Hide default arrow pseudo-element for clean card look */
+.cmdspp-tooltip-text::after {
+    display: none;
+}
+
+/* Show popup on icon hover */
+.cmdspp-tooltip-wrapper:hover .cmdspp-tooltip-text {
+    visibility: visible;
+    opacity: 1;
+}
+</style>
+
+<script>
+    window.cmdspp_IdentityInf_recordId = null;
+    window.cmdsppFieldMap = {};
+    window.cmdsppIsReadOnly = false;
+
+
+    window.cmdsppPageSchema = {% if serverPageSchema != "" %}{{ serverPageSchema }}{% else %}null{% endif %};
+
+    function fetchWebApi(url) {
+        return new Promise((resolve, reject) => {
+            window.webapi.safeAjax({
+                type: "GET",
+                url: url,
+                contentType: "application/json",
+                headers: { "Prefer": "odata.include-annotations=\"*\"" },
+                success: resolve,
+                error: (xhr) => reject(xhr.responseText || xhr.statusText)
+            });
+        });
+    }
+
+    // Helper to resolve direct properties, OData lookups (_value), and expanded navigation paths
+function getApiAttributeValue(item, key) {
+    if (!item || !key) return '';
+    if (item[key] !== undefined) return item[key];
+    if (item[`_${key}_value`] !== undefined) return item[`_${key}_value`];
+
+    // Handles nested OData path notation (e.g., "cmdspp_p_pvd_fk_id/cmdspp_p_pvd_typ_nam")
+    const parts = key.replace('/', '.').split('.');
+    if (parts.length > 1) {
+        return parts.reduce((obj, k) => (obj && obj[k] !== undefined ? obj[k] : null), item) || '';
+    }
+
+    return '';
+}
+
+    // Token Replacement Helper
+function replaceTokens(templateStr, context) {
+    if (!templateStr) return templateStr;
+    return templateStr.replace(/\{([^}]+)\}/g, (match, key) => {
+        return context[key] !== undefined && context[key] !== null ? context[key] : '';
+    });
+}
+
+// Dynamic DOM option populator for background-loaded fields
+function updateFieldDomOptions(field) {
+    if (field.type === 'select') {
+        const selectEl = document.getElementById(field.id);
+        if (!selectEl) return;
+
+        selectEl.innerHTML = '';
+        const hasSelected = (field.options || []).some(o => o.selected);
+
+        const defaultOpt = document.createElement('option');
+        defaultOpt.value = '';
+        defaultOpt.disabled = true;
+        if (!hasSelected) defaultOpt.selected = true;
+        defaultOpt.textContent = 'Select';
+        selectEl.appendChild(defaultOpt);
+
+        (field.options || []).forEach(opt => {
+            const optEl = document.createElement('option');
+            optEl.value = opt.value;
+            optEl.textContent = opt.label;
+            if (opt.selected) optEl.selected = true;
+            selectEl.appendChild(optEl);
+        });
+
+        if (field.value) selectEl.value = field.value;
+    }
+}
+
+// Syncs hydrated field values (text, date, select, radio) directly into the rendered DOM
+function updateDomFieldValue(field) {
+    if (!field || !field.id) return;
+
+    // Handle Select Fields
+    if (field.type === 'select') {
+        const selectEl = document.getElementById(field.id);
+        if (!selectEl) return;
+
+        selectEl.innerHTML = '';
+        const hasSelected = (field.options || []).some(o => o.selected);
+
+        const defaultOpt = document.createElement('option');
+        defaultOpt.value = '';
+        defaultOpt.disabled = true;
+        if (!hasSelected) defaultOpt.selected = true;
+        defaultOpt.textContent = 'Select';
+        selectEl.appendChild(defaultOpt);
+
+        (field.options || []).forEach(opt => {
+            const optEl = document.createElement('option');
+            optEl.value = opt.value;
+            optEl.textContent = opt.label;
+            if (opt.selected) optEl.selected = true;
+            selectEl.appendChild(optEl);
+        });
+
+        if (field.value) selectEl.value = field.value;
+    } 
+    // Handle Radio Buttons
+    else if (field.type === 'radio') {
+        if (field.value !== undefined && field.value !== null) {
+            const radios = document.querySelectorAll(`input[name="${field.id}"]`);
+            radios.forEach(r => {
+                const isMatch = String(r.value).toLowerCase() === String(field.value).toLowerCase();
+                r.checked = isMatch;
+            });
+        }
+    } 
+    // Handle Text, Date, Number inputs
+    else {
+        const inputEl = document.getElementById(field.id);
+        if (inputEl && field.value !== undefined && field.value !== null) {
+            inputEl.value = field.value;
+        }
+    }
+}
+
+async function hydrateField(field, tokenContext, mainRecord) {
+    window.cmdsppFieldMap[field.id] = field;
+
+    // 1. Bind saved main record value
+    if (field.columnName) {
+        const rawVal = mainRecord[field.columnName] ?? mainRecord[`_${field.columnName}_value`];
+        if (rawVal !== undefined && rawVal !== null) {
+            if (field.type === 'date' && typeof rawVal === 'string') {
+                field.value = rawVal.split('T')[0];
+            } else if (field.dataType === 'boolean') {
+                field.value = rawVal ? 'yes' : 'no';
+            } else {
+                field.value = String(rawVal);
+            }
+        }
+    }
+
+    // 2. Fetch options via endpoint if configured
+    if (field.optionsEndpoint) {
+        try {
+            const optionsUrl = replaceTokens(field.optionsEndpoint, tokenContext);
+            const optRes = await fetchWebApi(optionsUrl);
+            let optionsList = optRes.value || [];
+
+            if (field.excludeEndpoint && tokenContext.userId) {
+                const excludeUrl = replaceTokens(field.excludeEndpoint, tokenContext);
+                try {
+                    const excludeRes = await fetchWebApi(excludeUrl);
+                    const excludedSet = new Set(
+                        (excludeRes.value || [])
+                            .map(item => {
+                                const val = getApiAttributeValue(item, field.excludeValueKey || "_cmdspp_p_pvd_typ_lkp_value");
+                                return val ? String(val).toLowerCase() : null;
+                            })
+                            .filter(Boolean)
+                    );
+
+                    const savedValLower = field.value ? String(field.value).toLowerCase() : null;
+
+                    optionsList = optionsList.filter(item => {
+                        const optId = String(getApiAttributeValue(item, field.valueKey)).toLowerCase();
+                        return !excludedSet.has(optId) || (savedValLower && optId === savedValLower);
+                    });
+                } catch (e) {
+                    console.warn(`Exclusion fetch failed for ${field.id}`, e);
+                }
+            }
+
+            field.options = optionsList.map(item => {
+                const optVal = getApiAttributeValue(item, field.valueKey);
+                const isMatch = field.value && String(optVal).toLowerCase() === String(field.value).toLowerCase();
+                return {
+                    value: optVal,
+                    label: getApiAttributeValue(item, field.labelKey),
+                    selected: isMatch,
+                    checked: isMatch
+                };
+            });
+        } catch (err) {
+            console.error(`Error loading options for ${field.id}:`, err);
+        }
+    }
+
+    // 3. Update DOM for all field types once hydrated
+    updateDomFieldValue(field);
+}
+
+async function loadAndHydrateForm() {
+    const loaderWrapper = document.getElementById('cmdspp-loader-wrapper');
+    const formContainer = document.getElementById('cmdspp-dynamic-form');
+
+    const urlParams = new URLSearchParams(window.location.search);
+
+    const tokenContext = {
+        record: urlParams.get('record') || '',
+        appId: urlParams.get('record') || urlParams.get('appId') || '',
+        enrollmentId: urlParams.get('enrollmentId') || urlParams.get('id') || urlParams.get('record') || '',
+        userId: window.cmdsppUserId || ''
+    };
+
+    try {
+        if (loaderWrapper) loaderWrapper.style.display = 'block';
+        if (formContainer) formContainer.style.display = 'none';
+
+        // 1. Read Server-Injected JSON Schema (Instant)
+        const rawConfig = window.cmdsppPageSchema;
+        if (!rawConfig) {
+            console.error("Schema configuration not found.");
+            return;
+        }
+        
+        const dataSource = rawConfig.dataSource || {};
+        const sections = rawConfig.sections || rawConfig;
+
+        // 2. Fetch Main Record Data
+        let mainRecord = {};
+        if (dataSource.entitySet && dataSource.filterParam && dataSource.filterQuery) {
+            const paramValue = urlParams.get(dataSource.filterParam);
+            if (paramValue) {
+                const formattedFilter = replaceTokens(dataSource.filterQuery, tokenContext);
+                const recordRes = await fetchWebApi(`/_api/${dataSource.entitySet}?$select=${dataSource.selectQuery}&$filter=${formattedFilter}&$top=1`);
+                if (recordRes.value && recordRes.value.length > 0) {
+                    mainRecord = recordRes.value[0];
+                    if (dataSource.primaryKey) {
+                        window.cmdspp_IdentityInf_recordId = mainRecord[dataSource.primaryKey];
+                    }
+                }
+            }
+        }
+
+        window.cmdsppFieldMap = {};
+
+        // 3. Hydrate Section 0 ONLY (Blocking)
+        if (sections.length > 0) {
+            await Promise.all(
+                sections[0].fields.map(field => hydrateField(field, tokenContext, mainRecord))
+            );
+        }
+
+        // 4. Render Form Skeleton into DOM
+        renderFormFromJSON(sections);
+        applyDynamicDependencies(sections);
+
+        // 5. Force Browser Paint before hiding loader
+        if (formContainer) formContainer.style.display = 'flex';
+
+        await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+
+        // 6. Hide Loader after initial frame is visible
+        if (loaderWrapper) loaderWrapper.style.display = 'none';
+
+        // 7. Parallel Background Hydration for Remaining Sections
+        if (sections.length > 1) {
+            setTimeout(() => {
+                (async () => {
+                    const backgroundFields = sections.slice(1).flatMap(section => section.fields);
+                    await Promise.all(
+                        backgroundFields.map(field => hydrateField(field, tokenContext, mainRecord))
+                    );
+                    applyDynamicDependencies(sections);
+                })();
+            }, 50);
+        }
+
+    } catch (err) {
+        console.error("Hydration Error:", err);
+        if (loaderWrapper) loaderWrapper.style.display = 'none';
+        if (formContainer) formContainer.style.display = 'flex';
+    }
+}
+
+function renderFormFromJSON(schema) {
+    const container = document.getElementById('cmdspp-dynamic-form');
+    if (!container) return;
+    container.innerHTML = '';
+
+    schema.forEach((sec, idx) => {
+        const secDiv = document.createElement('div');
+        
+        // Section 0 starts active; Section 1+ start inactive and disabled
+        const isFirst = idx === 0;
+        const initialClass = isFirst 
+            ? 'cmdspp-accordion-section cmdspp-active' 
+            : 'cmdspp-accordion-section cmdspp-inactive cmdspp-disabled';
+        
+        secDiv.className = initialClass;
+        secDiv.id = sec.sectionId;
+
+        // Accordion Header
+        const headerDiv = document.createElement('div');
+        headerDiv.className = 'cmdspp-accordion-header';
+        headerDiv.innerHTML = `
+            <div class="cmdspp-header-left">
+                <div class="cmdspp-status-icon">${sec.statusLetter}</div>
+                <div class="cmdspp-header-text">
+                    <h2>${sec.title}</h2>
+                </div>
+            </div>
+            <img src="/cmdspp_chevronDown" class="cmdspp-chevron" alt="Toggle Section" />
+        `;
+        
+        headerDiv.addEventListener('click', function() {
+            toggleSection(this);
+        });
+        
+        secDiv.appendChild(headerDiv);
+
+        // Accordion Body
+        const bodyDiv = document.createElement('div');
+        bodyDiv.className = 'cmdspp-accordion-body';
+        bodyDiv.style.display = isFirst ? 'block' : 'none';
+
+        if (sec.infoText) {
+            const infoP = document.createElement('p');
+            infoP.className = 'cmdspp-info-text';
+            infoP.innerText = sec.infoText;
+            bodyDiv.appendChild(infoP);
+        }
+
+        // Fields Wrapper
+        let fieldsContainer = bodyDiv;
+        if (sec.layout === 'grid') {
+            const gridDiv = document.createElement('div');
+            gridDiv.className = 'cmdspp-form-grid';
+            bodyDiv.appendChild(gridDiv);
+            fieldsContainer = gridDiv;
+        }
+
+        // Render Fields
+        sec.fields.forEach(field => {
+            // Build Tooltip HTML if configured in JSON
+    let tooltipHtml = '';
+    if (field.tooltipText) {
+        tooltipHtml = `
+            <span class="cmdspp-tooltip-wrapper">
+                <img src="/cmdspp_tooltipIcon" class="cmdspp-tooltip-icon" alt="Help Tooltip" />
+                <span class="cmdspp-tooltip-text">${field.tooltipText}</span>
+            </span>
+        `;
+    }
+            if (field.type === 'radio') {
+                const radioGroupDiv = document.createElement('div');
+                radioGroupDiv.className = 'cmdspp-radio-group-container';
+                
+                const starSpan = field.required ? ' <span>*</span>' : '';
+                
+                const groupLabel = document.createElement('label');
+                groupLabel.className = field.required ? 'cmdspp-required' : '';
+                if (field.tooltipText) groupLabel.classList.add('cmdspp-label-with-tooltip');
+                groupLabel.setAttribute('data-label', field.label);
+                groupLabel.innerHTML = `${field.label}${starSpan}${tooltipHtml}`;
+                radioGroupDiv.appendChild(groupLabel);
+
+                const optionsDiv = document.createElement('div');
+                optionsDiv.className = 'cmdspp-radio-options';
+
+                (field.options || []).forEach(opt => {
+                    const rLabel = document.createElement('label');
+                    rLabel.className = 'cmdspp-radio-label';
+
+                    const rInput = document.createElement('input');
+                    rInput.type = 'radio';
+                    rInput.name = field.id;
+                    rInput.value = opt.value;
+                    if (opt.checked) rInput.checked = true;
+
+                    rLabel.appendChild(rInput);
+                    rLabel.appendChild(document.createTextNode(` ${opt.label}`));
+                    optionsDiv.appendChild(rLabel);
+                });
+
+                radioGroupDiv.appendChild(optionsDiv);
+                fieldsContainer.appendChild(radioGroupDiv);
+            } else {
+                const fgDiv = document.createElement('div');
+                fgDiv.className = `cmdspp-form-group ${sec.layout === 'single' ? 'cmdspp-single-col' : ''}`;
+                if (field.parentContainerId) {
+                    fgDiv.id = field.parentContainerId;
+                }
+
+                const starSpan = field.required ? ' <span>*</span>' : '';
+                
+                const labelEl = document.createElement('label');
+                labelEl.htmlFor = field.id;
+                labelEl.className = field.required ? 'cmdspp-required' : '';
+                if (field.tooltipText) labelEl.classList.add('cmdspp-label-with-tooltip');
+                // Group label text and asterisk together in ONE span
+                const labelTitleHtml = `<div class="cmdspp-label-title">${field.label} ${starSpan}</div>`;
+
+                // Assign to Label
+                labelEl.innerHTML = `${labelTitleHtml}${tooltipHtml}`;
+                // labelEl.innerHTML = `${field.label}${starSpan}${tooltipHtml}`;
+                fgDiv.appendChild(labelEl);
+
+                if (field.type === 'select') {
+                    const selectEl = document.createElement('select');
+                    selectEl.className = 'cmdspp-form-control';
+                    selectEl.id = field.id;
+                    selectEl.name = field.id;
+                    selectEl.setAttribute('data-label', field.label);
+
+                    const hasSelected = (field.options || []).some(o => o.selected);
+                    
+                    const defaultOpt = document.createElement('option');
+                    defaultOpt.value = '';
+                    defaultOpt.disabled = true;
+                    if (!hasSelected) defaultOpt.selected = true;
+                    defaultOpt.textContent = field.placeHolder ? field.placeHolder :'Select';
+                    selectEl.appendChild(defaultOpt);
+
+                    (field.options || []).forEach(opt => {
+                        const optEl = document.createElement('option');
+                        optEl.value = opt.value;
+                        optEl.textContent = opt.label;
+                        if (opt.selected) optEl.selected = true;
+                        selectEl.appendChild(optEl);
+                    });
+
+                    if (field.value) selectEl.value = field.value;
+
+                    fgDiv.appendChild(selectEl);
+                } else {
+                    const inputEl = document.createElement('input');
+                    inputEl.type = field.type;
+                    inputEl.id = field.id;
+                    inputEl.className = 'cmdspp-form-control';
+                    if (field.placeholder) inputEl.placeholder = field.placeholder;
+                    if (field.maxLength) inputEl.maxLength = field.maxLength;
+                    if (field.value) inputEl.value = field.value;
+                    inputEl.setAttribute('data-label', field.label);
+                    if (field.type === 'date') {
+                        const today = new Date();
+                        const yyyy = today.getFullYear();
+                        const mm = String(today.getMonth() + 1).padStart(2, '0');
+                        const dd = String(today.getDate()).padStart(2, '0');
+                        inputEl.max = `${yyyy}-${mm}-${dd}`;
+                    }
+
+                    fgDiv.appendChild(inputEl);
+                }
+
+                fieldsContainer.appendChild(fgDiv);
+            }
+        });
+
+        if (sec.noteText) {
+            const noteP = document.createElement('p');
+            noteP.className = 'cmdspp-note-text';
+            noteP.innerHTML = sec.noteText;
+            bodyDiv.appendChild(noteP);
+        }
+
+        // Buttons Row
+        const btnRow = document.createElement('div');
+        btnRow.className = 'cmdspp-button-row';
+
+        const resetBtn = document.createElement('button');
+        resetBtn.type = 'button';
+        resetBtn.className = 'cmdspp-btn cmdspp-btn-reset';
+        resetBtn.textContent = 'Reset';
+        resetBtn.addEventListener('click', function() {
+            resetSection(this);
+        });
+
+        const rightBtnsDiv = document.createElement('div');
+        rightBtnsDiv.className = 'cmdspp-right-buttons';
+
+        if (sec.hasBack) {
+            const backBtn = document.createElement('button');
+            backBtn.type = 'button';
+            backBtn.className = 'cmdspp-btn cmdspp-btn-back';
+            backBtn.textContent = 'Back';
+            backBtn.addEventListener('click', function() {
+                prevSection(this);
+            });
+            rightBtnsDiv.appendChild(backBtn);
+        }
+
+        const continueBtn = document.createElement('button');
+        continueBtn.type = 'button';
+        continueBtn.className = 'cmdspp-btn cmdspp-btn-continue';
+        continueBtn.textContent = 'Continue';
+        
+        continueBtn.addEventListener('click', function() {
+            executeSectionSubmit(sec, this);
+        });
+        
+        rightBtnsDiv.appendChild(continueBtn);
+
+        btnRow.appendChild(resetBtn);
+        btnRow.appendChild(rightBtnsDiv);
+
+        bodyDiv.appendChild(btnRow);
+        secDiv.appendChild(bodyDiv);
+        container.appendChild(secDiv);
+    });
+}
+
+    // 3. DYNAMIC RULE ENGINE FOR VISIBILITY
+    function applyDynamicDependencies(schema) {
+        schema.forEach(sec => {
+            sec.fields.forEach(field => {
+                if (!field.dependsOn) return;
+
+                const parentFieldId = field.dependsOn.field;
+                const expectedValue = field.dependsOn.value;
+
+                function evaluateCondition() {
+                    let parentVal = null;
+                    const radioCheck = document.querySelector(`input[name="${parentFieldId}"]:checked`);
+                    
+                    if (radioCheck) {
+                        parentVal = radioCheck.value;
+                    } else {
+                        const inputEl = document.getElementById(parentFieldId);
+                        if (inputEl) parentVal = inputEl.value;
+                    }
+
+                    const targetContainer = document.getElementById(field.parentContainerId) || 
+                        (document.getElementById(field.id) ? document.getElementById(field.id).closest('.cmdspp-form-group') : null);
+
+                    if (targetContainer) {
+                        if (String(parentVal).toLowerCase() === String(expectedValue).toLowerCase()) {
+                            targetContainer.style.display = 'flex';
+                        } else {
+                            targetContainer.style.display = 'none';
+                            const childInput = targetContainer.querySelector('input, select');
+                            if (childInput) childInput.value = '';
+                        }
+                    }
+                }
+
+                document.addEventListener('change', (e) => {
+                    if (e.target.name === parentFieldId || e.target.id === parentFieldId) {
+                        evaluateCondition();
+                    }
+                });
+
+                evaluateCondition();
+            });
+        });
+    }
+
+    // 4. ODATA PAYLOAD BUILDER
+    function buildPayloadFromSection(sec,externalExtraPay) {
+        const payload = {...externalExtraPay};
+
+        sec.fields.forEach(field => {
+            if (!field.columnName) return;
+
+            let rawVal = null;
+
+            if (field.type === 'radio') {
+                const checkedRadio = document.querySelector(`input[name="${field.id}"]:checked`);
+                rawVal = checkedRadio ? checkedRadio.value : null;
+            } else {
+                const el = document.getElementById(field.id);
+                rawVal = el ? el.value.trim() : null;
+            }
+
+            const targetEl = document.getElementById(field.id) || document.getElementById(field.parentContainerId);
+            if (targetEl) {
+                const group = targetEl.closest('.cmdspp-form-group');
+                if (group && group.style.display === 'none') rawVal = null;
+            }
+
+            if (rawVal === null || rawVal === "") return;
+
+            if (field.dataType === 'lookup' && field.lookupTarget) {
+                payload[`${field.columnName}@odata.bind`] = `/${field.lookupTarget}(${rawVal})`;
+            } else if (field.dataType === 'int') {
+                payload[field.columnName] = parseInt(rawVal, 10);
+            } else if (field.dataType === 'boolean') {
+                payload[field.columnName] = (rawVal === 'yes' || rawVal === 'true' || rawVal === '1');
+            } else if (field.dataType === 'date') {
+                payload[field.columnName] = `${rawVal}T00:00:00Z`;
+            } else {
+                payload[field.columnName] = rawVal;
+            }
+        });
+
+        if (sec.submitConfig && sec.submitConfig.extraBindings) {
+            sec.submitConfig.extraBindings.forEach(binding => {
+                let val = null;
+                if (binding.source === 'globalVar') {
+                    val = window[binding.name];
+                } else if (binding.source === 'urlParam') {
+                    const urlParams = new URLSearchParams(window.location.search);
+                    val = urlParams.get(binding.name);
+                }
+
+                if (val) {
+                    if (binding.dataType === 'lookup' && binding.lookupTarget) {
+                        payload[`${binding.columnName}@odata.bind`] = `/${binding.lookupTarget}(${val})`;
+                    } else {
+                        payload[binding.columnName] = val;
+                    }
+                }
+            });
+        }
+
+        Object.keys(payload).forEach(key => {
+            if (payload[key] === null || payload[key] === undefined) delete payload[key];
+        });
+
+        return payload;
+    }
+
+    // 5. UNIFIED SUBMIT & EXTERNAL FLOW ENGINE WITH JSON ERROR MESSAGING
+    async function executeSectionSubmit(sec, btn) {
+        if (window.cmdsppIsReadOnly) {
+
+    const currentSection = btn.closest('.cmdspp-accordion-section');
+    const allSections = Array.from(
+        document.querySelectorAll('.cmdspp-accordion-section')
+    );
+
+    const currentIndex = allSections.indexOf(currentSection);
+
+    // Last section -> navigate to next page without save
+    if (currentIndex === allSections.length - 1) {
+
+        const submitConfig = sec.submitConfig || {};
+
+        if (
+            submitConfig.nextAction === "redirect" &&
+            submitConfig.redirectUrl
+        ) {
+            window.location.href =
+                `${submitConfig.redirectUrl}${window.location.search}`;
+        }
+
+        return;
+    }
+
+    // Open next accordion section
+    nextSection(btn);
+    return;
+}
+        if (!validateSection(btn)) return;
+
+        const submitConfig = sec.submitConfig || {};
+
+        let externalExtraPay = {}
+
+        if (submitConfig.externalFlow) {
+            const flowConfig = submitConfig.externalFlow;
+            const inputEl = document.getElementById(flowConfig.sourceFieldId);
+            const inputVal = inputEl ? inputEl.value.trim() : '';
+
+            if (!inputVal) return;
+            btn.disabled = true;
+
+            try {
+                const response = await fetch(window.flowConfig2[`${flowConfig.urlkey}`], {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ [flowConfig.payloadKey]: inputVal })
+                });
+
+                if (!response.ok) throw new Error(`Status: ${response.status}`);
+                const resData = await response.json();
+
+                if (resData && resData.isValid) {
+                    const parsed = typeof resData.data === 'string' ? JSON.parse(resData.data) : resData.data;
+
+                    if (parsed && parsed.results && parsed.results.length > 0) {
+                        const result = parsed.results[0];
+                        const basic = result.basic || {};
+                        const addressDta = result?.addresses?.[0]
+                        if(addressDta.state){
+                             await webapi.safeAjax({
+                                    type: "GET",
+                                    url: `/_api/cmdspp_r_vv_tbs?$select=cmdspp_r_vv_cd,cmdspp_r_vv_tbid,cmdspp_r_vv_long_desc&$filter=cmdspp_r_vv_cd eq '${addressDta.state}' and cmdspp_r_vv_domain_nam eq 'G_US_STATE_CD'`,
+                                    success: function (res) {
+                                        if (res?.value?.length) {
+                                            externalExtraPay['cmdspp_p_prv_st_cd@odata.bind'] = `/cmdspp_r_vv_tbs(${res.value[0].cmdspp_r_vv_tbid})`
+                                        }
+                                    },
+
+                                    error: function (err) {
+                                        console.error("Unable to fetch State", err);
+                                    }
+                                });
+
+                        }
+
+                        externalExtraPay.cmdspp_p_prv_street = addressDta?.address_1 || ""
+                        externalExtraPay.cmdspp_p_prv_city = addressDta?.city || ""
+                        externalExtraPay.cmdspp_p_prv_fax = addressDta?.fax_number || ""
+                        externalExtraPay.cmdspp_p_prv_tel_num = addressDta?.telephone_number || ""
+                        externalExtraPay.cmdspp_p_prv_zip_code = addressDta?.postal_code || ""
+
+
+                        const fnEl = document.getElementById('cmdspp_firstname');
+                        if (fnEl && (basic.first_name || basic.authorized_official_first_name)) {
+                            fnEl.value = basic.first_name || basic.authorized_official_first_name;
+                        }
+
+                        const lnEl = document.getElementById('cmdspp_lastname');
+                        if (lnEl && (basic.last_name || basic.authorized_official_last_name)) {
+                            lnEl.value = basic.last_name || basic.authorized_official_last_name;
+                        }
+
+                        [fnEl, lnEl].forEach(el => {
+                            if (el) {
+                                el.classList.remove('cmdspp-invalid');
+                                const grp = el.closest('.cmdspp-form-group');
+                                if (grp) grp.querySelectorAll('.cmdspp-error-msg').forEach(m => m.remove());
+                            }
+                        });
+                        cmdsppShowToast("success", flowConfig.successmessage);
+                    } else {
+                        showFieldError(inputEl, flowConfig.errorMessage || "Invalid NPI Number");
+                        btn.disabled = false;
+                        return;
+                    }
+                } else {
+                    showFieldError(inputEl, flowConfig.errorMessage || "Invalid NPI Number");
+                    btn.disabled = false;
+                    return;
+                }
+            } catch (err) {
+                showFieldError(inputEl, flowConfig.errorMessage || "Validation failed. Please try again.");
+                btn.disabled = false;
+                return;
+            }
+        }
+
+        const payload = buildPayloadFromSection(sec,externalExtraPay);
+        const recordId = window.cmdspp_IdentityInf_recordId;
+        const entitySet = submitConfig.entitySet || "cmdspp_p_idt_inf_dtls";
+
+        const isUpdate = !!recordId;
+        const httpMethod = isUpdate ? "PATCH" : "POST";
+        const apiUrl = isUpdate ? `/_api/${entitySet}(${recordId})` : `/_api/${entitySet}`;
+
+        btn.disabled = true;
+
+        window.webapi.safeAjax({
+            type: httpMethod,
+            url: apiUrl,
+            contentType: "application/json",
+            data: JSON.stringify(payload),
+            success: function (res, status, xhr) {
+                btn.disabled = false;
+                console.log("json",submitConfig);
+                if (!isUpdate) {
+                    const newId = xhr.getResponseHeader("entityid");
+                    if (newId) window.cmdspp_IdentityInf_recordId = newId;
+                    
+                    let payload2 = {}
+                    payload2[`${submitConfig.parentLookupData.lookupKey}@odata.bind`] = `/${submitConfig.parentLookupData.lookupTarget}(${newId})`;
+
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const pdtlId = urlParams.get(submitConfig.parentLookupData.patchName);
+
+                    webapi.safeAjax({
+                                    type: "PATCH",
+                                    url: `/_api/cmdspp_p_dtl_tbs(${pdtlId})`,
+                                    contentType: "application/json",
+                                    data: JSON.stringify(payload2),
+                                    success: function (res) {
+                                    },
+                                    error: function (err) {
+                                        console.error("Unable to fetch State", err);
+                                    }
+                                });
+                }
+                // for dashboard navigation 
+                const urlParams = new URLSearchParams(window.location.search);
+               cmdsppUpdateApplicationProgress({
+               recordId: urlParams.get("record") || urlParams.get("id"),
+               pageTitle: "Enroll-Form"
+               });
+
+                if (submitConfig.nextAction === "redirect" && submitConfig.redirectUrl) {
+                    window.location.href = `${submitConfig.redirectUrl}${window.location.search}`;
+                } else {
+                    nextSection(btn);
+                }
+            },
+            error: function (xhr, status, error) {
+                btn.disabled = false;
+                console.error("Submission Error:", xhr.responseText || error);
+                alert("An error occurred while saving information. Please try again.");
+            }
+        });
+    }
+
+    // 6. ACCORDION HELPERS & NAVIGATION
+    function closeSection(section) {
+        const body = section.querySelector('.cmdspp-accordion-body');
+        if (body) body.style.display = 'none';
+    }
+
+    function openSection(section) {
+        const body = section.querySelector('.cmdspp-accordion-body');
+        if (body) body.style.display = 'block';
+    }
+
+    // function toggleSection(element) {
+    //     const currentSection = element.parentElement;
+    //     const currentBody = currentSection.querySelector('.cmdspp-accordion-body');
+    //     const container = currentSection.closest('.cmdspp-form-container');
+    //     const isOpen = currentBody.style.display === 'block';
+
+    //     const allSections = container.querySelectorAll('.cmdspp-accordion-section');
+    //     allSections.forEach(section => closeSection(section));
+
+    //     if (!isOpen) openSection(currentSection);
+    // }
+
+    function resetSection(btn) {
+        const section = btn.closest('.cmdspp-accordion-section');
+        if (!section) return;
+
+        const inputs = section.querySelectorAll('input[type="text"], input[type="date"], input[type="number"]');
+        inputs.forEach(input => input.value = '');
+
+        const selects = section.querySelectorAll('select');
+        selects.forEach(select => select.selectedIndex = 0);
+
+        const radiosAndChecks = section.querySelectorAll('input[type="radio"], input[type="checkbox"]');
+        radiosAndChecks.forEach(item => item.checked = item.defaultChecked);
+    }
+
+    function toggleSection(element) {
+    const targetSection = element.parentElement;
+    
+    // Do nothing if section is locked/disabled
+    if (targetSection.classList.contains('cmdspp-disabled')) return;
+
+    const container = targetSection.closest('.cmdspp-form-container');
+    const targetBody = targetSection.querySelector('.cmdspp-accordion-body');
+    const isOpen = targetBody.style.display === 'block';
+
+    const allSections = container.querySelectorAll('.cmdspp-accordion-section');
+    
+    // Close all sections and remove active class while maintaining cmdspp-completed
+    allSections.forEach(sec => {
+        closeSection(sec);
+        sec.classList.remove('cmdspp-active');
+        if (!sec.classList.contains('cmdspp-completed')) {
+            sec.classList.add('cmdspp-inactive');
+        }
+    });
+
+    // Toggle target section
+    if (!isOpen) {
+        targetSection.classList.remove('cmdspp-inactive');
+        targetSection.classList.add('cmdspp-active');
+        openSection(targetSection);
+    }
+}
+
+function nextSection(btn) {
+    const currentSection = btn.closest('.cmdspp-accordion-section');
+    const container = currentSection.closest('.cmdspp-form-container');
+    const allSections = Array.from(container.querySelectorAll('.cmdspp-accordion-section'));
+    const currentIndex = allSections.indexOf(currentSection);
+
+    // Mark current section as completed and unlocked
+    currentSection.classList.remove('cmdspp-active', 'cmdspp-inactive', 'cmdspp-disabled');
+    currentSection.classList.add('cmdspp-completed');
+
+    const statusIcon = currentSection.querySelector('.cmdspp-status-icon');
+    if (statusIcon && !statusIcon.querySelector('img')) {
+        statusIcon.innerHTML = '<img src="/cmdspp_whiteTickNormal" alt="Check"/>';
+    }
+
+    // Unlock and transition to next section
+    if (currentIndex < allSections.length - 1) {
+        const nextSec = allSections[currentIndex + 1];
+        
+        allSections.forEach(sec => closeSection(sec));
+
+        // Remove lock/disabled state from next section
+        nextSec.classList.remove('cmdspp-disabled', 'cmdspp-inactive');
+        nextSec.classList.add('cmdspp-active');
+        
+        openSection(nextSec);
+    }
+}
+
+    // function nextSection(btn) {
+    //     const currentSection = btn.closest('.cmdspp-accordion-section');
+    //     const container = currentSection.closest('.cmdspp-form-container');
+    //     const allSections = Array.from(container.querySelectorAll('.cmdspp-accordion-section'));
+    //     const currentIndex = allSections.indexOf(currentSection);
+
+    //     currentSection.classList.remove('cmdspp-active', 'cmdspp-inactive');
+    //     currentSection.classList.add('cmdspp-completed');
+
+    //     const statusIcon = currentSection.querySelector('.cmdspp-status-icon');
+    //     if (statusIcon && !statusIcon.querySelector('.fa-check')) {
+    //         statusIcon.innerHTML = '<img src="/cmdspp_whiteTickNormal" alt="Check"/>';
+    //     }
+
+    //     if (currentIndex < allSections.length - 1) {
+    //         const nextSec = allSections[currentIndex + 1];
+    //         allSections.forEach(sec => closeSection(sec));
+    //         nextSec.classList.remove('cmdspp-inactive');
+    //         nextSec.classList.add('cmdspp-active');
+    //         openSection(nextSec);
+    //     }
+    // }
+
+    function prevSection(btn) {
+        const currentSection = btn.closest('.cmdspp-accordion-section');
+        const container = currentSection.closest('.cmdspp-form-container');
+        const allSections = Array.from(container.querySelectorAll('.cmdspp-accordion-section'));
+        const currentIndex = allSections.indexOf(currentSection);
+
+        if (currentIndex > 0) {
+            const prevSec = allSections[currentIndex - 1];
+            allSections.forEach(sec => closeSection(sec));
+            prevSec.classList.remove('cmdspp-inactive');
+            prevSec.classList.add('cmdspp-active');
+            openSection(prevSec);
+        }
+    }
+
+    function showFieldError(inputEl, message) {
+        if (!inputEl) return;
+        const parentGroup = inputEl.closest('.cmdspp-form-group, .cmdspp-radio-group-container') || inputEl.parentElement;
+        if (parentGroup) parentGroup.querySelectorAll('.cmdspp-error-msg').forEach(msg => msg.remove());
+
+        inputEl.classList.add('cmdspp-invalid');
+
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'cmdspp-error-msg';
+        errorDiv.innerText = message;
+
+        inputEl.after(errorDiv);
+        inputEl.focus();
+    }
+    // ================================
+// 1. GLOBAL READ-ONLY STATE
+// ================================
+window.cmdsppIsReadOnly = false;
+
+function checkApplicationReadOnlyStatus() {
+    return new Promise((resolve) => {
+        const recordId = new URLSearchParams(window.location.search).get("record");
+
+        if (!recordId) {
+            resolve(false);
+            return;
+        }
+
+        webapi.safeAjax({
+            type: "GET",
+            url: "/_api/cmdspp_p_dtl_tbs" +
+                 "?$select=cmdspp_p_appln_status" +
+                 "&$filter=cmdspp_p_dtl_tbid eq " + recordId,
+
+            success: function (res) {
+                if (!res?.value?.length) {
+                    resolve(false);
+                    return;
+                }
+
+                const status = Number(res.value[0].cmdspp_p_appln_status);
+
+                // Awaiting Signature -> lock the whole form
+                window.cmdsppIsReadOnly = (status === 2);
+                resolve(window.cmdsppIsReadOnly);
+            },
+
+            error: function (err) {
+                console.error("Unable to fetch application status", err);
+                resolve(false);
+            }
+        });
+    });
+}
+
+// ================================
+// 2. LOCK ALL FIELDS / BUTTONS
+// ================================
+function applyReadOnlyMode(root) {
+    if (!window.cmdsppIsReadOnly) return;
+    const scope = root || document;
+
+    scope.querySelectorAll('input[type="text"], input[type="date"], input[type="number"], input[type="email"], input[type="tel"], textarea')
+        .forEach(el => { el.readOnly = true; el.classList.add('cmdspp-readonly'); });
+
+    scope.querySelectorAll('select, input[type="radio"], input[type="checkbox"]')
+        .forEach(el => { el.disabled = true; el.classList.add('cmdspp-readonly'); });
+
+    // Lock only DATA-MUTATING buttons — NOT Continue/Back (navigation must stay usable)
+    scope.querySelectorAll('[id$="-add"], [data-action="edit"], [data-action="delete"], .cmdspp-btn-reset')
+        .forEach(el => {
+            el.disabled = true;
+            el.style.pointerEvents = 'none';
+            el.style.opacity = '0.5';
+        });
+
+    // Make all accordion headers green in read-only mode
+    scope.querySelectorAll('.cmdspp-accordion-section').forEach(section => {
+        section.classList.remove(
+            'cmdspp-active',
+            'cmdspp-inactive',
+            'cmdspp-disabled'
+        );
+
+        section.classList.add('cmdspp-completed');
+
+        const statusIcon = section.querySelector('.cmdspp-status-icon');
+        if (statusIcon && !statusIcon.querySelector('img')) {
+            statusIcon.innerHTML = '<img src="/cmdspp_whiteTickNormal" alt="Check"/>';
+        }
+    });
+}
+
+// ================================
+// 3. CATCH FIELDS ADDED LATER
+//    (background-hydrated sections, ownership table rows, etc.)
+// ================================
+function observeAndLockNewFields() {
+    if (!window.cmdsppIsReadOnly) return;
+    const container = document.getElementById('cmdspp-dynamic-form') || document.body;
+
+    const observer = new MutationObserver((mutations) => {
+        mutations.forEach(m => {
+            m.addedNodes.forEach(node => {
+                if (node.nodeType === 1) applyReadOnlyMode(node);
+            });
+        });
+    });
+
+    observer.observe(container, { childList: true, subtree: true });
+}
+
+    // 7. VALIDATION ENGINE WITH DYNAMIC JSON ERROR MESSAGES
+    function validateSection(buttonEl) {
+        const section = buttonEl.closest('.cmdspp-accordion-section');
+        if (!section) return true;
+
+        section.querySelectorAll('.cmdspp-invalid').forEach(el => el.classList.remove('cmdspp-invalid'));
+        section.querySelectorAll('.cmdspp-error-msg').forEach(el => el.remove());
+
+        let isValid = true;
+        let firstInvalidField = null;
+
+        const requiredLabels = section.querySelectorAll('.cmdspp-required');
+
+        requiredLabels.forEach(label => {
+            let targetField = null;
+
+            const forAttr = label.getAttribute('for');
+            if (forAttr) targetField = document.getElementById(forAttr);
+
+            if (!targetField) {
+                const parentGroup = label.closest('.cmdspp-form-group, .cmdspp-radio-group-container') || label.parentElement;
+                if (parentGroup) targetField = parentGroup.querySelector('input, select, textarea');
+            }
+
+            if (!targetField) return;
+
+            const fieldContainer = targetField.closest('.cmdspp-form-group, .cmdspp-radio-group-container') || targetField;
+            if (fieldContainer.offsetWidth === 0 && fieldContainer.offsetHeight === 0) return;
+
+            let fieldIsEmpty = false;
+            let elementToHighlight = targetField;
+            let elementToAttachError = targetField;
+
+            if (targetField.type === 'radio') {
+                const radioName = targetField.name;
+                const isChecked = section.querySelector(`input[name="${radioName}"]:checked`);
+                const radioContainer = targetField.closest('.cmdspp-radio-group-container') || fieldContainer;
+                elementToHighlight = radioContainer;
+                elementToAttachError = radioContainer;
+
+                if (!isChecked) fieldIsEmpty = true;
+            } else {
+                const val = targetField.value ? targetField.value.trim() : '';
+                if (!val || val === '') fieldIsEmpty = true;
+            }
+
+            if (fieldIsEmpty) {
+                isValid = false;
+                if (!firstInvalidField) firstInvalidField = targetField;
+
+                elementToHighlight.classList.add('cmdspp-invalid');
+
+                const fieldMeta = window.cmdsppFieldMap[targetField.name || targetField.id] || {};
+                const customValidation = fieldMeta.validation || {};
+                
+                let labelText = targetField.getAttribute('data-label') || label.getAttribute('data-label');
+                if (!labelText) labelText = label.textContent.replace(/[*:]/g, '').trim();
+
+                const errorMessageText = customValidation.requiredMessage || `${labelText} is required`;
+
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'cmdspp-error-msg';
+                errorDiv.innerText = errorMessageText;
+
+                elementToAttachError.after(errorDiv);
+            }
+        });
+
+        if (!isValid && firstInvalidField && typeof firstInvalidField.focus === 'function') {
+            firstInvalidField.focus();
+        }
+
+        return isValid;
+    }
+
+    // 8. INITIALIZATION & EVENT LISTENERS
+   document.addEventListener('DOMContentLoaded', async function () {
+    await checkApplicationReadOnlyStatus();  // sets window.cmdsppIsReadOnly
+    await loadAndHydrateForm();              // your existing render/hydrate logic
+    applyReadOnlyMode();
+    observeAndLockNewFields();  
+
+        const formContainer = document.querySelector('.cmdspp-form-container');
+        if (!formContainer) return;
+
+        function clearFieldError(target) {
+            target.classList.remove('cmdspp-invalid');
+
+            const radioContainer = target.closest('.cmdspp-radio-group-container');
+            if (radioContainer) {
+                radioContainer.classList.remove('cmdspp-invalid');
+                if (radioContainer.nextElementSibling && radioContainer.nextElementSibling.classList.contains('cmdspp-error-msg')) {
+                    radioContainer.nextElementSibling.remove();
+                }
+            }
+
+            const parentContainer = target.closest('.cmdspp-form-group') || target.parentElement;
+            if (parentContainer) {
+                parentContainer.querySelectorAll('.cmdspp-invalid').forEach(el => el.classList.remove('cmdspp-invalid'));
+                parentContainer.querySelectorAll('.cmdspp-error-msg').forEach(msg => msg.remove());
+            }
+        }
+
+        ['input', 'change'].forEach(eventType => {
+            formContainer.addEventListener(eventType, function (e) {
+                if (e.target.matches('input, select, textarea')) {
+                    clearFieldError(e.target);
+                }
+            });
+        });
+    });
+</script>

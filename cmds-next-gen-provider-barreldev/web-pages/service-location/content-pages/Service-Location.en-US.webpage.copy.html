@@ -1,0 +1,136 @@
+{% include 'cmdspp_Enrollment_Form_Header' %}
+
+<div class="cmdspp-form-body">
+
+    <div id="identity-form-container">
+        {% include 'Service-Location' %}
+    </div>
+
+    {% include 'cmdspp_Enrollment_Form_SidePanel' %}
+
+</div>
+
+
+<style>
+    #sectionPContainer .col-md-6.mb-3{
+    width: 100%;
+    /* display: flex !important; */
+    /* justify-content: space-between;
+    flex-direction: column; */
+    }
+    
+    .alert.alert-light.border.mb-3{
+        
+    }
+.cmdspp-checkbox-group {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr;
+    width: 100%;
+    width: 100%;
+    column-gap:10px;
+    row-gap: 10px;
+}
+#sectionQContainer .cmdspp-form-card{
+       display: flex;
+    flex-direction: column-reverse;
+}
+ 
+
+#sectionEContainer .col-md-6.mb-3{
+        width: 100% !important;
+}
+#sectionGContainer .col-md-6.mb-3{
+        width: 100% !important;
+}
+#sectionQContainer .col-md-6.mb-3{
+        width: 100% !important;
+}
+.cmdspp-checkbox-group .form-check-input{
+ border-radius:4px !important;
+}
+.form-check-input:focus{
+    box-shadow: none;
+    border: 1px solid rgba(0, 0, 0, .25) ;
+    border-radius: 4px !important;
+}
+.cmdspp-checkbox-group .form-check {
+    width: auto !important; /* override the inline calc(50% - 10px) */
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    padding: 12px 16px;
+    border-bottom: 1px solid #e5e7eb;
+    
+}
+
+/* vertical divider between the two columns */
+.cmdspp-checkbox-group .form-check {
+        border: 1px solid #e5e7eb;
+    border-radius: 4px !important;
+}
+
+.cmdspp-checkbox-group .form-check-input {
+    width: 16px;
+    height: 16px;
+    margin: 0;
+    flex-shrink: 0;
+    cursor: pointer;
+}
+
+.cmdspp-checkbox-group .form-check-label {
+    font-weight: 400;
+    font-size: 14px;
+    color: #212529;
+    cursor: pointer;
+    margin: 0;
+       white-space: nowrap;
+}
+#sectionFContainer .col-md-12.mb-3{
+      width: 100% !important;
+
+}
+  
+#sectionFContainer .col-md-12.mb-3 .field-card-container .row{
+    width: 100% !important;
+    padding: 0px;
+}
+#sectionFContainer .col-md-12.mb-3 .field-card-container .row .col-md-6.checkboxgroup.mb-3{
+    width: 100%;
+    padding: 0px !important;
+    border: none;
+}
+#sectionFContainer .cmdspp-form-card .checkboxgroup > .form-label{
+  display: none;
+}
+
+#sectionFContainer .cmdspp-form-card .checkboxgroup .form-check{
+   width: calc(50% - 5px);
+}
+
+
+
+
+
+#sectionGContainer .col-md-12.mb-3{
+      width: 100% !important;
+
+}
+  
+#sectionGContainer .col-md-12.mb-3 .field-card-container .row{
+    width: 100% !important;
+    padding: 0px;
+}
+#sectionGContainer .col-md-12.mb-3 .field-card-container .row .col-md-6.checkboxgroup.mb-3{
+    width: 100%;
+    padding: 0px !important;
+    border: none;
+}
+#sectionGContainer .cmdspp-form-card .checkboxgroup > .form-label{
+  display: none;
+}
+
+#sectionGContainer .cmdspp-form-card .checkboxgroup .form-check{
+   width: calc(50% - 5px);
+}
+    </style>

@@ -1,0 +1,278 @@
+.tab-column{
+    width: 100% !important;
+}
+
+
+#MessagePanel {
+    display: none !important;
+}
+
+
+.cmdspp-registration-page{
+    min-height:calc(100vh - 124px);
+    display:flex;
+    justify-content:space-around;
+    align-items:center;
+    padding: 80px 40px 96px 40px;
+}
+
+.cmdspp-registration-left{
+    width:45%;
+}
+
+.cmdspp-portal-badge{
+    display:inline-block;
+    background:#0B3A6F1A;
+    border:1px solid #0B3A6F26;
+    padding:7px 17px;
+    border-radius:20px;
+    color:#0B3A6FE5;
+    margin-bottom:30px;
+    font-weight: 400;
+    font-size: 12px;
+    line-height: 16px;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+    span{
+        color: #00D492 !important;
+    }
+}
+
+.cmdspp-registration-left h1{
+    color: #0B3A6F;
+    font-size: 54.4px;
+    font-weight: 400 !important;
+    line-height: 62px;
+    margin-bottom: 33px;
+}
+
+.cmdspp-description{
+    max-width: 448px;
+    color: #0B3A6F;
+    font-weight: 400 !important;
+    font-size: 16px;
+    line-height: 26px;
+    letter-spacing: 0px;
+    margin-bottom: 191px;
+}
+.cmdspp-benefits{
+    display: flex;
+    gap: 25px;
+
+}
+.cmdspp-benefits div{
+    margin-bottom: 10px;
+    color: #0B3A6F;
+    line-height: 20px;
+    font-weight: 400 !important;
+    font-size: 10px;
+    line-height: 20px;
+    letter-spacing: 0px;
+}
+.cmdspp-benefits div img{
+    margin-right:10px;
+}
+
+.cmdspp-registration-right{
+    width:460px;
+}
+
+.cmdspp-registration-card{
+    background:#fff;
+    border-radius:16px;
+    padding:32px;
+    border-top:4px solid #295a9f;
+    box-shadow:0 8px 20px rgba(0,0,0,.08);
+    .cmdspp-registration-cardheading{
+        display: flex;
+        justify-content: center;
+        font-size: 23px;
+        color: #274463;
+        line-height: 34px;
+        font-weight: 400 !important;
+    }
+    .cmdspp-registration-cardfooter{
+        font-size: 12px;
+        color: #0B3A6F;
+        font-weight: 400;
+        line-height: 16px;
+        margin-top: 14px;
+        justify-content: center;
+        display: flex;
+    }
+}
+
+.cmdspp-registration-card h1,
+.cmdspp-registration-card h2,
+.cmdspp-registration-card .entity-form-title{
+    text-align:center;
+    color:#27456f;
+}
+
+.cmdspp-field-error {
+    box-shadow: inset 0 0 0 1px #CD3D64, 0 0 0 2px #FDE2DD !important;
+}
+
+/* custom registration form (replaces the old crmEntityFormView table layout) */
+.cmdspp-registration-form{
+    display: flex;
+    flex-direction: column;
+}
+
+.cmdspp-form-group{
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 16px;
+}
+
+.cmdspp-form-group:last-of-type{
+    margin-bottom: 0;
+}
+
+/* form labels */
+.cmdspp-registration-card label{
+    font-size: 12px;
+    color: #0B3A6F;
+    font-weight: 400;
+    line-height: 16px;
+    margin-bottom: 4px;
+}
+
+/* form a tag */
+.cmdspp-registration-card a{
+    font-size: 12px;
+    color: #1C70DE;
+    font-weight: 400;
+    line-height: 16px;
+    margin-left: 5px;
+}
+
+#termsCheckboxContainer{
+    margin-top: 8px;
+}
+
+#termsCheckboxContainer label{
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 0px !important;
+}
+
+#termsCheckbox{
+    margin-top: 0px !important;
+    width: 20px;
+    height: 20px;
+    accent-color: #274463;
+    flex-shrink: 0;
+}
+
+/* inputs */
+.cmdspp-registration-card input[type="text"],
+.cmdspp-registration-card input[type="email"],
+.cmdspp-registration-card input[type="tel"],
+.cmdspp-registration-card select{
+    width: 100%;
+    height:36px;
+    border:1px solid #E3E8EE;
+    border-radius:4px;
+    box-shadow: 0px 1px 2px 0px #37415114;
+    font-weight: 400 !important;
+    font-size: 14px;
+    line-height: 24px;
+    color: #0B3A6F;
+    text-decoration: none !important;
+    padding: 0 12px;
+    box-sizing: border-box;
+}
+
+
+.cmdspp-registration-card input[type="text"]::placeholder,
+.cmdspp-registration-card input[type="email"]::placeholder,
+.cmdspp-registration-card input[type="tel"]::placeholder {
+    text-decoration: none !important;
+    font-size: 14px;
+    font-weight: 400 !important;
+    line-height: 20px;
+    color: #0B3A6F; 
+    opacity: 0.4;
+}
+
+.cmdspp-registration-card input[type="text"]:focus,
+.cmdspp-registration-card input[type="email"]:focus,
+.cmdspp-registration-card input[type="tel"]:focus {
+    box-shadow: 0px 0px 0px 1px #6C8EEF inset, 0px 0px 0px 2px #D6ECFF;
+    outline: none;
+}
+
+
+.cmdspp-registration-actions{
+    display:flex;
+    gap:24px;
+    margin-top: 24px;
+}
+
+.cmdspp-btn-secondary,
+.cmdspp-btn-primary{
+    flex:1;
+    height:40px;
+    border-radius:8px;
+    font-weight: 400 !important;
+    font-size: 14px;
+    line-height: 20px;
+    letter-spacing: 0px;
+    text-align: center;
+    cursor:pointer;
+    box-shadow: 0px 1px 2px -1px #0000001A;
+}
+
+.cmdspp-btn-secondary{
+    background:#ffffff;
+    border:1px solid #274463;
+    color: #274463;
+}
+
+.cmdspp-btn-primary{
+    background:#274463;
+    border:1px solid #274463;
+    color:#ffffff;
+}
+
+#cmdsppSubmitBtn:disabled{
+    background: #274463;
+    opacity: 0.5 !important;
+    box-shadow: 0px 1px 2px -1px #0000001A, 0px 1px 3px 0px #0000001A;
+    color:#ffffff;
+    cursor: not-allowed;
+}
+
+/* checkbox row */
+.cmdspp-registration-card .checkbox{
+    margin-top:15px;
+}
+
+/* form header */
+.cmdspp-registration-card .form-title,
+.cmdspp-registration-card .entity-form-title{
+    font-size:34px;
+    margin-bottom:20px;
+}
+
+
+/* responsive */
+@media(max-width:1200px){
+
+    .cmdspp-registration-page{
+        flex-direction:column;
+        gap:40px;
+    }
+
+    .cmdspp-registration-left{
+        width:100%;
+    }
+
+    .cmdspp-registration-right{
+        width:100%;
+        max-width:550px;
+    }
+
+}

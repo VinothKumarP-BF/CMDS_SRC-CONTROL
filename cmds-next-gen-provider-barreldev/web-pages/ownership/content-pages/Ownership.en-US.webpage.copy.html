@@ -1,0 +1,183 @@
+<div class="row sectionBlockLayout text-start" style="display: none; min-height: auto; padding: 8px;">
+  <div class="container" style="display: flex; flex-wrap: wrap;">
+    <div class="col-lg-12 columnBlockLayout" style="padding: 16px; margin: 60px 0px; min-height: 200px;"></div>
+  </div>
+</div>
+
+{% include 'cmdspp_Enrollment_Form_Header' %}
+
+<div class="cmdspp-form-body">
+  <div id="identity-form-container">
+    {% include 'cmdspp_Ownership_template' %}
+  </div>
+
+  <div class="cmdspp-side-panel-container">
+    {% include 'cmdspp_Enrollment_Form_SidePanel' %}
+  </div>
+</div>
+
+<style>
+  /* MAIN PAGE LAYOUT */
+  .cmdspp-form-body {
+    display: flex;
+    flex-direction: row;
+    gap: 24px;
+    padding: 24px;
+    padding-top: 10px !important;
+    width: 100%;
+    box-sizing: border-box;
+    align-items: flex-start;
+  }
+
+  #identity-form-container {
+    flex: 1;
+    min-width: 0; /* Prevents flex items from overflowing */
+  }
+
+  .cmdspp-side-panel-container {
+    width: 320px;
+    flex-shrink: 0;
+  }
+
+  /* FORM CONTROLS & FIELDSET STYLES */
+  #identity-form-container fieldset {
+    border: 1px solid #d9dde4;
+    border-radius: 12px;
+    margin-bottom: 16px;
+    background: #fff;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,.08);
+  }
+
+  #identity-form-container fieldset.active {
+    border: 2px solid #23476d;
+  }
+
+  #identity-form-container legend {
+    width: 100%;
+    margin: 0;
+    padding: 18px 20px;
+    cursor: pointer;
+    background: #fff;
+    border-bottom: 1px solid #eee;
+  }
+
+  label {
+    font-weight: 500;
+    font-size: 13px;
+    line-height: 16px;
+    color: #274463 !important;
+    margin-bottom: 6px;
+    display: block;
+  }
+
+  input.form-control,
+  select.form-control {
+    border: 1px solid #E3E8EE !important;
+    height: 40px;
+    border-radius: 6px;
+    font-size: 14px;
+    padding: 6px 12px;
+  }
+
+  input.form-control:focus,
+  select.form-control:focus {
+    border-color: #23476d !important;
+    box-shadow: 0 0 0 2px rgba(35, 71, 109, 0.1);
+  }
+
+  /* ACCORDION & STEP CIRCLE */
+  .step-circle {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: #1d3557;
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+
+  /* INSTRUCTION BLOCK */
+  .cmdspp-instruction-box {
+    font-size: 0.875rem;
+    color: #374151;
+    line-height: 1.5;
+  }
+
+  /* ACTION BUTTONS */
+  .btn-navy {
+    background-color: #1d3557;
+    color: #ffffff;
+    border-radius: 6px;
+    font-weight: 500;
+  }
+
+  .btn-navy:hover {
+    background-color: #152741;
+    color: #ffffff;
+  }
+
+  .btn-reset-custom {
+    border: 1px solid #E58A8A;
+    background: #fff;
+    color: #D9534F;
+    border-radius: 6px;
+    min-width: 90px;
+    height: 38px;
+    font-weight: 500;
+    cursor: pointer;
+  }
+
+  .btn-reset-custom:hover {
+    background: #fdf2f2;
+  }
+
+  .btn-back-custom {
+    min-width: 90px;
+    height: 38px;
+    border: 1px solid #23476d;
+    background: #fff;
+    color: #23476d;
+    border-radius: 6px;
+    font-weight: 500;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .btn-back-custom:hover {
+    background: #f5f8fb;
+    color: #23476d;
+  }
+
+  .btn-continue-custom {
+    background: #1d3557;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    min-width: 110px;
+    height: 38px;
+    font-weight: 500;
+    cursor: pointer;
+  }
+
+  .btn-continue-custom:hover {
+    background: #152741;
+  }
+
+  /* Responsive layout fallback */
+  @media (max-width: 991px) {
+    .cmdspp-form-body {
+      flex-direction: column;
+    }
+    .cmdspp-side-panel-container {
+      width: 100%;
+    }
+  }
+</style>

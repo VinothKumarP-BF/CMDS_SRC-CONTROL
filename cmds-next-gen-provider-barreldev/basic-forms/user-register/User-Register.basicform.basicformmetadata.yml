@@ -1,0 +1,24 @@
+- adx_entityform: b478420f-1c3e-4bb5-bbcb-0d055549c5ce
+  adx_entityformmetadataid: 68860fdb-fd24-4029-8c8e-dc671d282d74
+  adx_label: >-
+    [
+      {
+        "LCID": 1033,
+        "Value": "New user registration"
+      }
+    ]
+  adx_name: User Register DETAILS_TAB
+  adx_tabname: DETAILS_TAB
+  adx_type: 100000002
+- adx_entityform: b478420f-1c3e-4bb5-bbcb-0d055549c5ce
+  adx_entityformmetadataid: 75a68cec-3afd-44fa-8171-bc1244c55dc0
+  adx_label: >-
+    [
+      {
+        "LCID": 1033,
+        "Value": "<br>"
+      }
+    ]
+  adx_name: User Register DETAILS_TAB_section_5
+  adx_sectionname: DETAILS_TAB_section_5
+  adx_type: 100000001

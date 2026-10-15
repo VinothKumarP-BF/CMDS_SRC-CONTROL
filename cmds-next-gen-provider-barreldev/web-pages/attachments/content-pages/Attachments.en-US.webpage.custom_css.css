@@ -1,0 +1,32 @@
+.actions{
+    display: none;
+}
+.cmdspp-enrollment-page{
+   padding: 0px !important;
+}
+.save-btn{
+    display: none;
+}
+
+.cmdspp-btn.cmdspp-btn-primary{
+    position: absolute;
+}
+.crmEntityFormView, .entitylist, .modal-content, .popover-content{
+    border: none;
+}
+.crmEntityFormView .cell{
+    padding: 0px;
+}
+
+.cmdspp-form-body {
+    display: flex;
+    padding: 24px;
+    padding-top: 10px !important;
+    width: 100%;
+    gap: 24px;
+}
+
+#identity-form-container{
+    width: 100%;
+
+}

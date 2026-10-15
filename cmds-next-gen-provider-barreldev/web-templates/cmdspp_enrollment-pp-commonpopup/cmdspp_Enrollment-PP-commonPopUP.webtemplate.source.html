@@ -1,0 +1,133 @@
+<script>
+function showConfirmationPopup(options) {
+
+    var title = options.title || "Confirmation";
+    var message = options.message || "Are you sure?";
+    var confirmText = options.confirmText || "Yes";
+    var cancelText = options.cancelText || "Cancel";
+
+    var popupHtml = `
+        <div class="cmdspp-modal-overlay">
+            <div class="cmdspp-modal">
+
+                <div class="cmdspp-modal-title">
+                    ${title}
+                </div>
+
+                <div class="cmdspp-modal-message">
+                    ${message}
+                </div>
+
+                <div class="cmdspp-modal-actions">
+
+                    <button type="button"
+                            class="cmdspp-btn-secondary popup-cancel">
+                        ${cancelText}
+                    </button>
+
+                    <button type="button"
+                            class="cmdspp-btn-primary popup-confirm">
+                        ${confirmText}
+                    </button>
+
+                </div>
+
+            </div>
+        </div>
+    `;
+
+    var wrapper = document.createElement("div");
+    wrapper.innerHTML = popupHtml;
+
+    document.body.appendChild(wrapper);
+
+    wrapper.querySelector(".popup-cancel")
+        .addEventListener("click", function () {
+
+            wrapper.remove();
+
+            if (typeof options.onCancel === "function") {
+                options.onCancel();
+            }
+        });
+
+    wrapper.querySelector(".popup-confirm")
+        .addEventListener("click", function () {
+
+            wrapper.remove();
+
+            if (typeof options.onConfirm === "function") {
+                options.onConfirm();
+            }
+        });
+}
+</script>
+
+<style>
+.cmdspp-modal-overlay{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.45);
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    z-index:9999;
+}
+
+.cmdspp-modal{
+    width:420px;
+    max-width:90%;
+    background:#fff;
+    border-radius:12px;
+    padding:24px;
+    position:relative;
+    box-shadow:0 12px 30px rgba(0,0,0,.2);
+}
+
+.cmdspp-modal-title{
+    font-size:18px;
+    font-weight:600;
+    margin-bottom:8px;
+    color:#23466a;
+}
+
+.cmdspp-modal-message{
+    font-size:14px;
+    margin-bottom:24px;
+    color:#6b7280;
+    line-height:1.5;
+}
+
+.cmdspp-modal-actions{
+    display:flex;
+    gap:12px;
+}
+
+.cmdspp-btn-secondary{
+    flex:1;
+    height:40px;
+    border:1px solid #23466a;
+    background:#fff;
+    color:#23466a;
+    border-radius:8px;
+    cursor:pointer;
+}
+
+.cmdspp-btn-primary{
+    flex:1;
+    height:40px;
+    border:none;
+    background:#23466a;
+    color:#fff;
+    border-radius:8px;
+    cursor:pointer;
+}
+
+.cmdspp-btn-secondary:hover{
+    background:#f8f9fa;
+}
+
+.cmdspp-btn-primary:hover{
+    background:#1d3b59;
+}
+</style>

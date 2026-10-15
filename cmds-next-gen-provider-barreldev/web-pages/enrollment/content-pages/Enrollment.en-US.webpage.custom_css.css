@@ -1,0 +1,5 @@
+#mainContent{
+    width: calc(100% - 221px);
+    position: relative;
+    left: 221px;
+}

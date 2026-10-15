@@ -1,0 +1,62 @@
+{% include 'cmdspp_Loader' %}
+<div class="cmdspp-inbox-container">
+
+    <!-- LEFT PANEL -->
+
+    <div class="cmdspp-thread-panel">
+
+        <div class="cmdspp-search-container">
+            <img src="/cmdspp_SearchIcon"/>
+            <input type="text"
+                   id="cmdspp-search"
+                   placeholder="Search messages..." />
+        </div>
+
+        <div id="cmdspp-thread-list"></div>
+
+    </div>
+
+    <!-- RIGHT PANEL -->
+
+    <div class="cmdspp-message-panel">
+
+        <div class="cmdspp-toolbar">
+
+            <button id="cmdspp-btn-reply"
+                    class="cmdspp-toolbar-btn">
+                ↩ Reply
+            </button>
+
+            <button id="cmdspp-btn-markread"
+                    class="cmdspp-toolbar-btn">
+                <img src="/cmdspp_MarkRead"/> Mark Read
+            </button>
+
+            <button id="cmdspp-btn-delete"
+                    class="cmdspp-toolbar-btn cmdspp-danger">
+                <img src="/cmdspp_DeleteIcon"/> Delete
+            </button>
+
+        </div>
+
+        <div id="cmdspp-message-view">
+
+            <div class="cmdspp-empty-state">
+
+                <div class="cmdspp-empty-icon">
+                    <img src="/cmdspp_SendMessage"/>
+                </div>
+
+                <h3 id="cmdspp-inbox-placeholder-heading" class="cmdspp-inbox-placeholder-heading">Select a message</h3>
+
+                <p id="cmdspp-inbox-placeholder-subheading" class="cmdspp-inbox-placeholder-subheading">
+                    Choose a message from the list to read it
+                </p>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>

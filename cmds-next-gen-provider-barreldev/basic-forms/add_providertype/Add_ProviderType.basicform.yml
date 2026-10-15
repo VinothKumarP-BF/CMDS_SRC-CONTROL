@@ -1,0 +1,17 @@
+adx_attachfilemaxsize: 
+adx_attachfilestoragelocation: 756150000
+adx_captcharequired: false
+adx_entityformid: 1fda772f-af21-499d-9114-c3af90ec0554
+adx_entityname: cmdspp_pc_pvd_typ_tb
+adx_entitypermissionsenabled: false
+adx_formname: Add_ProviderType
+adx_geolocation_maptype: 756150000
+adx_hideformonsuccess: true
+adx_maximumnooffiles: 5
+adx_mode: 100000000
+adx_name: Add_ProviderType
+adx_onsuccess: 756150001
+adx_recordidquerystringparametername: 
+adx_redirecturl: 
+adx_redirectwebpage: 7c549f07-2591-ce5c-f47e-907b7509b099
+adx_showcaptchaforauthenticatedusers: false

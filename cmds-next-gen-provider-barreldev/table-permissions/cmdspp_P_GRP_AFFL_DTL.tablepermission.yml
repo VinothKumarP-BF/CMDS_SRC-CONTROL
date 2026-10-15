@@ -1,0 +1,16 @@
+adx_accountrelationship: 
+adx_append: true
+adx_appendto: true
+adx_contactrelationship: 
+adx_create: true
+adx_delete: true
+adx_entitylogicalname: cmdspp_p_grp_affl_dtl
+adx_entityname: cmdspp_P_GRP_AFFL_DTL
+adx_entitypermission_webrole:
+- 3e0eed5c-e2e0-46fa-a82c-1f6c985badca
+adx_entitypermissionid: 6a7d94b7-3cc6-4179-a5c6-f35c6edab5b7
+adx_parententitypermission: 
+adx_parentrelationship: 
+adx_read: true
+adx_scope: 756150000
+adx_write: true

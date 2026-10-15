@@ -1,0 +1,15 @@
+- adx_botconsumer_adx_webrole:
+  - 3e0eed5c-e2e0-46fa-a82c-1f6c985badca
+  - f899f791-55b3-4fd6-86ac-f9addbb7477b
+  adx_botconsumerid: 58a0a37e-b64e-4520-8172-b82213cf74cf
+  adx_botschemaname: cr7a7_5545b9cb-fc06-4ec2-9556-64592bc88207
+  adx_configjson: '{"isVisible":true,"botSchemaName":"cr7a7_5545b9cb-fc06-4ec2-9556-64592bc88207","version":"v2"}'
+  adx_name: AI Assistant
+- adx_botconsumer_adx_webrole:
+  - 04aca432-bb7b-f111-ab0e-000d3a3586e4
+  - 3e0eed5c-e2e0-46fa-a82c-1f6c985badca
+  - f899f791-55b3-4fd6-86ac-f9addbb7477b
+  adx_botconsumerid: f46d54e6-3679-f111-ab0f-000d3a31b966
+  adx_botschemaname: cr834_8b45cbb0-7290-49c5-b762-70fb7628d59a
+  adx_configjson: '{"skillConfigViewName":"CMdS Next Gen Provider Dev bot Answers","botSchemaName":"cr834_8b45cbb0-7290-49c5-b762-70fb7628d59a","version":"v2","isVisible":true}'
+  adx_name: Bot Consumer

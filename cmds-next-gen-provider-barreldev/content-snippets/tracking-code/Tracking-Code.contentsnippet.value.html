@@ -1,0 +1,40 @@
+<script>
+$(document).ready(function () {
+    document.title = "CMdS NextGen Provider Portal";
+    const params =
+        new URLSearchParams(window.location.search);
+
+    const invitation =
+        params.get("invitation");
+    console.log("invitcode",invitation)    
+
+    const isRegisterPage =
+        window.location.pathname
+            .toLowerCase()
+            .includes("/account/register");
+
+    if (isRegisterPage && invitation) {
+        console.log("invitcode",invitation)
+        document.body.style.visibility = "hidden";
+        setTimeout(function () {
+
+            if ($("#submit-redeem-invitation").length) {
+
+                $("#submit-redeem-invitation").click();
+
+            } else {
+
+                document.body.style.visibility = "visible";
+
+            }
+
+        }, 500);
+
+    } else {
+
+        document.body.style.visibility = "visible";
+
+    }
+
+});
+</script>

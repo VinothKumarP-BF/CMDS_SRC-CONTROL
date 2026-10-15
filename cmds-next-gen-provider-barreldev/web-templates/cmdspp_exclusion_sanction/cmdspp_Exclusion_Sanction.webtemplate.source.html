@@ -1,0 +1,45 @@
+{% fetchxml sectionJsonSchema %}
+<fetch>
+  <entity name="cmdspp_pc_enrol_page_json_tb">
+    <attribute name="cmdspp_p_jsontxt" />
+    <attribute name="cmdspp_p_table_nam" />
+    <attribute name="cmdspp_p_page_nam" />
+    <filter>
+      <condition attribute="cmdspp_p_page_nam" operator="eq" value="exclusion_sanction" />
+    </filter>
+  </entity>
+</fetch>
+{% endfetchxml %}
+<script id="wizardSchemaData" type="application/json">
+[
+{% for rec in sectionJsonSchema.results.entities %}
+    {{ rec.cmdspp_p_jsontxt }}{% unless forloop.last %},{% endunless %}
+{% endfor %}
+]
+
+</script>
+<script>
+  var schemaElement = document.getElementById("wizardSchemaData");
+
+var wizardSchema = JSON.parse(
+    schemaElement.textContent
+);
+
+wizardSchema.sort(function (a, b) {
+
+    var prefixA = String(a.headerPrefix || "").trim();
+    var prefixB = String(b.headerPrefix || "").trim();
+
+    return prefixA.localeCompare(
+        prefixB,
+        undefined,
+        {
+            numeric: true,
+            sensitivity: "base"
+        }
+    );
+});
+
+console.log("Sorted schema:", wizardSchema);
+</script>
+{% include 'common_page_template' %}

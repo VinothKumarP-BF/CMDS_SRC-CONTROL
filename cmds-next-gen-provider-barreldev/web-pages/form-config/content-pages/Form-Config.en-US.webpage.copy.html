@@ -1,0 +1,107 @@
+<meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /><title>Form Configuration Builder</title><link rel="stylesheet" href="styles.css" />
+{% include 'cmdspp_ToastModal' %}{% include 'cmdspp_Loader' %}
+<div class="app" style="display: flex; flex-direction: column; min-height: unset;">
+  <!-- CONTENT -->
+  <div class="content" style="flex-grow: 1; flex-shrink: 1; flex-basis: 0%; display: flex; flex-direction: column; width: 100%;">
+    <main style="padding-top: 0px; padding-right: 0px; padding-bottom: 0px; padding-left: 0px; width: 100%; max-width: none;">
+      <!-- TITLE -->
+      <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; margin-top: 0px; margin-right: 0px; margin-bottom: 0px; margin-left: 0px; padding-left: 24px; padding-right: 24px; padding-top: 16px; padding-bottom: 20px; border-bottom-width: 1px; border-bottom-style: solid; border-bottom-color: rgb(229, 231, 235);">
+        <div>
+          <h1 class="page-title" style="margin-top: 0px; margin-right: 0px; margin-bottom: 0px; margin-left: 0px; font-weight: 400; font-size: 20px; line-height: 25px; letter-spacing: 0px; color: rgb(39, 68, 99);">Form Configuration Builder</h1>
+          <p class="page-subtitle" style="margin-top: 5px; margin-bottom: 0px; white-space-collapse: collapse; text-wrap-mode: nowrap; overflow-x: hidden; overflow-y: hidden; text-overflow: ellipsis; font-family: FontAwesome; font-weight: 400; font-size: 12px; line-height: 18px; letter-spacing: 0px; color: rgb(90, 112, 153);">Configure pages, sections, and fields per enrollment type and provider type</p>
+        </div>
+        <div class="header-actions" style="display: flex; row-gap: 12px; column-gap: 12px;">
+          <button type="button" class="save-btn" style="row-gap: 8px; column-gap: 8px; opacity: 1; padding-right: 20px; padding-left: 20px; border-top-left-radius: 10px; border-top-right-radius: 10px; border-bottom-right-radius: 10px; border-bottom-left-radius: 10px; background-image: initial; background-position-x: initial; background-position-y: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial; background-color: rgb(39, 68, 99); font-weight: 400; font-size: 13px; line-height: 19.5px; letter-spacing: 0px; text-align: center; color: white; border-top-width: medium; border-right-width: medium; border-bottom-width: medium; border-left-width: medium; border-top-style: none; border-right-style: none; border-bottom-style: none; border-left-style: none; border-top-color: currentcolor; border-right-color: currentcolor; border-bottom-color: currentcolor; border-left-color: currentcolor; border-image-source: none; border-image-slice: 100%; border-image-width: 1; border-image-outset: 0; border-image-repeat: stretch; padding-top: 8px; padding-bottom: 8px;">Save Configuration</button>
+        </div>
+      </div>
+      <!-- ENROLLMENT -->
+      <div class="container" style="width: 100%; max-width: none; margin-top: 0px; margin-right: 0px; margin-bottom: 0px; margin-left: 0px; padding-top: 16px; padding-right: 24px; padding-bottom: 17px; padding-left: 24px;">
+        <div class="title" style="font-weight: 400; font-size: 11px; line-height: 16.5px; letter-spacing: 1px; text-transform: uppercase; color: rgb(143, 143, 143); margin-bottom: 12px;">
+          ENROLLMENT TYPE
+          <span style="font-weight: 400; text-transform: none; font-size: 10px; line-height: 15px; letter-spacing: 0px; color: rgb(143, 143, 143);">— select one to configure its form</span>
+        </div>
+        <div id="cardGrid" class="card-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); row-gap: 14px; column-gap: 14px;"></div>
+      </div>
+    </main>
+  </div>
+  {% include 'cmdspp_dataloss_modal' %}
+  <!-- Tabs -->
+  <div id="tabsContainer" class="tabs" style="display: flex; row-gap: 0px; column-gap: 0px; margin-bottom: 0px; border-bottom-width: 1px; border-bottom-style: solid; border-bottom-color: rgb(229, 231, 235); border-top-width: 1px; border-top-style: solid; border-top-color: rgb(229, 231, 235); margin-top: 0px; padding-left: 24px;"></div>
+  <!-- Tab Content -->
+  <div id="tabContent"></div>
+  <div id="enrollmentTypeModal" class="modal fade">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 520px;">
+      <div class="modal-content enrollment-modal">
+          <div class="required-doc-loader">
+                    <div class="required-doc-spinner"></div>
+                </div>
+        <div class="modal-header border-0" style="display: flex; justify-content: space-between; font-weight: 400; font-size: 16px; line-height: 24px; letter-spacing: 0px; color: rgb(11, 58, 111); padding-top: 24px; padding-right: 24px; padding-left: 24px; padding-bottom: 20px;">
+          <div>
+            <h5 class="modal-title" style="margin-top: 0px; margin-right: 0px; margin-bottom: 0px; margin-left: 0px; font-weight: 400; font-size: 16px; line-height: 24px; letter-spacing: 0px; color: rgb(11, 58, 111);">Add Enrollment Type</h5>
+            <small style="font-weight: 400; font-size: 14px; line-height: 16px; letter-spacing: 0px; color: rgb(90, 112, 153);"> Add a new Enrollment type </small>
+          </div>
+          <button type="button" data-bs-dismiss="modal" class="btn-close"><img src="/cmdspp_closeIcon" alt="close"/></button>
+        </div>
+        <div class="modal-body" id="modalEnrollment"></div>
+        <div class="modal-footer border-0" style="border-top-width: 1px; border-top-style: solid; border-top-color: rgb(238, 241, 245); padding-top: 15px; padding-right: 20px; padding-bottom: 15px; padding-left: 20px; display: flex; row-gap: 10px; column-gap: 10px;">
+          <button type="button" data-bs-dismiss="modal" id="cancelEnrollment" class="btn btn-outline-primary" style="width: 230px; height: 38px; border-top-left-radius: 10px; border-top-right-radius: 10px; border-bottom-right-radius: 10px; border-bottom-left-radius: 10px; padding-top: 8px; padding-right: 20px; padding-bottom: 8px; padding-left: 20px; opacity: 1; color: rgb(11, 58, 111); border-top-width: 1px; border-right-width: 1px; border-bottom-width: 1px; border-left-width: 1px; border-top-style: solid; border-right-style: solid; border-bottom-style: solid; border-left-style: solid; border-top-color: rgb(11, 58, 111); border-right-color: rgb(11, 58, 111); border-bottom-color: rgb(11, 58, 111); border-left-color: rgb(11, 58, 111); border-image-source: none; border-image-slice: 100%; border-image-width: 1; border-image-outset: 0; border-image-repeat: stretch; margin-top: 0px; margin-right: 0px; margin-bottom: 0px; margin-left: 0px;">Cancel</button>
+          <button type="button" id="submitEnrollment" class="btn btn-primary" style="width: 230px; height: 38px; border-top-left-radius: 10px; border-top-right-radius: 10px; border-bottom-right-radius: 10px; border-bottom-left-radius: 10px; padding-top: 8px; padding-right: 20px; padding-bottom: 8px; padding-left: 20px; opacity: 1; font-weight: 400; font-size: 14px; line-height: 20px; letter-spacing: 0px; text-align: center; background-image: initial; background-position-x: initial; background-position-y: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial; background-color: rgb(39, 68, 99); margin-top: 0px; margin-right: 0px; margin-bottom: 0px; margin-left: 0px;">Submit</button></div>
+      </div>
+    </div>
+  </div>
+  <div id="providerTypeModal" class="modal fade">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 520px;">
+      <div class="modal-content enrollment-modal">
+          <div class="required-doc-loader">
+                    <div class="required-doc-spinner"></div>
+                </div>
+        <div class="modal-header border-0" style="display: flex; justify-content: space-between; font-weight: 400; font-size: 16px; line-height: 24px; letter-spacing: 0px; color: rgb(11, 58, 111); padding-top: 24px; padding-right: 24px; padding-left: 24px; padding-bottom: 20px;">
+          <div>
+            <h5 class="modal-title" style="margin-top: 0px; margin-right: 0px; margin-bottom: 0px; margin-left: 0px; font-weight: 400; font-size: 16px; line-height: 24px; letter-spacing: 0px; color: rgb(11, 58, 111);">Add Provider Type</h5>
+            <small style="font-weight: 400; font-size: 14px; line-height: 16px; letter-spacing: 0px; color: rgb(90, 112, 153);"> Add a new Provider type </small>
+          </div>
+          <button type="button" data-bs-dismiss="modal" class="btn-close"><img src="/cmdspp_closeIcon" alt="close"/></button>
+        </div>
+        <div class="modal-body" id="modalProvider"></div>
+        <div class="modal-footer border-0" style="border-top-width: 1px; border-top-style: solid; border-top-color: rgb(238, 241, 245); padding-top: 15px; padding-right: 20px; padding-bottom: 15px; padding-left: 20px; display: flex; row-gap: 10px; column-gap: 10px;">
+          <button type="button" data-bs-dismiss="modal" id="cancelEnrollment" class="btn btn-outline-primary" style="width: 230px; height: 38px; border-top-left-radius: 10px; border-top-right-radius: 10px; border-bottom-right-radius: 10px; border-bottom-left-radius: 10px; padding-top: 8px; padding-right: 20px; padding-bottom: 8px; padding-left: 20px; opacity: 1; color: rgb(11, 58, 111); border-top-width: 1px; border-right-width: 1px; border-bottom-width: 1px; border-left-width: 1px; border-top-style: solid; border-right-style: solid; border-bottom-style: solid; border-left-style: solid; border-top-color: rgb(11, 58, 111); border-right-color: rgb(11, 58, 111); border-bottom-color: rgb(11, 58, 111); border-left-color: rgb(11, 58, 111); border-image-source: none; border-image-slice: 100%; border-image-width: 1; border-image-outset: 0; border-image-repeat: stretch; margin-top: 0px; margin-right: 0px; margin-bottom: 0px; margin-left: 0px;">Cancel</button>
+          <button type="button" id="submitProvider" class="btn btn-primary" style="width: 230px; height: 38px; border-top-left-radius: 10px; border-top-right-radius: 10px; border-bottom-right-radius: 10px; border-bottom-left-radius: 10px; padding-top: 8px; padding-right: 20px; padding-bottom: 8px; padding-left: 20px; opacity: 1; font-weight: 400; font-size: 14px; line-height: 20px; letter-spacing: 0px; text-align: center; background-image: initial; background-position-x: initial; background-position-y: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial; background-color: rgb(39, 68, 99); margin-top: 0px; margin-right: 0px; margin-bottom: 0px; margin-left: 0px;">Submit</button></div>
+      </div>
+    </div>
+  </div>
+    <div id="imageModal" class="modal fade">
+      <div class="modal-dialog modal-dialog-centered" style="max-width: 520px; width: 520px;">
+        <div class="modal-content enrollment-modal" style="border-top-left-radius: 16px; border-top-right-radius: 16px; border-bottom-right-radius: 16px; border-bottom-left-radius: 16px; border-top-width: medium; border-right-width: medium; border-bottom-width: medium; border-left-width: medium; border-top-style: none; border-right-style: none; border-bottom-style: none; border-left-style: none; border-top-color: currentcolor; border-right-color: currentcolor; border-bottom-color: currentcolor; border-left-color: currentcolor; border-image-source: none; border-image-slice: 100%; border-image-width: 1; border-image-outset: 0; border-image-repeat: stretch; padding-top: 24px; padding-right: 24px; padding-bottom: 24px; padding-left: 24px; box-shadow: rgba(0, 0, 0, 0.15) 0px 8px 30px;">
+          <div class="modal-header border-0" style="display: flex; justify-content: space-between; font-weight: 400; font-size: 16px; line-height: 24px; letter-spacing: 0px; color: rgb(11, 58, 111); padding-top: 24px; padding-right: 24px; padding-left: 24px; padding-bottom: 20px;"><button type="button" data-bs-dismiss="modal" class="btn-close"><img src="/cmdspp_closeIcon" alt="close"/></button></div>
+          <div class="modal-body" style="padding-top: 0px; padding-right: 20px; padding-bottom: 20px; padding-left: 20px;"><img id="previewImage" src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTEwOCIgaGVpZ2h0PSI0NTAiIHZpZXdCb3g9IjAgMCAxMTA4IDQ1MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGcgb3BhY2l0eT0iMC45NSIgZmlsdGVyPSJ1cmwoI2ZpbHRlcjBfYl8xMzQ4XzY0MDMpIj4KPHJlY3Qgd2lkdGg9IjExMDgiIGhlaWdodD0iNDUwIiB0cmFuc2Zvcm09Im1hdHJpeCgtMSAwIDAgMSAxMTA4IDApIiBmaWxsPSJ3aGl0ZSIvPgo8cmVjdCB4PSItMSIgeT0iMSIgd2lkdGg9IjExMDYiIGhlaWdodD0iNDQ4IiB0cmFuc2Zvcm09Im1hdHJpeCgtMSAwIDAgMSAxMTA2IDApIiBzdHJva2U9IiNEMkQwQ0UiIHN0cm9rZS13aWR0aD0iMiIvPgo8L2c+CjxwYXRoIGQ9Ik01NzcuOTU4IDE4Ny41QzU4NS40MzcgMTg3LjUgNTkxLjUgMTkzLjU2MyA1OTEuNSAyMDEuMDQyVjI0OC45NThDNTkxLjUgMjU2LjQzNyA1ODUuNDM3IDI2Mi41IDU3Ny45NTggMjYyLjVINTMwLjA0MkM1MjIuNTYzIDI2Mi41IDUxNi41IDI1Ni40MzcgNTE2LjUgMjQ4Ljk1OFYyMDEuMDQyQzUxNi41IDE5My41NjMgNTIyLjU2MyAxODcuNSA1MzAuMDQyIDE4Ny41SDU3Ny45NThaTTU4MC4zNzcgMjU1LjgzOUw1NTYuMTg2IDIzMi4xNDVDNTU1LjA4MiAyMzEuMDY0IDU1My4zNzUgMjMwLjk2NSA1NTIuMTYyIDIzMS44NUw1NTEuODEzIDIzMi4xNDVMNTI3LjYxOSAyNTUuODM4QzUyOC4zNzcgMjU2LjEwNSA1MjkuMTkyIDI1Ni4yNSA1MzAuMDQyIDI1Ni4yNUg1NzcuOTU4QzU3OC44MDYgMjU2LjI1IDU3OS42MiAyNTYuMTA1IDU4MC4zNzcgMjU1LjgzOUw1NTYuMTg2IDIzMi4xNDVMNTgwLjM3NyAyNTUuODM5Wk01NzcuOTU4IDE5My43NUg1MzAuMDQyQzUyNi4wMTUgMTkzLjc1IDUyMi43NSAxOTcuMDE1IDUyMi43NSAyMDEuMDQyVjI0OC45NThDNTIyLjc1IDI0OS44MjcgNTIyLjkwMiAyNTAuNjYgNTIzLjE4IDI1MS40MzJMNTQ3LjQ0MSAyMjcuNjc5QzU1MC45MTIgMjI0LjI4IDU1Ni4zNjUgMjI0LjExOSA1NjAuMDI0IDIyNy4xOTRMNTYwLjU1OSAyMjcuNjhMNTg0LjgxOCAyNTEuNDM2QzU4NS4wOTcgMjUwLjY2MiA1ODUuMjUgMjQ5LjgyOCA1ODUuMjUgMjQ4Ljk1OFYyMDEuMDQyQzU4NS4yNSAxOTcuMDE1IDU4MS45ODUgMTkzLjc1IDU3Ny45NTggMTkzLjc1Wk01NjcuNTUgMjAyLjA4M0M1NzIuNzMzIDIwMi4wODMgNTc2LjkzNCAyMDYuMjg1IDU3Ni45MzQgMjExLjQ2N0M1NzYuOTM0IDIxNi42NSA1NzIuNzMzIDIyMC44NTEgNTY3LjU1IDIyMC44NTFDNTYyLjM2OCAyMjAuODUxIDU1OC4xNjcgMjE2LjY1IDU1OC4xNjcgMjExLjQ2N0M1NTguMTY3IDIwNi4yODUgNTYyLjM2OCAyMDIuMDgzIDU2Ny41NSAyMDIuMDgzWk01NjcuNTUgMjA4LjMzM0M1NjUuODIgMjA4LjMzMyA1NjQuNDE3IDIwOS43MzYgNTY0LjQxNyAyMTEuNDY3QzU2NC40MTcgMjEzLjE5OCA1NjUuODIgMjE0LjYwMSA1NjcuNTUgMjE0LjYwMUM1NjkuMjgxIDIxNC42MDEgNTcwLjY4NCAyMTMuMTk4IDU3MC42ODQgMjExLjQ2N0M1NzAuNjg0IDIwOS43MzYgNTY5LjI4MSAyMDguMzMzIDU2Ny41NSAyMDguMzMzWiIgZmlsbD0iI0FDQUNBQyIvPgo8ZGVmcz4KPGZpbHRlciBpZD0iZmlsdGVyMF9iXzEzNDhfNjQwMyIgeD0iLTQiIHk9Ii00IiB3aWR0aD0iMTExNiIgaGVpZ2h0PSI0NTgiIGZpbHRlclVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgY29sb3ItaW50ZXJwb2xhdGlvbi1maWx0ZXJzPSJzUkdCIj4KPGZlRmxvb2QgZmxvb2Qtb3BhY2l0eT0iMCIgcmVzdWx0PSJCYWNrZ3JvdW5kSW1hZ2VGaXgiLz4KPGZlR2F1c3NpYW5CbHVyIGluPSJCYWNrZ3JvdW5kSW1hZ2UiIHN0ZERldmlhdGlvbj0iMiIvPgo8ZmVDb21wb3NpdGUgaW4yPSJTb3VyY2VBbHBoYSIgb3BlcmF0b3I9ImluIiByZXN1bHQ9ImVmZmVjdDFfYmFja2dyb3VuZEJsdXJfMTM0OF82NDAzIi8+CjxmZUJsZW5kIG1vZGU9Im5vcm1hbCIgaW49IlNvdXJjZUdyYXBoaWMiIGluMj0iZWZmZWN0MV9iYWNrZ3JvdW5kQmx1cl8xMzQ4XzY0MDMiIHJlc3VsdD0ic2hhcGUiLz4KPC9maWx0ZXI+CjwvZGVmcz4KPC9zdmc+Cg==" style="width: 100%; max-height: 80vh; object-fit: contain;" /></div>
+        </div>
+      </div>
+    </div>
+  <div id="pdfModal" class="modal fade">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 520px; width: 520px;">
+      <div class="modal-content enrollment-modal" style="border-top-left-radius: 16px; border-top-right-radius: 16px; border-bottom-right-radius: 16px; border-bottom-left-radius: 16px; border-top-width: medium; border-right-width: medium; border-bottom-width: medium; border-left-width: medium; border-top-style: none; border-right-style: none; border-bottom-style: none; border-left-style: none; border-top-color: currentcolor; border-right-color: currentcolor; border-bottom-color: currentcolor; border-left-color: currentcolor; border-image-source: none; border-image-slice: 100%; border-image-width: 1; border-image-outset: 0; border-image-repeat: stretch; padding-top: 24px; padding-right: 24px; padding-bottom: 24px; padding-left: 24px; box-shadow: rgba(0, 0, 0, 0.15) 0px 8px 30px;">
+        <div class="modal-header border-0" style="display: flex; justify-content: space-between; font-weight: 400; font-size: 16px; line-height: 24px; letter-spacing: 0px; color: rgb(11, 58, 111); padding-top: 24px; padding-right: 24px; padding-left: 24px; padding-bottom: 20px;"><button type="button" data-bs-dismiss="modal" class="btn-close"><img src="/cmdspp_closeIcon" alt="close"/></button></div>
+        <div class="modal-body" style="padding-top: 0px; padding-right: 20px; padding-bottom: 20px; padding-left: 20px;"><iframe frameborder="0" id="pdfViewer" width="100%" height="600px" src="https://www.bing.com"></iframe></div>
+      </div>
+    </div>
+  </div>
+   <div id="infoModal" class="modal fade">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 520px; width: 520px;">
+      <div class="modal-content enrollment-modal" style="border-top-left-radius: 16px; border-top-right-radius: 16px; border-bottom-right-radius: 16px; border-bottom-left-radius: 16px; border-top-width: medium; border-right-width: medium; border-bottom-width: medium; border-left-width: medium; border-top-style: none; border-right-style: none; border-bottom-style: none; border-left-style: none; border-top-color: currentcolor; border-right-color: currentcolor; border-bottom-color: currentcolor; border-left-color: currentcolor; border-image-source: none; border-image-slice: 100%; border-image-width: 1; border-image-outset: 0; border-image-repeat: stretch; padding-top: 24px; padding-right: 24px; padding-bottom: 24px; padding-left: 24px; box-shadow: rgba(0, 0, 0, 0.15) 0px 8px 30px;">
+        <div class="modal-header border-0" style="display: flex; justify-content: space-between; font-weight: 400; font-size: 16px; line-height: 24px; letter-spacing: 0px; color: rgb(11, 58, 111); padding-top: 0px; padding-right: 0px; padding-left: 0px; padding-bottom: 20px;">
+         <div>Save Configuration</div>
+          <button type="button" id="cancelProvider" data-bs-dismiss="modal" class="btn-close"><img src="/cmdspp_closeIcon" alt="close"/></button>
+        </div>
+        <div class="modal-body" style="padding-top: 0px; padding-right: 0px; padding-bottom: 0px; padding-left: 0px;">
+          <div>Processing in progress. This may take a few moments.</div>
+          
+      </div>
+      <div class="modal-footer border-0" style="border-top-width: 1px; border-top-style: solid; border-top-color: rgb(238, 241, 245); padding-top: 0px; padding-right: 0px; padding-bottom: 0px; padding-left: 0px; display: flex; row-gap: 10px; column-gap: 10px;">
+            <button type="button" data-bs-dismiss="modal" class="btn btn-primary" style="width: 230px; height: 38px; border-top-left-radius: 10px; border-top-right-radius: 10px; border-bottom-right-radius: 10px; border-bottom-left-radius: 10px; padding-top: 8px; padding-right: 20px; padding-bottom: 8px; padding-left: 20px; opacity: 1; font-weight: 400; font-size: 14px; line-height: 20px; letter-spacing: 0px; text-align: center; background-image: initial; background-position-x: initial; background-position-y: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial; background-color: rgb(39, 68, 99); margin-top: 0px; margin-right: 0px; margin-bottom: 0px; margin-left: 0px;">OK</button></div>
+        </div>
+    </div>  
+  </div> 
+  <div class="row sectionBlockLayout text-start" style="display: none; flex-wrap: wrap; margin: 0px; min-height: auto; padding: 8px;">
+    <div class="container" style="padding: 0px; display: flex; flex-wrap: wrap; width: 100%; max-width: none; margin-top: 0px; margin-right: 0px; margin-bottom: 0px; margin-left: 0px; padding-top: 16px; padding-right: 24px; padding-bottom: 17px; padding-left: 24px;"><div class="col-lg-12 columnBlockLayout" style="flex-grow: 1; display: flex; flex-direction: column; min-width: 250px;"></div></div>
+  </div>
+</div>

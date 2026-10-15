@@ -1,0 +1,45 @@
+- adx_name: Restrict Read on Enrollment-PP
+  adx_right: 2
+  adx_scope: 1
+  adx_webpageaccesscontrolrule_webrole:
+  - 3e0eed5c-e2e0-46fa-a82c-1f6c985badca
+  adx_webpageaccesscontrolruleid: 0748db92-ce08-d68e-56f8-5e0e932ec5af
+  adx_webpageid: 51d44b41-26bf-6d84-f130-1b2b46867671
+- adx_name: Grant Change to Content
+  adx_right: 1
+  adx_webpageaccesscontrolruleid: 2ccf1d1c-4692-471e-856b-a2e97bd279c9
+- adx_name: Grant Change to Administrators
+  adx_right: 1
+  adx_webpageaccesscontrolrule_webrole:
+  - 43123b46-21f2-4834-8177-926e09ee53ab
+  adx_webpageaccesscontrolruleid: 318aaf45-b97c-446a-866e-dcb9efa49a1a
+  adx_webpageid: 551cf2a7-4cb2-4424-8af7-3422ddbd968e
+- adx_name: Restrict Read on Group Affiliation
+  adx_right: 2
+  adx_scope: 1
+  adx_webpageaccesscontrolrule_webrole:
+  - 3e0eed5c-e2e0-46fa-a82c-1f6c985badca
+  adx_webpageaccesscontrolruleid: 7e4c304e-7564-2221-77bc-1de5a09f42ab
+  adx_webpageid: fe2df42c-5b5e-1061-99cf-1330156d33e2
+- adx_name: Restrict Read on Enrollment
+  adx_right: 2
+  adx_scope: 1
+  adx_webpageaccesscontrolrule_webrole:
+  - 3e0eed5c-e2e0-46fa-a82c-1f6c985badca
+  adx_webpageaccesscontrolruleid: 8db026f5-ec63-51ac-8f3a-a35d521c8d40
+  adx_webpageid: d85c2d1b-c8de-5d88-e6cf-b5cc351a0e23
+- adx_name: Restrict Read on Dashboard
+  adx_right: 2
+  adx_scope: 1
+  adx_webpageaccesscontrolrule_webrole:
+  - 3e0eed5c-e2e0-46fa-a82c-1f6c985badca
+  adx_webpageaccesscontrolruleid: c44326e1-2ed7-f9ac-3cc6-3a0c01ee1b4b
+  adx_webpageid: 1d00d537-b8b2-03ca-8729-3e41d9104352
+- adx_name: Restrict Read on Form Config
+  adx_right: 2
+  adx_scope: 1
+  adx_webpageaccesscontrolrule_webrole: []
+  adx_webpageaccesscontrolruleid: d56f55f2-2802-efff-2dba-9635fa1ebf18
+  adx_webpageid: 7c549f07-2591-ce5c-f47e-907b7509b099
+  statecode: 1
+  statuscode: 2

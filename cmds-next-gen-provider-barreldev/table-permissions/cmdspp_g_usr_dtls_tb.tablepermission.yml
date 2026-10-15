@@ -1,0 +1,17 @@
+adx_accountrelationship: 
+adx_append: true
+adx_appendto: true
+adx_contactrelationship: 
+adx_create: true
+adx_delete: false
+adx_entitylogicalname: cmdspp_g_usr_dtls_tb
+adx_entityname: cmdspp_g_usr_dtls_tb
+adx_entitypermission_webrole:
+- 3e0eed5c-e2e0-46fa-a82c-1f6c985badca
+- 43123b46-21f2-4834-8177-926e09ee53ab
+adx_entitypermissionid: 536aa447-eb40-4b2e-82f7-72cfe9c40a21
+adx_parententitypermission: 
+adx_parentrelationship: 
+adx_read: true
+adx_scope: 756150000
+adx_write: false

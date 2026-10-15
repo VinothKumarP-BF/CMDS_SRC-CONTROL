@@ -1,0 +1,12 @@
+adx_append: true
+adx_appendto: false
+adx_create: true
+adx_delete: true
+adx_entitylogicalname: cmdspp_pc_specl_pvdty_map
+adx_entityname: Add_Specialty
+adx_entitypermission_webrole:
+- 3e0eed5c-e2e0-46fa-a82c-1f6c985badca
+adx_entitypermissionid: 129998aa-138c-f111-ab10-70a8a5b028cc
+adx_read: true
+adx_scope: 756150000
+adx_write: true

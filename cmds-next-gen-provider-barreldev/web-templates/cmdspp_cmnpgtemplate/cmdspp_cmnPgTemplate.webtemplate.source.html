@@ -1,0 +1,54 @@
+<!-- Power Pages Web Template -->
+{% assign appId = request.params['record'] | default: request.params['id'] %}
+
+{% fetchxml sectionJsonSchema %}
+<fetch>
+  <entity name="cmdspp_pc_enrol_page_json_tb">
+    <attribute name="cmdspp_p_jsontxt" />
+    <attribute name="cmdspp_p_table_nam" />
+    <attribute name="cmdspp_p_page_nam" />
+    <filter>
+      <condition attribute="cmdspp_p_page_nam" operator="eq" value="exclusion_sanction" />
+    </filter>
+  </entity>
+</fetch>
+{% endfetchxml %}
+
+<!-- 1. Liquid renders data into HTML DOM context -->
+<script id="wizardSchemaData" type="application/json">
+[
+  {% for rec in sectionJsonSchema.results.entities %}
+      {{ rec.cmdspp_p_jsontxt }}{% unless forloop.last %},{% endunless %}
+  {% endfor %}
+]
+</script>
+
+<style>
+  .cmdspp-sidemenu { display: none; }
+  
+  .cmdspp-loader-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(4px);
+    z-index: 99999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+  }
+  .cmdspp-loader-content {
+    text-align: center;
+  }
+  .cmdspp-loader-overlay.hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+</style>
+<div id="wizardContainer"></div>
+
+<script src="/new_cmn_template"></script>

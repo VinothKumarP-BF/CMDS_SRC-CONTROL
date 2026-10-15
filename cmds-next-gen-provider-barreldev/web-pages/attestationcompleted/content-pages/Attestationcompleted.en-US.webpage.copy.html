@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<body>
+<script>
+const params = new URLSearchParams(window.location.search);
+
+// Quote the value ourselves and escape it to prevent breaking out of the string
+var cmdsppBaseUrl = "{{ settings["cmdspp_ENV_App_Base_Url"] | escape }}";
+
+window.opener.postMessage(
+  {
+    source: "DOCUSIGN",
+    event: "SESSION_END",
+    eventType: params.get("event"),
+    envelopeId: params.get("envelopeId")
+  },
+  cmdsppBaseUrl
+);
+
+window.close();
+</script>
+</body>
+</html>

@@ -1,0 +1,117 @@
+#mainContent{
+    width: calc(100% - 221px);
+    position: relative;
+    left: 221px;
+}
+.cmdspp-dashboard-header{
+    padding:16px;
+    margin:9px
+}
+.xrm-attribute-value #cmdspp-toast-container {
+    width: auto !important;
+    display: block !important;
+}
+
+.xrm-attribute-value #cmdspp-toast-container .cmdspp-toast {
+    display: inline-flex !important;
+    width: fit-content !important;
+    max-width: 400px;
+}
+
+.cmdspp-dashboard-title{
+    margin:0;
+    color:#274463;
+    font-size:36px;
+    font-weight:400;
+    padding: 10px;
+leading-trim: NONE;
+line-height: 40px;
+letter-spacing: 0px;
+
+}
+ .cmdspp-dashboard-title {
+        margin: 0;
+        color: #274463;
+        font-size: 36px;
+        font-weight: 400;
+        line-height: 40px;
+        letter-spacing: 0;
+        padding: 24px 24px 24px 24px;
+    }
+
+    .cmdspp-section {
+        width: 100%;
+        background: #FFFFFF;
+        border-radius: 12px;
+        padding:0px 24px 24px 24px;
+        margin: 0px;
+        box-sizing: border-box;
+    }
+
+    .cmdspp-section-title {
+        color: #274463;
+        margin-bottom: 16px;
+       font-weight: 400;
+       font-size: 14px;
+       line-height: 20px;
+       letter-spacing: 0px;
+       margin-bottom:0px
+       
+    }
+     .cmdspp-subsection-title {
+        color: #274463;
+        margin-bottom: 16px;
+       font-weight: 400;
+       font-size: 12px;
+       line-height: 20px;
+       letter-spacing: 0px;
+       
+    }
+
+    .cmdspp-bottom-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+        width: 100%;
+        padding: 0 24px 24px 24px;
+        box-sizing: border-box;
+    }
+
+    .cmdspp-bottom-card {
+        flex: 1 1 320px;
+        background: #FFFFFF;
+        border: 1px solid #E5E9F0;
+        border-radius: 12px;
+        padding: 20px;
+        box-sizing: border-box;
+        min-height: 140px;
+        width: 50%;
+    }
+
+    .cmdspp-bottom-card-title {
+        font-size: 16px;
+        font-weight: 600;
+        color: #274463;
+        margin-bottom: 12px;
+    }
+
+    .cmdspp-bottom-card-empty {
+        color: #5A7099;
+        font-size: 13px;
+    }
+
+    .cmdspp-notification-item-dashboard{
+        padding: 10px !important;
+        border-bottom: none !important;
+        height: 52.5px !important;
+    }
+
+    .cmdspp-notification-footer-dashboard{
+        padding-bottom: 8px !important;
+    }
+
+    @media (max-width: 767px) {
+        .cmdspp-bottom-row {
+            flex-direction: column;
+        }
+    }

@@ -1,0 +1,16 @@
+adx_accountrelationship: 
+adx_append: true
+adx_appendto: true
+adx_contactrelationship: 
+adx_create: true
+adx_delete: true
+adx_entitylogicalname: cmdspp_p_pin_dea_dtl
+adx_entityname: cmdspp_p_pin_dea_dtl
+adx_entitypermission_webrole:
+- 3e0eed5c-e2e0-46fa-a82c-1f6c985badca
+adx_entitypermissionid: 13f1f77d-37a3-4445-82ce-f7f104706082
+adx_parententitypermission: 
+adx_parentrelationship: 
+adx_read: true
+adx_scope: 756150000
+adx_write: true

@@ -1,0 +1,22 @@
+body .top-header {
+    display: none !important;
+}
+
+body .crmEntityFormView .actions {
+    display: none !important;
+}
+
+body .provider-footer{
+    display: none !important;
+}
+
+body .crmEntityFormView, .entitylist, .modal-content, .popover-content{
+    border: none !important;
+}
+.enrollment-page{
+    padding: 0px !important;
+}
+
+.crmEntityFormView .cell{
+    padding: 0px !important;
+}

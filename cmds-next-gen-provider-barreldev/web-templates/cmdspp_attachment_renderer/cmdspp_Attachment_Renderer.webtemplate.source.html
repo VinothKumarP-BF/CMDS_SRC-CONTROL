@@ -1,0 +1,2674 @@
+<style>
+    .cmdspp-attachment-card {
+        background: #fff;
+        border: 1px solid #e4e8ef;
+        border-radius: 14px;
+        padding: 24px;
+        margin-bottom: 24px;
+        text-align: justify;
+    }
+
+    .cmdspp-attachment-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: #24456e;
+    }
+
+    .cmdspp-attachment-subtitle {
+        color: #707d95;
+        margin-top: 6px;
+        margin-bottom: 20px;
+    }
+
+    .cmdspp-attachment-table {
+        width: 100%;
+        border-collapse: collapse;
+        border: 1px solid #eef1f5;
+    }
+
+    .cmdspp-attachment-table th {
+        background: #22456f;
+        color: white;
+        padding: 14px;
+        text-align: left;
+    }
+
+    .cmdspp-attachment-table td {
+        padding: 14px;
+        border-bottom: 1px solid #eef1f5;
+    }
+
+    .cmdspp-upload-button {
+        background: #24456e;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        padding: 8px 14px;
+        cursor: pointer;
+    }
+
+    .cmdspp-upload-button:hover {
+        background: #1a3655;
+    }
+
+    .cmdspp-other-doc-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 5px;
+        margin-top: 30px;
+    }
+
+    .cmdspp-other-doc-table {
+        width: 100%;
+        border-collapse: collapse;
+        border: 1px solid #eef1f5;
+    }
+
+    .cmdspp-other-doc-table th {
+        background: #22456f;
+        color: #fff;
+        padding: 10px 14px;
+        font-size: 12px;
+        text-align: left;
+    }
+
+    #cmdspp-other-action-header{
+      padding-right: 85px;
+    }
+
+   #cmdspp-other-action-header,
+   #cmdspp-other-tbody td:nth-child(2) {
+    text-align: right;
+   }
+
+    .cmdspp-other-doc-table td {
+        border-bottom: 1px solid #e5e7eb;
+        padding: 12px;
+    }
+
+    .cmdspp-other-doc-dropzone {
+        min-height: 170px;
+        border: 2px dashed #d6dce5;
+        border-radius: 8px;
+        background: #fafafa;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        cursor: pointer;
+        text-align: center;
+        padding-bottom: 25px;
+    }
+
+    .cmdspp-other-doc-dropzone:hover {
+        background: #f4f7fb;
+    }
+
+    .cmdspp-action-btn {
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        margin-right: 4px;
+        background-color: white;
+        padding: 4px 8px;
+    }
+
+    .cmdspp-action-btn:hover {
+        background: #eef3f7;
+    }
+
+    .cmdspp-filename-cell {
+        white-space: normal;
+        overflow-wrap: break-word;
+        text-align: left;
+        line-height: 1.4;
+        max-width: 220px;
+    }
+
+    .cmdspp-upload-icon-box {
+        width: 42px;
+        height: 42px;
+        border-radius: 10px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin: auto auto 12px;
+    }
+
+    .cmdspp-pagination {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 12px;
+    }
+
+    .cmdspp-pagination-info {
+        font-size: 12px;
+        color: #64748b;
+    }
+
+    .cmdspp-pagination-controls {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .cmdspp-pagination-controls button,
+    .cmdspp-page-btn {
+        min-width: 28px;
+        height: 28px;
+        border: 1px solid #d1d5db;
+        background: #fff;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 12px;
+    }
+
+    .cmdspp-page-btn.active {
+        background: #24456e;
+        color: #fff;
+        border-color: #24456e;
+    }
+
+    .cmdspp-pagination-controls button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    /* modal */
+    .cmdspp-upload-modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(121, 138, 158, .45);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 99999;
+    }
+
+    .cmdspp-upload-modal {
+        width: 500px;
+        max-width: 92vw;
+        background: white;
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, .18);
+    }
+
+    .cmdspp-upload-modal-top-border {
+        height: 5px;
+        background: linear-gradient(90deg, #184c7a, #12c6d6);
+    }
+
+    .cmdspp-upload-modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        padding: 20px 22px 14px;
+    }
+
+    .cmdspp-upload-modal-title {
+        font-size: 22px;
+        font-weight: 500;
+        color: #23456d;
+    }
+
+    .cmdspp-upload-modal-subtitle {
+        font-size: 14px;
+        color: #7a8ca5;
+        margin-top: 4px;
+    }
+
+    .cmdspp-close-modal-btn {
+        border: none;
+        background: transparent;
+        font-size: 26px;
+        color: #8a8a8a;
+        cursor: pointer;
+        line-height: 1;
+    }
+
+    .cmdspp-upload-dropzone {
+        margin: 0 22px;
+        height: 220px;
+        border: 2px dashed #d7dce4;
+        border-radius: 12px;
+        cursor: pointer;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        position: relative;
+    }
+
+    .cmdspp-upload-dropzone-content {
+        text-align: center;
+        width: 100%;
+    }
+
+    .cmdspp-upload-dropzone-title {
+        color: #344054;
+        font-size: 14px;
+        margin-bottom: 6px;
+    }
+
+    .cmdspp-upload-dropzone-subtitle {
+        color: #98a2b3;
+        font-size: 12px;
+    }
+
+    .cmdspp-file-types {
+        margin-top: 14px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .cmdspp-file-types span {
+        background: #f2f4f7;
+        border-radius: 18px;
+        padding: 4px 10px;
+        font-size: 11px;
+    }
+
+    .cmdspp-max-size {
+        background: transparent !important;
+    }
+
+    .cmdspp-modal-footer {
+        display: flex;
+        gap: 12px;
+        padding: 20px 22px 22px;
+    }
+
+    .cmdspp-cancel-modal-btn {
+        flex: 1;
+        height: 42px;
+        border-radius: 8px;
+        border: 1px solid #23456d;
+        background: white;
+        color: #23456d;
+        cursor: pointer;
+    }
+
+    .cmdspp-submit-modal-btn {
+        flex: 1;
+        height: 42px;
+        border-radius: 8px;
+        border: none;
+        background: #23456d;
+        color: white;
+        cursor: pointer;
+    }
+
+    .cmdspp-submit-modal-btn:disabled {
+        opacity: .5;
+        cursor: not-allowed;
+        background: #23456d;
+    }
+
+    .cmdspp-uploaded-file-section {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        align-items: center;
+        width: 100%;
+        padding: 12px;
+    }
+
+    .cmdspp-uploaded-file-card {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 12px;
+        border: 1px solid #d1d1d1;
+        border-radius: 6px;
+        background: #fff;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .cmdspp-uploaded-file-icon {
+        font-size: 24px;
+        flex-shrink: 0;
+    }
+
+    .cmdspp-uploaded-file-details {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        min-width: 0;
+    }
+
+    .cmdspp-uploaded-file-name {
+        font-size: 14px;
+        font-weight: 600;
+        color: #323130;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .cmdspp-uploaded-file-size {
+        font-size: 12px;
+        color: #605e5c;
+    }
+
+    .cmdspp-remove-file-btn {
+        border: none;
+        background: transparent;
+        color: #605e5c;
+        cursor: pointer;
+        font-size: 18px;
+        font-weight: 600;
+        padding: 4px 8px;
+        flex-shrink: 0;
+    }
+
+    .cmdspp-remove-file-btn:hover {
+        color: #d13438;
+    }
+
+    .cmdspp-field-error {
+        color: #d13438;
+        margin-top: 8px;
+        font-size: 12px;
+        box-shadow: unset;
+    }
+
+    .cmdspp-file-input-hidden {
+        display: none;
+    }
+
+    .cmdspp-upload-file-types {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        margin-bottom: 6px;
+    }
+
+    .cmdspp-upload-file-types span {
+        display: inline-block;
+        font-size: 14px;
+        color: #1f3f68;
+    }
+</style>
+
+
+{% assign appId = request.params['record'] | default: request.params['id'] %}
+{% assign enrollAppNumber = request.params['id'] %}
+
+<!-- SERVER-SIDE PRE-FETCH: Grab the IDs instantly so JS doesn't have to wait -->
+{% fetchxml typeNameQuery %}
+<fetch top="1" no-lock="true">
+    <entity name="cmdspp_p_dtl_tb">
+        <attribute name="cmdspp_p_enrolment_type" />
+        <filter>
+            <condition attribute="cmdspp_p_sys_id" operator="eq" value="{{ enrollAppNumber }}" />
+            <condition attribute="statecode" operator="eq" value="0" />
+        </filter>
+    </entity>
+</fetch>
+{% endfetchxml %}
+{% assign typeName = typeNameQuery.results.entities[0].cmdspp_p_enrolment_type %}
+
+{% assign finalEnrollmentId = "" %}
+{% if typeName %}
+{% fetchxml typeIdQuery %}
+<fetch top="1" no-lock="true">
+    <entity name="cmdspp_pc_enrol_typ_tb">
+        <attribute name="cmdspp_pc_enrol_typ_tbid" />
+        <filter>
+            <condition attribute="cmdspp_p_enrol_typ_nam" operator="eq" value="{{ typeName }}" />
+        </filter>
+    </entity>
+</fetch>
+{% endfetchxml %}
+{% assign finalEnrollmentId = typeIdQuery.results.entities[0].cmdspp_pc_enrol_typ_tbid %}
+{% endif %}
+
+{% include 'cmdspp_ToastModal' %}
+{% include 'cmdspp_Loader' %}
+
+{% fetchxml attachmentConfigQuery %}
+<fetch top="1">
+    <entity name="cmdspp_pc_enrol_page_json_tb">
+        <attribute name="cmdspp_p_jsontxt" />
+        <attribute name="cmdspp_p_table_nam" />
+        <filter>
+            <condition attribute="cmdspp_p_table_nam" operator="eq" value="Attachments" />
+        </filter>
+    </entity>
+</fetch>
+{% endfetchxml %}
+
+<script id="attachmentConfigData" type="application/json">
+[
+{% for rec in attachmentConfigQuery.results.entities %}
+    {{ rec.cmdspp_p_jsontxt }}{% unless forloop.last %},{% endunless %}
+{% endfor %}
+]
+</script>
+
+
+<script>
+    window.cmdsppConfig = {
+        applicationId: "{{ appId | escape }}",
+        enrollmentAppNumber: "{{ enrollAppNumber | escape }}",
+        userId: "{{ user.contactid | default: '' }}",
+        preloadedEnrollmentId: "{{ finalEnrollmentId | escape }}"
+    };
+</script>
+
+<script>
+    window.cmdsppConfig = {
+        applicationId: "{{ appId | escape }}",
+        enrollmentAppNumber: "{{ enrollAppNumber | escape }}",
+        userId: "{{ user.contactid | default: '' }}"
+    };
+</script>
+
+
+<!-- ============================================================
+     ATTACHMENTS UI
+     ============================================================ -->
+
+<div id="cmdspp-attachment-root">
+
+    <!-- Required Attachments -->
+    <div class="cmdspp-attachment-card">
+
+        <div class="cmdspp-attachment-title" id="cmdspp-required-title">
+        </div>
+
+        <div class="cmdspp-attachment-subtitle" id="cmdspp-required-subtitle">
+        </div>
+
+        <table class="cmdspp-attachment-table">
+
+            <thead>
+                <tr>
+                    <th id="cmdspp-required-document-header"></th>
+                    <th id="cmdspp-required-action-header"></th>
+                    <th id="cmdspp-required-file-header"></th>
+                </tr>
+            </thead>
+
+            <tbody id="cmdspp-required-tbody"></tbody>
+
+        </table>
+
+        <div id="cmdspp-required-pagination" class="cmdspp-pagination">
+        </div>
+
+    </div>
+
+
+    <!-- Other Documents -->
+    <div class="cmdspp-attachment-card">
+
+        <div class="cmdspp-other-doc-header">
+
+            <div>
+
+                <div class="cmdspp-attachment-title" id="cmdspp-other-title">
+                </div>
+
+                <div class="cmdspp-attachment-subtitle" id="cmdspp-other-subtitle">
+                </div>
+
+            </div>
+
+            <button type="button" class="cmdspp-upload-button" id="cmdspp-other-upload-btn">
+            </button>
+
+        </div>
+
+
+        <table class="cmdspp-other-doc-table">
+
+            <thead>
+                <tr>
+                    <th id="cmdspp-other-file-header"></th>
+                    <th id="cmdspp-other-action-header"></th>
+                </tr>
+            </thead>
+
+            <tbody id="cmdspp-other-tbody"></tbody>
+
+        </table>
+
+        <div id="cmdspp-other-pagination" class="cmdspp-pagination">
+        </div>
+
+    </div>
+
+
+    <!-- ========================================================
+         UPLOAD / REPLACE MODAL
+         ======================================================== -->
+
+    <div id="cmdspp-upload-modal-overlay" class="cmdspp-upload-modal-overlay" style="display:none;">
+
+        <div class="cmdspp-upload-modal">
+
+            <div class="cmdspp-upload-modal-top-border"></div>
+
+
+            <div class="cmdspp-upload-modal-header">
+
+                <div>
+
+                    <div class="cmdspp-upload-modal-title" id="cmdspp-upload-modal-title">
+                    </div>
+
+                    <div class="cmdspp-upload-modal-subtitle" id="cmdspp-upload-doc-name">
+                    </div>
+
+                </div>
+
+                <button type="button" class="cmdspp-close-modal-btn" id="cmdspp-upload-close-btn">
+                    &times;
+                </button>
+
+            </div>
+
+
+            <div class="cmdspp-upload-dropzone" id="cmdspp-upload-dropzone">
+
+                <input type="file" id="cmdspp-upload-file-input" class="cmdspp-file-input-hidden" multiple />
+
+
+                <!-- Empty state -->
+                <div id="cmdspp-upload-dropzone-empty" class="cmdspp-upload-dropzone-content">
+
+                    <div class="cmdspp-upload-icon-box">
+                        <img src="/cmdspp_uploadDocument_icon" alt="" />
+                    </div>
+
+                    <div class="cmdspp-upload-dropzone-title" id="cmdspp-upload-drag-text">
+                    </div>
+
+                    <div class="cmdspp-upload-dropzone-subtitle" id="cmdspp-upload-browse-text">
+                    </div>
+
+                    <div class="cmdspp-file-types">
+                        <div id="cmdspp-upload-file-types" class="cmdspp-upload-file-types">
+                        </div>
+
+                        <span class="cmdspp-max-size" id="cmdspp-upload-max-size">
+                        </span>
+                    </div>
+
+                    <div id="cmdspp-upload-error" class="cmdspp-field-error" style="display:none;">
+                    </div>
+
+                </div>
+
+
+                <!-- Selected file state -->
+                <div id="cmdspp-upload-selected" class="cmdspp-uploaded-file-section" style="display:none;"
+                    onclick="event.stopPropagation();">
+
+                    <div class="cmdspp-uploaded-file-card">
+
+                        <div class="cmdspp-uploaded-file-icon">
+                            &#128196;
+                        </div>
+
+                        <div class="cmdspp-uploaded-file-details">
+
+                            <div class="cmdspp-uploaded-file-name" id="cmdspp-upload-file-name">
+                            </div>
+
+                            <div class="cmdspp-uploaded-file-size" id="cmdspp-upload-file-size">
+                            </div>
+
+                        </div>
+
+                        <button type="button" class="cmdspp-remove-file-btn" id="cmdspp-upload-remove-btn">
+                            &times;
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="cmdspp-modal-footer">
+
+                <button type="button" class="cmdspp-cancel-modal-btn" id="cmdspp-upload-cancel-btn">
+                </button>
+
+                <button type="button" class="cmdspp-submit-modal-btn" id="cmdspp-upload-submit-btn" disabled>
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- ========================================================
+         DELETE MODAL
+         ======================================================== -->
+
+    <div id="cmdspp-delete-modal-overlay" class="cmdspp-upload-modal-overlay" style="display:none;">
+
+        <div class="cmdspp-upload-modal">
+
+            <div class="cmdspp-upload-modal-top-border"></div>
+
+            <div class="cmdspp-upload-modal-header">
+
+                <div class="cmdspp-upload-modal-title" id="cmdspp-delete-title">
+                </div>
+
+                <button type="button" class="cmdspp-close-modal-btn" id="cmdspp-delete-close-btn">
+                    &times;
+                </button>
+
+            </div>
+
+
+            <div id="cmdspp-delete-message" style="padding:8px 22px 20px;">
+            </div>
+
+
+            <div class="cmdspp-modal-footer">
+
+                <button type="button" class="cmdspp-cancel-modal-btn" id="cmdspp-delete-cancel-btn">
+                </button>
+
+                <button type="button" class="cmdspp-submit-modal-btn" id="cmdspp-delete-confirm-btn">
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- ========================================================
+         VIEW MODAL
+         ======================================================== -->
+
+    <div id="cmdspp-view-modal-overlay" class="cmdspp-upload-modal-overlay" style="display:none;">
+
+        <div class="cmdspp-upload-modal" style="width:760px;max-width:95vw;">
+
+            <div class="cmdspp-upload-modal-top-border"></div>
+
+            <div class="cmdspp-upload-modal-header">
+
+                <div class="cmdspp-upload-modal-title" id="cmdspp-view-title">
+                </div>
+
+                <button type="button" class="cmdspp-close-modal-btn" id="cmdspp-view-close-btn">
+                    &times;
+                </button>
+
+            </div>
+
+            <div id="cmdspp-view-content" style="padding:0 22px 22px;width:100%;height:600px;overflow:auto;">
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<script>
+    
+    (function() {
+        "use strict";
+        /* ============================================================
+           1. CONFIG
+           ============================================================ */
+        var cmdsppRaw = {{ settings["cmdspp_ENV_Attachment_Urls"] | json }};
+        var cmdsppUrls = typeof cmdsppRaw === "string" ? JSON.parse(cmdsppRaw) : cmdsppRaw;
+        window.cmdsppConfig = Object.assign({}, window.cmdsppConfig || {}, {
+            attachmentFlow: cmdsppUrls && cmdsppUrls.cmdspp_document_management_flow,
+            attachmentRequiredDocuments: cmdsppUrls && cmdsppUrls.cmdspp_required_document_management_flow,
+            auditLogFlow: cmdsppUrls && cmdsppUrls.cmdspp_fetch_configAudits,
+            createDocusignFlow: cmdsppUrls && cmdsppUrls.CMDSPP_Create_Docusign_Envelope,
+            signatureUpdateFlow: cmdsppUrls && cmdsppUrls.cmdspp_Signature_Updates,
+        });
+        var cfg = window.cmdsppConfig || {};
+        var API_URLS = {
+            attachmentFlow: cfg.attachmentFlow,
+            attachmentRequiredDocuments: cfg.attachmentRequiredDocuments,
+            auditLogFlow: cfg.auditLogFlow,
+            createDocusignFlow: cfg.createDocusignFlow,
+            signatureUpdateFlow: cfg.signatureUpdateFlow,
+        };
+        var APPLICATION_ID = cfg.applicationId || "";
+        var ENROLLMENT_ID = cfg.preloadedEnrollmentId || "";;
+        var ENROL_NUMBER = cfg.enrollmentAppNumber || "";
+        var CURRENT_USER_ID = window.cmdsppUserId || cfg.userId || "";
+        /* ============================================================
+           2. ATTACHMENT CONFIG
+           ============================================================ */
+        var attachmentConfig = null;
+        function showPopupBlockedModal(url, popupFeatures) {
+            var existing = document.getElementById("cmdspp-popup-blocked-overlay");
+            if (existing) {
+                existing.remove();
+            }
+
+            var overlay = document.createElement("div");
+            overlay.id = "cmdspp-popup-blocked-overlay";
+            overlay.className = "cmdspp-upload-modal-overlay";
+
+            overlay.innerHTML =
+                '<div class="cmdspp-upload-modal" style="width:520px;max-width:92vw;">' +
+                    '<div class="cmdspp-upload-modal-top-border"></div>' +
+                    '<div class="cmdspp-upload-modal-header">' +
+                        '<div>' +
+                            '<div class="cmdspp-upload-modal-title">Pop-up blocked</div>' +
+                            '<div class="cmdspp-upload-modal-subtitle" style="margin-top:10px;line-height:1.5;">' +
+                                'Your browser blocked the DocuSign window. Please allow pop-ups for this site, then click <strong>Open DocuSign</strong> below.' +
+                            '</div>' +
+                        '</div>' +
+                    '</div>' +
+                    '<div id="cmdspp-popup-blocked-message" style="padding:0 22px 8px;color:#667085;font-size:13px;line-height:1.5;">' +
+                        'If your browser shows a pop-up blocked icon in the address bar, select it and allow pop-ups for this site.' +
+                    '</div>' +
+                    '<div class="cmdspp-modal-footer">' +
+                        '<button type="button" class="cmdspp-cancel-modal-btn" id="cmdspp-popup-cancel-btn">Cancel</button>' +
+                        '<button type="button" class="cmdspp-submit-modal-btn" id="cmdspp-popup-open-btn">Open DocuSign</button>' +
+                    '</div>' +
+                '</div>';
+
+            document.body.appendChild(overlay);
+
+            document.getElementById("cmdspp-popup-cancel-btn").onclick = function () {
+                overlay.remove();
+            };
+
+            document.getElementById("cmdspp-popup-open-btn").onclick = function () {
+                var popup = window.open(url, "DocuSign", popupFeatures);
+
+                if (popup) {
+                    popup.focus();
+                    overlay.remove();
+                    return;
+                }
+
+                var message = document.getElementById("cmdspp-popup-blocked-message");
+                if (message) {
+                    message.innerHTML =
+                        '<strong>The pop-up is still blocked.</strong> Please allow pop-ups for this site in your browser settings, then click <strong>Open DocuSign</strong> again.';
+                }
+            };
+        }
+
+        function openDocuSignWindow(url, popupWindow, popupFeatures) {
+            if (popupWindow && !popupWindow.closed) {
+                try {
+                    popupWindow.location.href = url;
+                    popupWindow.focus();
+                    return popupWindow;
+                } catch (err) {
+                    console.warn("Unable to reuse DocuSign popup window:", err);
+                }
+            }
+
+            var popup = window.open(url, "DocuSign", popupFeatures);
+
+            if (popup) {
+                popup.focus();
+                return popup;
+            }
+
+            showPopupBlockedModal(url, popupFeatures);
+            return null;
+        }
+
+        $(document).on("click", "#submitApplicationBtn", function (e) {
+            e.preventDefault();
+            console.log(state.attachments, state.requiredDocuments);
+
+            const missing = state.requiredDocuments?.filter((d) => !state.attachments[d.id] && !d.eSignature);
+
+            if(missing.length){
+                showToast("error", "All required documents must be uploaded before submission");
+            }else{
+                const width = 1100;
+                const height = 800;
+                const left = window.screenX + (window.outerWidth - width) / 2;
+                const top = window.screenY + (window.outerHeight - height) / 2;
+                const popupFeatures = `width=${width},height=${height},left=${left},top=${top}`;
+
+                /*
+                 * Open a blank window immediately while we are still inside the
+                 * user's click event. Browsers are much less likely to block this.
+                 * After the async DocuSign URL is returned, this same window is
+                 * navigated to that URL.
+                 */
+                let docusignPopup = null;
+
+                try {
+                    docusignPopup = window.open("", "DocuSign", popupFeatures);
+
+                    if (docusignPopup) {
+                        docusignPopup.document.title = "DocuSign";
+                        docusignPopup.document.body.innerHTML =
+                            '<div style="font-family:Arial,sans-serif;padding:24px;">Preparing DocuSign...</div>';
+                    }
+                } catch (popupError) {
+                    console.warn("Initial DocuSign popup was blocked:", popupError);
+                    docusignPopup = null;
+                }
+
+                showLoader();
+
+                webapi.safeAjax({
+                    type: "GET",
+                    url: "/_api/cmdspp_p_idt_inf_dtls" + "?$select=cmdspp_p_fst_nam,cmdspp_p_lst_nam,cmdspp_p_mid_in,_cmdspp_p_pvd_typ_lkp_value" +
+                        "&$filter=_cmdspp_p_app_id_lkp_value eq " + APPLICATION_ID +
+                        "&$expand=cmdspp_p_app_id_lkp($select=cmdspp_p_appln_email,cmdspp_p_envelope_id)",
+                    contentType: "application/json",
+                    success: function(res) {
+                        try {
+                            if (res && res.value && res.value.length) {
+                                let response = res.value[0]
+                                let envelopeId = response?.['cmdspp_p_app_id_lkp']?.['cmdspp_p_envelope_id']
+                                let email = response?.['cmdspp_p_app_id_lkp']?.['cmdspp_p_appln_email']
+                                let userName = (response?.['cmdspp_p_fst_nam']?response?.['cmdspp_p_fst_nam']:"") +" "+ (response?.['cmdspp_p_mid_in']?response?.['cmdspp_p_mid_in']:"") +" "+ (response?.['cmdspp_p_lst_nam']?response?.['cmdspp_p_lst_nam']:"")
+                                let signatureDocuments = state.requiredDocuments?.filter((d) => d.eSignature);
+                                let payload = {
+                                    "applicationId":APPLICATION_ID,
+                                    "signerName":userName,
+                                    "signerEmail":email,
+                                }
+
+                                if(envelopeId){
+                                    payload["envelopeID"] = envelopeId
+                                    payload["action"] = "getDocusignUrl"
+                                    postJson(API_URLS.signatureUpdateFlow,payload).then((results)=>{
+                                        console.log(results)
+                                        let url = results.embeddedUrl.url
+                                        docusignPopup = openDocuSignWindow(url, docusignPopup, popupFeatures);
+                                    }).catch(err=>{
+                                        if (docusignPopup && !docusignPopup.closed) {
+                                            docusignPopup.close();
+                                        }
+                                        hideLoader()
+                                    })
+
+
+                                }else{
+                                    payload["documents"]=signatureDocuments
+                                    postJson(API_URLS.createDocusignFlow,payload).then((results)=>{
+                                        console.log(results)
+                                        let url = results.embeddedUrl.url
+                                        docusignPopup = openDocuSignWindow(url, docusignPopup, popupFeatures);
+
+                                    }).catch(err=>{
+                                        if (docusignPopup && !docusignPopup.closed) {
+                                            docusignPopup.close();
+                                        }
+                                        hideLoader()
+                                    })
+
+
+                                }
+
+                            } else {
+                                if (docusignPopup && !docusignPopup.closed) {
+                                    docusignPopup.close();
+                                }
+                                hideLoader()
+                                console.warn("Attachment configuration not found.");
+                                attachmentConfig = {};
+                            }
+                        } catch (error) {
+                            if (docusignPopup && !docusignPopup.closed) {
+                                docusignPopup.close();
+                            }
+                            hideLoader()
+                            console.error("Failed to parse attachment configuration:", error);
+                        }
+                    },
+                    error: function(err) {
+                        if (docusignPopup && !docusignPopup.closed) {
+                            docusignPopup.close();
+                        }
+                        hideLoader()
+                        console.error("Failed to load attachment config:", err);
+                    }
+                });
+            }
+
+        });
+
+
+                function getConfig(path, defaultValue) {
+            var value = attachmentConfig;
+            if (!value) {
+                return defaultValue || "";
+            }
+            var parts = path.split(".");
+            for (var i = 0; i < parts.length; i++) {
+                if (value === null || value === undefined || value[parts[i]] === undefined) {
+                    return defaultValue || "";
+                }
+                value = value[parts[i]];
+            }
+            return value;
+        }
+
+        function getLabel(path, defaultValue) {
+            return getConfig("labels." + path, defaultValue);
+        }
+
+        function getAllowedExtensions() {
+            var extensions = getConfig("validation.allowedExtensions",
+                []);
+            return Array.isArray(extensions) ? extensions : [];
+        }
+
+        function getAcceptAttribute() {
+            return getAllowedExtensions().join(",");
+        }
+
+        function renderAllowedFileTypes(containerId) {
+            var container = document.getElementById(containerId);
+            if (!container) {
+                return;
+            }
+            var extensions = getAllowedExtensions();
+            var displayExtensions = extensions.filter(function(extension) {
+                return String(extension).trim().toLowerCase() !== ".jpg";
+            });
+            container.innerHTML = "";
+            displayExtensions.forEach(function(extension) {
+                var span = document.createElement("span");
+                span.textContent = extension;
+                container.appendChild(span);
+            });
+        }
+
+        function applyFileInputAcceptAttributes() {
+            var accept = getAcceptAttribute();
+            var uploadInput = document.getElementById("cmdspp-upload-file-input");
+            if (uploadInput) {
+                uploadInput.setAttribute("accept", accept);
+            }
+        }
+
+        function getValidationMessage(path, defaultValue) {
+            return getConfig("validation.messages." + path, defaultValue);
+        }
+
+        function getToastMessage(path, defaultValue) {
+            return getConfig("toastMessages." + path, defaultValue);
+        }
+
+        function getPageSize() {
+            var size = getConfig("pageSize", 4);
+            size = parseInt(size, 10);
+            return isNaN(size) || size <= 0 ? 4 : size;
+        }
+        /* ============================================================
+           3. LOAD ATTACHMENT CONFIG
+           ============================================================ */
+function loadAttachmentConfig() {
+    return new Promise(function(resolve, reject) {
+        try {
+            var configElement = document.getElementById("attachmentConfigData");
+
+            if (!configElement) {
+                console.warn("Attachment configuration element not found.");
+                attachmentConfig = {};
+                resolve(attachmentConfig);
+                return;
+            }
+
+            var configData = JSON.parse(configElement.textContent);
+
+            if (configData && configData.length > 0) {
+                attachmentConfig = configData[0];
+
+                console.log("Attachment Config loaded:", attachmentConfig);
+
+                resolve(attachmentConfig);
+            } else {
+                console.warn("Attachment configuration not found.");
+                attachmentConfig = {};
+                resolve(attachmentConfig);
+            }
+
+        } catch (error) {
+            console.error("Failed to parse attachment configuration:", error);
+            attachmentConfig = {};
+            reject(error);
+        }
+    });
+}
+        /* ============================================================
+           4. APPLY CONFIG TO STATIC UI
+           ============================================================ */
+        function applyAttachmentConfig() {
+            /*
+             * Required attachments
+             */
+            document.getElementById("cmdspp-required-title").textContent = getLabel("requiredAttachments.title");
+            document.getElementById("cmdspp-required-subtitle").textContent = getLabel("requiredAttachments.subtitle");
+            document.getElementById("cmdspp-required-document-header").textContent = getLabel(
+                "requiredAttachments.tableHeaders.document");
+            document.getElementById("cmdspp-required-action-header").textContent = getLabel(
+                "requiredAttachments.tableHeaders.action");
+            document.getElementById("cmdspp-required-file-header").textContent = getLabel(
+                "requiredAttachments.tableHeaders.fileName");
+            /*
+             * Other documents
+             */
+            document.getElementById("cmdspp-other-title").textContent = getLabel("otherDocuments.title");
+            document.getElementById("cmdspp-other-subtitle").textContent = getLabel("otherDocuments.subtitle");
+            document.getElementById("cmdspp-other-upload-btn").textContent = getLabel(
+            "otherDocuments.uploadButtonText");
+            document.getElementById("cmdspp-other-file-header").textContent = getLabel(
+                "otherDocuments.tableHeaders.fileName");
+            document.getElementById("cmdspp-other-action-header").textContent = getLabel(
+                "otherDocuments.tableHeaders.action");
+            /*
+             * Upload modal
+             */
+            document.getElementById("cmdspp-upload-modal-title").textContent = getLabel("uploadModal.title");
+            document.getElementById("cmdspp-upload-drag-text").textContent = getLabel("uploadModal.dropzone.dragText");
+            document.getElementById("cmdspp-upload-browse-text").textContent = getLabel(
+                "uploadModal.dropzone.browseText");
+            applyFileInputAcceptAttributes();
+            renderAllowedFileTypes("cmdspp-upload-file-types");
+            var maxSize = getConfig("validation.maxFileSizeMB", "");
+            var maxSizePrefix = getLabel("uploadModal.dropzone.maxSizePrefix", "");
+            var maxSizeSuffix = getLabel("uploadModal.dropzone.maxSizeSuffix", "");
+            document.getElementById("cmdspp-upload-max-size").textContent = [
+                maxSizePrefix,
+                maxSize,
+                maxSizeSuffix
+            ].filter(function(value) {
+                return value !== "" && value !== null && value !== undefined;
+            }).join(" ");
+            document.getElementById("cmdspp-upload-cancel-btn").textContent = getLabel("uploadModal.cancelButton");
+            document.getElementById("cmdspp-upload-submit-btn").textContent = getLabel("uploadModal.submitButton");
+            /*
+             * Delete modal
+             */
+            document.getElementById("cmdspp-delete-title").textContent = getLabel("deleteModal.title");
+            document.getElementById("cmdspp-delete-message").textContent = getLabel("deleteModal.confirmMessage");
+            document.getElementById("cmdspp-delete-cancel-btn").textContent = getLabel("deleteModal.cancelButton");
+            document.getElementById("cmdspp-delete-confirm-btn").textContent = getLabel("deleteModal.confirmButton");
+            /*
+             * View modal
+             */
+            document.getElementById("cmdspp-view-title").textContent = getLabel("viewModal.title");
+        }
+        /* ============================================================
+           5. TOAST
+           ============================================================ */
+        function showToast(type, message) {
+            if (typeof cmdsppShowToast === "function") {
+                cmdsppShowToast(type, message);
+            }
+        }
+        /* ============================================================
+           6. HTTP HELPERS
+           ============================================================ */
+        function postJson(url, payload) {
+            return fetch(url, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(payload)
+            }).then(function(r) {
+                if (!r.ok) {
+                    throw new Error("HTTP " + r.status);
+                }
+                return r.json();
+            });
+        }
+
+        function fileToBase64(file) {
+            return new Promise(function(resolve, reject) {
+                var reader = new FileReader();
+                reader.onload = function() {
+                    resolve(reader.result.split(",")[1]);
+                };
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+        }
+        /* ============================================================
+           7. SERVICE
+           ============================================================ */
+        var svc = {
+            uploadAttachment: function(documentId, file, enrollNumber, documentType, applicationId, documentName) {
+                return fileToBase64(file).then(function(b64) {
+                    return postJson(API_URLS.attachmentFlow, {
+                        action: "Upload",
+                        documentId: documentId,
+                        fileName: file.name,
+                        fileContent: b64,
+                        enrollmentId: enrollNumber,
+                        documentType: documentType,
+                        ApplicationId: applicationId,
+                        documentName: documentName,
+                        userId: CURRENT_USER_ID
+                    });
+                });
+            },
+            replaceAttachment: function(recordId, file, enrollNumber, documentType, applicationId) {
+                return fileToBase64(file).then(function(b64) {
+                    return postJson(API_URLS.attachmentFlow, {
+                        action: "Replace",
+                        recordId: recordId,
+                        fileName: file.name,
+                        fileContent: b64,
+                        enrollmentId: enrollNumber,
+                        documentType: documentType,
+                        ApplicationId: applicationId,
+                        userId: CURRENT_USER_ID
+                    });
+                });
+            },
+            detachAttachment: function(recordId) {
+                return postJson(API_URLS.attachmentFlow, {
+                    action: "Detach",
+                    recordId: recordId
+                });
+            },
+            getAttachment: function(recordId) {
+                return postJson(API_URLS.attachmentFlow, {
+                    action: "View",
+                    recordId: recordId
+                });
+            },
+            getUploadedAttachments: function(appId) {
+                return postJson(API_URLS.attachmentFlow, {
+                    action: "Fetch",
+                    ApplicationId: appId
+                });
+            },
+            getAttachmentDocuments: function(enrollType) {
+                return postJson(API_URLS.attachmentRequiredDocuments, {
+                    enrollmentType: enrollType
+                });
+            },
+            createAuditLog: function(payload) {
+                return postJson(API_URLS.auditLogFlow, payload);
+            }
+        };
+        /* ============================================================
+           8. FILE VALIDATION
+           ============================================================ */
+        function validateFile(fileOrList) {
+            if (!fileOrList) {
+                return null;
+            }
+            var file;
+            if (fileOrList instanceof FileList) {
+                if (fileOrList.length > 1) {
+                    return getValidationMessage("multipleFiles");
+                }
+                if (fileOrList.length === 0) {
+                    return null;
+                }
+                file = fileOrList[0];
+            } else {
+                file = fileOrList;
+            }
+            var allowed = getConfig("validation.allowedExtensions",
+                []);
+            if (!Array.isArray(allowed)) {
+                allowed = [];
+            }
+            var ext = "." + (file.name.split(".").pop() || "").toLowerCase();
+            if (allowed.indexOf(ext) === -1) {
+                return getValidationMessage("invalidFormat");
+            }
+            var maxMB = parseFloat(getConfig("validation.maxFileSizeMB", 10));
+            if (isNaN(maxMB)) {
+                maxMB = 10;
+            }
+            if (file.size > maxMB * 1024 * 1024) {
+                return getValidationMessage("fileTooLarge").replace("{maxMB}", maxMB);
+            }
+            return null;
+        }
+        /* ============================================================
+           9. AUDIT
+           ============================================================ */
+        function getAuditFieldName(documentType, documentId, fileName) {
+            if (documentType === "required") {
+                var doc = state.requiredDocuments.find(function(d) {
+                    return d.id === documentId;
+                });
+                return doc ? doc.name : documentId;
+            }
+            return fileName;
+        }
+
+        function createAuditPayload(operationType, fieldName, oldValue, newValue) {
+            return {
+                action: "Create",
+                auditList: [{
+                    oldValue: oldValue,
+                    newValue: newValue,
+                    fieldName: fieldName,
+                    operationType: operationType,
+                    modifiedBy: CURRENT_USER_ID
+                }]
+            };
+        }
+        /* ============================================================
+           10. STATE
+           ============================================================ */
+        var state = {
+            requiredDocuments: [],
+            attachments: {},
+            otherDocuments: [],
+            currentPage: 1,
+            otherCurrentPage: 1,
+            pageSize: 4,
+            uploadType: null,
+            selectedDocument: null,
+            isReplace: false,
+            replaceIndex: null,
+            selectedFile: null
+        };
+
+        function syncPageSizeFromConfig() {
+            state.pageSize = getPageSize();
+        }
+        /* ============================================================
+           11. RENDER
+           ============================================================ */
+        function render() {
+            renderRequiredTable();
+            renderOtherTable();
+            applyAttachmentReadOnlyMode();
+        }
+
+        function paginate(list, page, size) {
+            return list.slice(
+                (page - 1) * size, page * size);
+        }
+
+        function renderPagination(containerId, totalRecords, page, size, onChange) {
+            var totalPages = Math.max(1, Math.ceil(totalRecords / size));
+            var startCount = Math.min(page * size, totalRecords);
+            var el = document.getElementById(containerId);
+            var showingText = getLabel("pagination.showingText");
+            var ofText = getLabel("pagination.ofText");
+            var prevArrow = getLabel("pagination.prevArrow");
+            var nextArrow = getLabel("pagination.nextArrow");
+            el.innerHTML = '<span class="cmdspp-pagination-info">' + escapeHtml(showingText) + ' ' + startCount + ' ' +
+                escapeHtml(ofText) + ' ' + totalRecords + ' ' + escapeHtml(getLabel("pagination.recordsText")) +
+                '</span>' + '<div class="cmdspp-pagination-controls">' + '<button type="button" data-dir="-1"' + (
+                    page <= 1 ? " disabled" : "") + '>' + escapeHtml(prevArrow) + '</button>' + Array.from({
+                    length: totalPages
+                }, function(_, i) {
+                    var n = i + 1;
+                    return ('<button type="button" ' + 'class="cmdspp-page-btn' + (n === page ? " active" : "") +
+                        '" data-page="' + n + '">' + n + '</button>');
+                }).join("") + '<button type="button" data-dir="1"' + (page >= totalPages ? " disabled" : "") + '>' +
+                escapeHtml(nextArrow) + '</button>' + '</div>';
+            el.querySelectorAll("[data-page]").forEach(function(btn) {
+                btn.addEventListener("click", function() {
+                    onChange(parseInt(btn.dataset.page, 10));
+                });
+            });
+            el.querySelectorAll("[data-dir]").forEach(function(btn) {
+                btn.addEventListener("click", function() {
+                    onChange(page + parseInt(btn.dataset.dir, 10));
+                });
+            });
+        }
+
+        function escapeHtml(str) {
+            return String(str == null ? "" : str).replace(/[&<>"']/g, function(c) {
+                return {
+                    "&": "&amp;",
+                    "<": "&lt;",
+                    ">": "&gt;",
+                    '"': "&quot;",
+                    "'": "&#39;"
+                } [c];
+            });
+        }
+        /* ============================================================
+           12. REQUIRED TABLE
+           ============================================================ */
+        function renderRequiredTable() {
+            var rows = paginate(state.requiredDocuments, state.currentPage, state.pageSize);
+            var tbody = document.getElementById("cmdspp-required-tbody");
+            if (!rows.length) {
+                tbody.innerHTML = '<tr>' + '<td colspan="3" ' + 'style="text-align:center;padding:20px;color:#666;">' +
+                    escapeHtml(getLabel("requiredAttachments.emptyMessage")) + '</td>' + '</tr>';
+            } else {
+                tbody.innerHTML = rows.map(function(doc) {
+                    var att = state.attachments[doc.id];
+                    var actionHtml;
+                    if (att && att.id) {
+                        actionHtml = '<button type="button" ' + 'class="cmdspp-action-btn js-view" ' + 'title="View" ' +
+                            'data-id="' + escapeHtml(att.id) + '">' + '<img src="/cmdspp_viewIcon" alt="' +
+                            escapeHtml(getLabel("actionButtons.view")) + '"/>' + '</button>' +
+                            '<button type="button" ' + 'class="cmdspp-action-btn js-replace" ' + 'title="Replace" ' +
+                            'data-doc-id="' + escapeHtml(doc.id) + '">' +
+                            '<img src="/cmdspp_replaceIcon" alt="' + escapeHtml(getLabel(
+                                "actionButtons.replace")) + '"/>' + '</button>' + '<button type="button" ' +
+                            'class="cmdspp-action-btn js-detach" ' + 'title="Detach" ' + 'data-id="' + escapeHtml(att.id) + '" ' +
+                            'data-doc-id="' + escapeHtml(doc.id) + '">' +
+                            '<img src="/cmdspp_detachIcon" alt="' + escapeHtml(getLabel(
+                            "actionButtons.detach")) + '"/>' + '</button>';
+                    }else if (doc.eSignature) {
+    actionHtml =
+        '<button type="button" ' +
+        'class="cmdspp-action-btn js-sign" ' +
+        'title="Signature">' +
+        '<img src="/cmdspp_signature_icon" alt="' +
+        escapeHtml(getLabel("actionButtons.sign")) +
+        '"/>' +
+        '</button>';
+} else {
+                        actionHtml = '<button type="button" ' + 'class="cmdspp-action-btn js-upload" ' + 'title="Upload" ' +
+                            'data-doc-id="' + escapeHtml(doc.id) + '">' +
+                            '<img src="/cmdspp_uploadIcon" alt="' + escapeHtml(getLabel(
+                            "actionButtons.upload")) + '"/>' + '</button>';
+                    }
+                    var fileName = doc.eSignature ? (att && att.fileName ? att.fileName : getLabel(
+                        "requiredAttachments.needSignature")) : (att && att.fileName ? att.fileName :
+                        getLabel("requiredAttachments.noFileName"));
+                    return ('<tr data-doc-id="' + escapeHtml(doc.id) + '">' + '<td>' + escapeHtml(doc.name) +
+                        '</td>' + '<td>' + actionHtml + '</td>' + '<td class="cmdspp-filename-cell">' +
+                        escapeHtml(fileName) + '</td>' + '</tr>');
+                }).join("");
+            }
+            renderPagination("cmdspp-required-pagination", state.requiredDocuments.length, state.currentPage, state
+                .pageSize,
+                function(p) {
+                    state.currentPage = p;
+                    render();
+                });
+        }
+        /* ============================================================
+           13. OTHER DOCUMENT TABLE
+           ============================================================ */
+        function renderOtherTable() {
+            var rows = paginate(state.otherDocuments, state.otherCurrentPage, state.pageSize);
+            var tbody = document.getElementById("cmdspp-other-tbody");
+            if (!rows.length) {
+                tbody.innerHTML = '<tr>' + '<td colspan="2" style="padding:20px;">' + '<div ' +
+                    'class="cmdspp-other-doc-dropzone" ' + 'id="cmdspp-other-dropzone">' + '<input ' + 'type="file" ' +
+                    'id="cmdspp-other-dropzone-input" ' + 'accept="' + escapeHtml(getAcceptAttribute()) + '" ' +
+                    'multiple ' + 'style="display:none;"/>' + '<div class="cmdspp-upload-icon-box">' +
+                    '<img src="/cmdspp_uploadDocument_icon" alt=""/>' + '</div>' + '<div>' + escapeHtml(getLabel(
+                        "otherDocuments.dropzone.dragText")) + '</div>' +
+                    '<div style="font-size:12px;color:#98a2b3;">' + escapeHtml(getLabel(
+                        "otherDocuments.dropzone.browseText")) + '</div>' + '<div ' +
+                    'id="cmdspp-other-dropzone-error" ' + 'class="cmdspp-field-error">' + '</div>' + '</div>' +
+                    '</td>' + '</tr>';
+                bindOtherDropzone();
+            } else {
+            function capitalizeFirstLetter(text) {
+    if (!text) return "";
+    return text.charAt(0).toUpperCase() + text.slice(1);
+}
+
+tbody.innerHTML = rows.map(function(doc, idx) {
+    var actualIndex = (state.otherCurrentPage - 1) * state.pageSize + idx;
+
+    return (
+        '<tr data-index="' + actualIndex + '">' +
+            '<td class="cmdspp-filename-cell">' +
+                escapeHtml(doc.fileName) +
+            '</td>' +
+
+            '<td>' +
+
+                '<button type="button" ' +
+                    'class="cmdspp-action-btn js-other-view" ' +
+                    'title="' + escapeHtml(
+                        capitalizeFirstLetter(
+                            getLabel("actionButtons.view")
+                        )
+                    ) + '" ' +
+                    'data-index="' + actualIndex + '">' +
+                    '<img src="/cmdspp_viewIcon" alt="' +
+                        escapeHtml(getLabel("actionButtons.view")) +
+                    '"/>' +
+                '</button>' +
+
+                '<button type="button" ' +
+                    'class="cmdspp-action-btn js-other-replace" ' +
+                    'title="' + escapeHtml(
+                        capitalizeFirstLetter(
+                            getLabel("actionButtons.replace")
+                        )
+                    ) + '" ' +
+                    'data-index="' + actualIndex + '">' +
+                    '<img src="/cmdspp_replaceIcon" alt="' +
+                        escapeHtml(getLabel("actionButtons.replace")) +
+                    '"/>' +
+                '</button>' +
+
+                '<button type="button" ' +
+                    'class="cmdspp-action-btn js-other-detach" ' +
+                    'title="' + escapeHtml(
+                        capitalizeFirstLetter(
+                            getLabel("actionButtons.detach")
+                        )
+                    ) + '" ' +
+                    'data-index="' + actualIndex + '">' +
+                    '<img src="/cmdspp_detachIcon" alt="' +
+                        escapeHtml(getLabel("actionButtons.detach")) +
+                    '"/>' +
+                '</button>' +
+
+            '</td>' +
+        '</tr>'
+    );
+}).join("");
+            }
+            renderPagination("cmdspp-other-pagination", state.otherDocuments.length, state.otherCurrentPage, state
+                .pageSize,
+                function(p) {
+                    state.otherCurrentPage = p;
+                    render();
+                });
+        }
+        /* ============================================================
+       14. LOAD REQUIRED DOCUMENTS + ATTACHMENTS
+       ============================================================ */
+
+        function loadRequiredDocumentsAndAttachments() {
+            // Trigger your existing full-page/component loader
+            showLoader();
+
+            // Fetch required docs and uploaded files in PARALLEL
+            return Promise.all([
+                svc.getAttachmentDocuments(ENROLLMENT_ID),
+                svc.getUploadedAttachments(APPLICATION_ID)
+            ]).then(function (results) {
+                var docs = results[0];
+                var response = results[1];
+
+                state.requiredDocuments = Array.isArray(docs) ? docs : [];
+
+                var attachmentMap = {};
+                var otherDocs = [];
+
+                var items = Array.isArray(response)
+                    ? response
+                    : (response && Array.isArray(response.value) ? response.value : []);
+
+                items.forEach(function (item) {
+                    if (String(item.documentType || "").toLowerCase() === "required") {
+                        var matchingDoc = state.requiredDocuments.find(function (doc) {
+                            return String(doc.name || "").trim().toLowerCase() ===
+                                String(item.documentName || "").trim().toLowerCase();
+                        });
+
+                        if (matchingDoc) {
+                            attachmentMap[String(matchingDoc.id)] = {
+                                id: item.recordId,
+                                fileName: item.fileName,
+                                data: []
+                            };
+                        }
+                    } else {
+                        otherDocs.push({
+                            attachmentId: item.recordId,
+                            fileName: item.fileName,
+                            file: {}
+                        });
+                    }
+                });
+
+                state.attachments = attachmentMap;
+                state.otherDocuments = otherDocs;
+
+                // Render the tables with the new data
+                render();
+                return true;
+
+            }).catch(function(err) {
+                console.error("Error loading documents:", err);
+                showToast("error", "Failed to load documents. Please refresh.");
+                
+            }).finally(function() {
+                // Hide your existing loader once the 12-second fetch is entirely complete
+                hideLoader();
+            });
+        }
+        /* ============================================================
+           15. OTHER DOCUMENT DROPZONE
+           ============================================================ */
+        function bindOtherDropzone() {
+            var dz = document.getElementById("cmdspp-other-dropzone");
+            var input = document.getElementById("cmdspp-other-dropzone-input");
+            if (!dz || !input) {
+                return;
+            }
+
+            function uploadOtherFile(file) {
+                var err = validateFile(file);
+                var errEl = document.getElementById("cmdspp-other-dropzone-error");
+                if (err) {
+                    if (errEl) {
+                        errEl.textContent = err;
+                    }
+                    return;
+                }
+                if (errEl) {
+                    errEl.textContent = "";
+                }
+                showLoader();
+                svc.uploadAttachment("OTHER_DOCUMENT", file, ENROL_NUMBER, "other", APPLICATION_ID).then(function(
+                    result) {
+                    if (result && result.status === "Success" && result.recordId) {
+                        state.otherDocuments.push({
+                            file: file,
+                            attachmentId: result.recordId,
+                            fileName: file.name
+                        });
+                        svc.createAuditLog(createAuditPayload("Create", file.name, "", file.name)).catch(
+                            function() {});
+                        showToast("success", getToastMessage("uploadSuccess"));
+                        render();
+                    } else {
+                        showToast("error", getToastMessage("uploadFailed"));
+                    }
+                }).catch(function() {
+                    showToast("error", getToastMessage("uploadFailed"));
+                }).finally(hideLoader);
+            }
+            dz.addEventListener("click", function() {
+                input.click();
+            });
+            dz.addEventListener("dragover", function(e) {
+                e.preventDefault();
+            });
+            dz.addEventListener("drop", function(e) {
+                e.preventDefault();
+                var files = e.dataTransfer.files;
+                if (!files || !files.length) {
+                    return;
+                }
+                var err = validateFile(files);
+                var errEl = document.getElementById("cmdspp-other-dropzone-error");
+                if (err) {
+                    if (errEl) {
+                        errEl.textContent = err;
+                    }
+                    return;
+                }
+                if (errEl) {
+                    errEl.textContent = "";
+                }
+                uploadOtherFile(files[0]);
+            });
+            input.addEventListener("change", function(e) {
+                var files = e.target.files;
+                if (!files || !files.length) {
+                    return;
+                }
+                var err = validateFile(files);
+                if (err) {
+                    var errEl = document.getElementById("cmdspp-other-dropzone-error");
+                    if (errEl) {
+                        errEl.textContent = err;
+                    }
+                    return;
+                }
+                uploadOtherFile(files[0]);
+            });
+        }
+        /* ============================================================
+           16. UPLOAD MODAL
+           ============================================================ */
+        var uploadOverlay = document.getElementById("cmdspp-upload-modal-overlay");
+
+        function resetUploadDropzoneUI() {
+            state.selectedFile = null;
+            var empty = document.getElementById("cmdspp-upload-dropzone-empty");
+            var selected = document.getElementById("cmdspp-upload-selected");
+            var errEl = document.getElementById("cmdspp-upload-error");
+            var input = document.getElementById("cmdspp-upload-file-input");
+            var submitBtn = document.getElementById("cmdspp-upload-submit-btn");
+            empty.style.display = "";
+            selected.style.display = "none";
+            errEl.textContent = "";
+            errEl.style.display = "none";
+            submitBtn.disabled = true;
+            if (input) {
+                input.value = "";
+            }
+        }
+
+        function openUploadModal(documentOrNull, uploadType, isReplace, replaceIndex) {
+            state.uploadType = uploadType;
+            state.selectedDocument = documentOrNull;
+            state.isReplace = !!isReplace;
+            state.replaceIndex = typeof replaceIndex === "number" ? replaceIndex : null;
+            document.getElementById("cmdspp-upload-doc-name").textContent = uploadType === "other" ? getLabel(
+                "uploadModal.otherDocumentName") : (documentOrNull ? documentOrNull.name : "");
+            resetUploadDropzoneUI();
+            uploadOverlay.style.display = "flex";
+        }
+        // Save the current page name to resume the application from this step.
+        function updateApplicationProgress() {
+    const pathParts = window.location.pathname
+        .split("/")
+        .filter(Boolean);
+
+    const pageTitle =
+        pathParts[pathParts.indexOf("Enrollment-PP") + 1];
+
+    const recordId =
+        new URLSearchParams(window.location.search)
+            .get("record");
+
+    if (typeof cmdsppUpdateApplicationProgress === "function") {
+        cmdsppUpdateApplicationProgress({
+            recordId: recordId,
+            pageTitle: pageTitle
+        });
+    }
+}
+        function closeUploadModal() {
+            uploadOverlay.style.display = "none";
+            resetUploadDropzoneUI();
+            state.selectedDocument = null;
+            state.uploadType = null;
+            state.isReplace = false;
+            state.replaceIndex = null;
+        }
+
+        function isDuplicateFileName(file) {
+            if (!file || !file.name) {
+                return false;
+            }
+            var fileName = String(file.name).trim().toLowerCase();
+            if (state.uploadType === "required") {
+                return Object.keys(state.attachments).some(function(docId) {
+                    if (state.isReplace && state.selectedDocument && String(docId) === String(state
+                            .selectedDocument.id)) {
+                        return false;
+                    }
+                    var attachment = state.attachments[docId];
+                    return (attachment && attachment.fileName && String(attachment.fileName).trim()
+                    .toLowerCase() === fileName);
+                });
+            }
+            if (state.uploadType === "other") {
+                return state.otherDocuments.some(function(doc, index) {
+                    if (state.isReplace && state.replaceIndex !== null && index === state.replaceIndex) {
+                        return false;
+                    }
+                    return (doc && doc.fileName && String(doc.fileName).trim().toLowerCase() === fileName);
+                });
+            }
+            return false;
+        }
+
+        function setSelectedFile(file) {
+            if (isDuplicateFileName(file)) {
+                setUploadError(getValidationMessage("duplicateDocument"));
+                return;
+            }
+            state.selectedFile = file;
+            var empty = document.getElementById("cmdspp-upload-dropzone-empty");
+            var selected = document.getElementById("cmdspp-upload-selected");
+            var nameEl = document.getElementById("cmdspp-upload-file-name");
+            var sizeEl = document.getElementById("cmdspp-upload-file-size");
+            var submitBtn = document.getElementById("cmdspp-upload-submit-btn");
+            empty.style.display = "none";
+            selected.style.display = "flex";
+            nameEl.textContent = file.name;
+            sizeEl.textContent = (file.size / 1024).toFixed(1) + " " + getLabel("uploadModal.dropzone.fileSizeUnit",
+            "");
+            submitBtn.disabled = false;
+        }
+
+        function setUploadError(message) {
+            var errEl = document.getElementById("cmdspp-upload-error");
+            errEl.textContent = message;
+            errEl.style.display = "block";
+            state.selectedFile = null;
+            document.getElementById("cmdspp-upload-submit-btn").disabled = true;
+        }
+        document.getElementById("cmdspp-upload-close-btn").addEventListener("click", closeUploadModal);
+        document.getElementById("cmdspp-upload-cancel-btn").addEventListener("click", closeUploadModal);
+        document.getElementById("cmdspp-upload-remove-btn").addEventListener("click", function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            resetUploadDropzoneUI();
+        });
+        document.getElementById("cmdspp-upload-dropzone").addEventListener("click", function(e) {
+            if (state.selectedFile) {
+                return;
+            }
+            if (e.target.closest("#cmdspp-upload-selected")) {
+                return;
+            }
+            document.getElementById("cmdspp-upload-file-input").click();
+        });
+        document.getElementById("cmdspp-upload-dropzone").addEventListener("dragover", function(e) {
+            e.preventDefault();
+        });
+        document.getElementById("cmdspp-upload-dropzone").addEventListener("drop", function(e) {
+            e.preventDefault();
+            var file = e.dataTransfer.files && e.dataTransfer.files[0];
+            if (!file) {
+                return;
+            }
+            var err = validateFile(e.dataTransfer.files);
+            if (err) {
+                setUploadError(err);
+                return;
+            }
+            setSelectedFile(file);
+        });
+        document.getElementById("cmdspp-upload-file-input").addEventListener("change", function(e) {
+            var files = e.target.files;
+            if (!files || !files.length) {
+                return;
+            }
+            var err = validateFile(files);
+            if (err) {
+                setUploadError(err);
+                return;
+            }
+            setSelectedFile(files[0]);
+        });
+        
+        /* ============================================================
+           17. UPLOAD / REPLACE SUBMIT
+           ============================================================ */
+        document.getElementById("cmdspp-upload-submit-btn").addEventListener("click", function() {
+            if (!state.selectedFile) {
+                return;
+            }
+            var file = state.selectedFile;
+            var uploadType = state.uploadType;
+            var selectedDocument = state.selectedDocument;
+            var isReplace = state.isReplace;
+            var replaceIndex = state.replaceIndex;
+            closeUploadModal();
+            showLoader();
+
+            function afterSave(result, docType, docId) {
+                //
+                 updateApplicationProgress();
+                svc.createAuditLog(createAuditPayload(isReplace ? "Update" : "Create", getAuditFieldName(
+                    docType, docId, result.fileName), isReplace ? (state.attachments[docId] ? state
+                    .attachments[docId].fileName : "") : "", result.fileName)).catch(function(e) {
+                    console.error("Audit log failed:", e);
+                });
+                showToast("success", isReplace ? getToastMessage("replaceSuccess") : getToastMessage(
+                    "uploadSuccess"));
+                hideLoader();
+                render();
+            }
+
+            function onFail(err) {
+                console.error("Upload/Replace error:", err);
+                showToast("error", isReplace ? getToastMessage("replaceFailed") : getToastMessage(
+                    "uploadFailed"));
+                hideLoader();
+            }
+            /*
+             * Required document
+             */
+            if (uploadType === "required" && selectedDocument) {
+                if (isReplace) {
+                    var existingAtt = state.attachments[selectedDocument.id];
+                    var recordId = existingAtt ? existingAtt.id : null;
+                    svc.replaceAttachment(recordId, file, ENROL_NUMBER, "required", APPLICATION_ID).then(
+                        function(result) {
+                            if (result && result.status === "Success") {
+                                state.attachments[selectedDocument.id] = {
+                                    id: result.recordId,
+                                    fileName: result.fileName,
+                                    data: result.data || []
+                                };
+                                afterSave(result, "required", selectedDocument.id);
+                            } else {
+                                onFail(result);
+                            }
+                        }).catch(onFail);
+                } else {
+                    svc.uploadAttachment(selectedDocument.id, file, ENROL_NUMBER, "required", APPLICATION_ID,
+                        selectedDocument.name).then(function(result) {
+                        if (result && result.status === "Success") {
+                            state.attachments[selectedDocument.id] = {
+                                id: result.recordId,
+                                fileName: result.fileName,
+                                data: result.data || []
+                            };
+                            afterSave(result, "required", selectedDocument.id);
+                        } else {
+                            onFail(result);
+                        }
+                    }).catch(onFail);
+                }
+                /*
+                 * Other document
+                 */
+            } else if (uploadType === "other") {
+                if (isReplace && replaceIndex !== null) {
+                    var existing = state.otherDocuments[replaceIndex];
+                    var attachmentId = existing ? existing.attachmentId : null;
+                    if (!attachmentId) {
+                        showToast("error", getValidationMessage("missingOtherDocId"));
+                        hideLoader();
+                        return;
+                    }
+                    var oldFileName = existing.fileName;
+                    svc.replaceAttachment(attachmentId, file, ENROL_NUMBER, "other", APPLICATION_ID).then(
+                        function(result) {
+                            if (result && result.status === "Success") {
+                                state.otherDocuments[replaceIndex].fileName = file.name;
+                                svc.createAuditLog(createAuditPayload("Update", oldFileName, oldFileName,
+                                    file.name)).catch(function(e) {
+                                    console.error("Audit log failed:", e);
+                                });
+                                showToast("success", getToastMessage("replaceSuccess"));
+                                hideLoader();
+                                render();
+                            } else {
+                                onFail(result);
+                            }
+                        }).catch(onFail);
+                } else {
+                    svc.uploadAttachment("OTHER_DOCUMENT", file, ENROL_NUMBER, "other", APPLICATION_ID).then(
+                        function(result) {
+                            if (result && result.status === "Success" && result.recordId) {
+                                state.otherDocuments.push({
+                                    file: file,
+                                    attachmentId: result.recordId,
+                                    fileName: file.name
+                                });
+                                svc.createAuditLog(createAuditPayload("Create", file.name, "", file.name))
+                                    .catch(function() {});
+                                showToast("success", getToastMessage("uploadSuccess"));
+                                hideLoader();
+                                render();
+                            } else {
+                                onFail(result);
+                            }
+                        }).catch(onFail);
+                }
+            }
+        });
+        /* ============================================================
+           18. DELETE MODAL
+           ============================================================ */
+        var deleteOverlay = document.getElementById("cmdspp-delete-modal-overlay");
+        var pendingDelete = {
+            recordId: null,
+            type: null,
+            index: null
+        };
+
+        function openDeleteModal(recordId, type, index) {
+            pendingDelete = {
+                recordId: recordId,
+                type: type,
+                index: typeof index === "number" ? index : null
+            };
+            deleteOverlay.style.display = "flex";
+        }
+
+        function closeDeleteModal() {
+            deleteOverlay.style.display = "none";
+            pendingDelete = {
+                recordId: null,
+                type: null,
+                index: null
+            };
+        }
+        document.getElementById("cmdspp-delete-close-btn").addEventListener("click", closeDeleteModal);
+        document.getElementById("cmdspp-delete-cancel-btn").addEventListener("click", closeDeleteModal);
+        document.getElementById("cmdspp-delete-confirm-btn").addEventListener("click", function() {
+            var target = pendingDelete;
+            closeDeleteModal();
+            showLoader();
+            svc.detachAttachment(target.recordId).then(function(result) {
+                if (result && result.status === "Success") {
+                    var deletedFileName = "";
+                    
+                    if (target.type === "required") {
+                        var docId = Object.keys(state.attachments).find(function(k) {
+                            return (state.attachments[k] && state.attachments[k].id === target
+                                .recordId);
+                        });
+                        deletedFileName = docId ? state.attachments[docId].fileName : "";
+                        if (docId) {
+                            state.attachments[docId] = {
+                                id: "",
+                                fileName: "",
+                                data: []
+                            };
+                        }
+                        svc.createAuditLog(createAuditPayload("Delete", getAuditFieldName("required",
+                            docId || "", deletedFileName), deletedFileName, "")).catch(
+                        function() {});
+                    } else if (target.type === "other" && target.index !== null) {
+                        var deletedDoc = state.otherDocuments[target.index];
+                        deletedFileName = deletedDoc ? deletedDoc.fileName : "";
+                        state.otherDocuments.splice(target.index, 1);
+                        svc.createAuditLog(createAuditPayload("Delete", deletedFileName,
+                            deletedFileName, "")).catch(function() {});
+                    }
+                     updateApplicationProgress();
+                    showToast("success", getToastMessage("deleteSuccess"));
+                    render();
+                } else {
+                    showToast("error", getToastMessage("deleteFailed"));
+                }
+            }).catch(function() {
+                showToast("error", getToastMessage("deleteFailed"));
+            }).finally(hideLoader);
+        });
+        /* ============================================================
+           19. VIEW MODAL
+           ============================================================ */
+        var viewOverlay = document.getElementById("cmdspp-view-modal-overlay");
+        document.getElementById("cmdspp-view-close-btn").addEventListener("click", function() {
+            viewOverlay.style.display = "none";
+            document.getElementById("cmdspp-view-content").innerHTML = "";
+        });
+
+        function handleViewAttachment(recordId) {
+            showLoader();
+            svc.getAttachment(recordId).then(function(result) {
+                if (result && result.status === "Success") {
+                    renderViewContent(result.fileContent, result.fileName);
+                    viewOverlay.style.display = "flex";
+                } else {
+                    showToast("error", getToastMessage("viewFailed"));
+                }
+            }).catch(function() {
+                showToast("error", getToastMessage("viewFailed"));
+            }).finally(hideLoader);
+        }
+
+        function renderViewContent(fileUrl, fileName) {
+            var c = document.getElementById("cmdspp-view-content");
+            if (/^data:image\/(jpeg|jpg|png)/i.test(fileUrl)) {
+                c.innerHTML = '<img ' + 'src="' + fileUrl + '" ' + 'alt="" ' +
+                    'style="width:100%;height:auto;object-fit:contain;"/>';
+            } else if (/^data:image\/(tiff|x-tiff|tif)/i.test(fileUrl)) {
+                c.innerHTML = '<div style="text-align:center;padding:20px;">' + '<p>' + escapeHtml(getLabel(
+                    "viewModal.tiffMessage")) + '</p>' + '<a href="' + fileUrl + '" download="' + escapeHtml(
+                    fileName) + '">' + escapeHtml(fileName) + '</a>' + '</div>';
+            } else if (/^data:application\/pdf/i.test(fileUrl)) {
+                c.innerHTML = '<iframe ' + 'src="' + fileUrl + '" ' + 'title="' + escapeHtml(getLabel(
+                        "viewModal.title")) + '" ' + 'width="100%" ' + 'height="570px" ' + 'style="border:none;">' +
+                    '</iframe>';
+            } else {
+                c.innerHTML = '<p style="padding:20px;">' + escapeHtml(getLabel("viewModal.unsupportedMessage")) +
+                    '</p>';
+            }
+        }
+        /* ============================================================
+           20. REQUIRED TABLE EVENTS
+           ============================================================ */
+        document.getElementById("cmdspp-required-tbody").addEventListener("click", function(e) {
+            var btn;
+            /*
+             * Upload
+             */
+            btn = e.target.closest(".js-upload");
+            if (btn) {
+                var doc1 = state.requiredDocuments.find(function(d) {
+                    return String(d.id) === btn.dataset.docId;
+                });
+                return openUploadModal(doc1, "required", false);
+            }
+            /*
+             * Replace
+             */
+            btn = e.target.closest(".js-replace");
+            if (btn) {
+                var doc2 = state.requiredDocuments.find(function(d) {
+                    return String(d.id) === btn.dataset.docId;
+                });
+                return openUploadModal(doc2, "required", true);
+            }
+            /*
+             * View
+             */
+            btn = e.target.closest(".js-view");
+            if (btn) {
+                return handleViewAttachment(btn.dataset.id);
+            }
+            /*
+             * Delete
+             */
+            btn = e.target.closest(".js-detach");
+            if (btn) {
+                return openDeleteModal(btn.dataset.id, "required");
+            }
+        });
+        /* ============================================================
+           21. OTHER TABLE EVENTS
+           ============================================================ */
+        document.getElementById("cmdspp-other-tbody").addEventListener("click", function(e) {
+            var btn;
+            var idx;
+            /*
+             * View
+             */
+            btn = e.target.closest(".js-other-view");
+            if (btn) {
+                idx = parseInt(btn.dataset.index, 10);
+                var doc = state.otherDocuments[idx];
+                if (doc && doc.attachmentId) {
+                    return handleViewAttachment(doc.attachmentId);
+                }
+                return showToast("error", getValidationMessage("otherDocNotAvailable"));
+            }
+            /*
+             * Replace
+             */
+            btn = e.target.closest(".js-other-replace");
+            if (btn) {
+                idx = parseInt(btn.dataset.index, 10);
+                return openUploadModal(null, "other", true, idx);
+            }
+            /*
+             * Delete
+             */
+            btn = e.target.closest(".js-other-detach");
+            if (btn) {
+                idx = parseInt(btn.dataset.index, 10);
+                var doc3 = state.otherDocuments[idx];
+                if (!doc3 || !doc3.attachmentId) {
+                    return showToast("error", getValidationMessage("otherDocIdMissing"));
+                }
+                return openDeleteModal(doc3.attachmentId, "other", idx);
+            }
+        });
+        /* ============================================================
+           22. OTHER UPLOAD BUTTON
+           ============================================================ */
+        document.getElementById("cmdspp-other-upload-btn").addEventListener("click", function() {
+            openUploadModal(null, "other", false);
+        });
+        /* ============================================================
+           23. ENROLLMENT TYPE
+           ============================================================ */
+        function odataEscape(value) {
+            return String(value == null ? "" : value).replace(/'/g, "''");
+        }
+        
+
+        function fetchEnrollmentTypeName(appNumber) {
+        return new Promise(function (resolve, reject) {
+            if (!window.webapi || !window.webapi.safeAjax) return reject(new Error("webapi not ready"));
+            webapi.safeAjax({
+                type: "GET",
+                url: "/_api/cmdspp_p_dtl_tbs?$filter=cmdspp_p_sys_id eq '" + odataEscape(appNumber) + "' and statecode eq 0&$select=cmdspp_p_dtl_tbid,cmdspp_p_enrolment_type",
+                contentType: "application/json",
+                success: function (res) {
+                    var row = res && res.value && res.value[0];
+                    resolve(row ? row.cmdspp_p_enrolment_type : "");
+                },
+                error: reject
+            });
+        });
+    }
+
+    function fetchEnrollmentTypeId(typeName) {
+        return new Promise(function (resolve, reject) {
+            if (!typeName) return resolve("");
+            webapi.safeAjax({
+                type: "GET",
+                url: "/_api/cmdspp_pc_enrol_typ_tbs?$filter=cmdspp_p_enrol_typ_nam eq '" + odataEscape(typeName) + "'&$select=cmdspp_pc_enrol_typ_tbid",
+                contentType: "application/json",
+                success: function (res) {
+                    var row = res && res.value && res.value[0];
+                    resolve(row ? row.cmdspp_pc_enrol_typ_tbid : "");
+                },
+                error: reject
+            });
+        });
+    }
+
+//Read only
+window.cmdsppIsReadOnly = false;
+
+function applyAttachmentReadOnlyMode() {
+
+    if (!window.cmdsppIsReadOnly) return;
+
+    document.querySelectorAll(
+        '.js-upload, .js-replace, .js-detach, .js-other-replace, .js-other-detach'
+    ).forEach(function(btn) {
+        btn.disabled = true;
+        btn.style.opacity = '0.5';
+        btn.style.cursor = 'not-allowed';
+        btn.style.pointerEvents = 'none';
+    });
+
+    const uploadBtn =
+        document.getElementById('cmdspp-other-upload-btn');
+
+    if (uploadBtn) {
+        uploadBtn.disabled = true;
+        uploadBtn.style.opacity = '0.5';
+        uploadBtn.style.cursor = 'not-allowed';
+        uploadBtn.style.pointerEvents = 'none';
+    }
+
+    const dropZone =
+        document.getElementById('cmdspp-other-dropzone');
+
+    if (dropZone) {
+        dropZone.style.pointerEvents = 'none';
+        dropZone.style.opacity = '0.5';
+    }
+}
+    /* ============================================================
+       24. INITIALIZATION
+       ============================================================ */
+
+    document.addEventListener("DOMContentLoaded", function () {
+          const recordId =new URLSearchParams(window.location.search).get("record");
+
+    if (!recordId) return;
+
+    webapi.safeAjax({
+        type: "GET",
+        url:
+            "/_api/cmdspp_p_dtl_tbs" +
+            "?$select=cmdspp_p_appln_status" +
+            "&$filter=cmdspp_p_dtl_tbid eq " + recordId,
+
+        success: function (res) {
+
+            if (!res?.value?.length) return;
+
+            const status =
+                Number(res.value[0].cmdspp_p_appln_status);
+            if(status === 2){
+                window.cmdsppIsReadOnly = true;
+                applyAttachmentReadOnlyMode();
+            }
+            // Awaiting Signature
+            else if (status === 5) {
+
+                console.log(
+                    "Application is Awaiting Signature. Opening DocuSign..."
+                );
+
+                $("#submitApplicationBtn").trigger("click");
+
+                // or
+                // document.getElementById("submitApplicationBtn")?.click();
+            }
+        },
+
+        error: function (err) {
+            console.error(
+                "Unable to fetch application status",
+                err
+            );
+        }
+    });
+
+        showLoader();
+
+        // TRACK 1: Fetch and apply UI configuration
+        var configPromise = loadAttachmentConfig().then(function () {
+            applyAttachmentConfig();
+            syncPageSizeFromConfig();
+        });
+
+        // TRACK 2: Safely lookup the IDs, THEN fetch documents
+        var enrollmentPromise = Promise.resolve()
+            .then(function () {
+                if (!ENROL_NUMBER) throw new Error("Enrollment number missing");
+                return fetchEnrollmentTypeName(ENROL_NUMBER);
+            })
+            .then(function (typeName) {
+                if (!typeName) throw new Error("Could not find type name");
+                return fetchEnrollmentTypeId(typeName);
+            })
+            .then(function (typeId) {
+                if (!typeId) throw new Error("Could not find type ID");
+                
+                // Assign the validated ID
+                ENROLLMENT_ID = typeId;
+                console.log("Successfully resolved ENROLLMENT_ID:", ENROLLMENT_ID);
+                
+                // Only now do we call your Power Automate flows (running in parallel)
+                return loadRequiredDocumentsAndAttachments();
+            });
+
+        // Wait for everything to finish
+        Promise.all([configPromise, enrollmentPromise])
+            .then(function () {
+                console.log("Entire attachment screen data loaded.");
+            })
+            .catch(function (err) {
+                console.error("Attachment initialization failed:", err);
+                // Optional: show Toast error here so user knows something failed
+                showToast("error", "Failed to load documents. Please refresh the page.");
+                render(); 
+            })
+            .finally(function () {
+                hideLoader();
+            });
+    });
+    })();
+</script>
+
+<script>
+(function () {
+
+    /*
+     * Expected message origin.
+     * If DocuSign is hosted on another known origin,
+     * replace this with that exact origin.
+     */
+    const baseUrl = window.location.origin;
+
+    const cfg = window.cmdsppConfig || {};
+    const APPLICATION_ID = cfg.applicationId || "";
+
+    /*
+     * Power Pages cloud flow trigger GUID.
+     *
+     * Configure:
+     * window.cmdsppConfig.statusFlowTriggerId = "<FLOW_TRIGGER_GUID>";
+     *
+     * The flow must use:
+     * - Trigger: "When Power Pages calls a flow"
+     * - Input: applicationId (Text)
+     * - Dataverse: Get a row by ID
+     * - Return value(s) to Power Pages:
+     *     applicationStatus
+     *     modifiedOn
+     */
+    const STATUS_FLOW_TRIGGER_ID =
+        cfg.statusFlowTriggerId || "";
+
+    let pollInProgress = false;
+    let signatureCompleted = false;
+    let pollTimer = null;
+
+
+    /*
+     * Schedule the next poll without creating
+     * multiple overlapping timers.
+     */
+    function scheduleNextPoll(delay = 2000) {
+
+        if (signatureCompleted) {
+            return;
+        }
+
+        if (pollTimer) {
+            clearTimeout(pollTimer);
+            pollTimer = null;
+        }
+
+        pollTimer = setTimeout(function () {
+
+            pollTimer = null;
+            poll();
+
+        }, delay);
+    }
+
+
+    /*
+     * Poll Dataverse application status.
+     */
+    function poll() {
+
+        /*
+         * Stop if already completed.
+         */
+        if (signatureCompleted) {
+            return;
+        }
+
+        /*
+         * Prevent overlapping Power Automate calls.
+         */
+        if (pollInProgress) {
+            return;
+        }
+
+        if (!APPLICATION_ID) {
+            console.error(
+                "Application ID is missing."
+            );
+            return;
+        }
+
+        
+
+        if (
+            !window.shell ||
+            typeof window.shell.ajaxSafePost !== "function"
+        ) {
+            console.error(
+                "shell.ajaxSafePost is not available."
+            );
+            scheduleNextPoll(2000);
+            return;
+        }
+
+        pollInProgress = true;
+        var cmdsppRaw = {{ settings["cmdspp_ENV_Attachment_Urls"] | json }};
+        var cmdsppUrls = typeof cmdsppRaw === "string" ? JSON.parse(cmdsppRaw) : cmdsppRaw;
+        window.cmdsppConfig = Object.assign({}, window.cmdsppConfig || {}, {
+            attachmentFlow: cmdsppUrls && cmdsppUrls.cmdspp_document_management_flow,
+            attachmentRequiredDocuments: cmdsppUrls && cmdsppUrls.cmdspp_required_document_management_flow,
+            auditLogFlow: cmdsppUrls && cmdsppUrls.cmdspp_fetch_configAudits,
+            createDocusignFlow: cmdsppUrls && cmdsppUrls.CMDSPP_Create_Docusign_Envelope,
+            signatureUpdateFlow: cmdsppUrls && cmdsppUrls.cmdspp_Signature_Updates,
+        });
+        var cfg = window.cmdsppConfig || {};
+        var API_URLS = {
+            attachmentFlow: cfg.attachmentFlow,
+            attachmentRequiredDocuments: cfg.attachmentRequiredDocuments,
+            auditLogFlow: cfg.auditLogFlow,
+            createDocusignFlow: cfg.createDocusignFlow,
+            signatureUpdateFlow: cfg.signatureUpdateFlow,
+        };
+        const flowUrl =API_URLS.signatureUpdateFlow;
+
+        console.log(
+            "[Application Status Flow Poll]",
+            new Date().toISOString(),
+            {
+                applicationId: APPLICATION_ID,
+                flowUrl: flowUrl
+            }
+        );
+
+        try {
+
+            function postJson(url, payload) {
+            return fetch(url, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(payload)
+            }).then(function(r) {
+                if (!r.ok) {
+                    throw new Error("HTTP " + r.status);
+                }
+                return r.json();
+            });
+        }
+
+        postJson( flowUrl,{
+                    "ApplicationID": APPLICATION_ID,
+                    "action": "getApplnStatus"
+                }).then((resp)=>{
+                    if(resp){
+                        if (resp.applicationStatus === 2) {
+
+                            signatureCompleted = true;
+
+                            if (pollTimer) {
+                                clearTimeout(pollTimer);
+                                pollTimer = null;
+                            }
+
+                            console.log(
+                                "Application status is 2. Redirecting..."
+                            );
+
+                            if (
+                                typeof hideLoader ===
+                                "function"
+                            ) {
+                                hideLoader();
+                            }
+
+                            window.location.href =
+                                "/Enrollment-PP/E-signature/" +
+                                window.location.search;
+
+                            return;
+                        }else{
+                            pollInProgress = false;
+                            scheduleNextPoll(2000);
+                        }
+                    }else{
+                        pollInProgress = false;
+                        scheduleNextPoll(2000);
+                    }
+                }).catch((err)=>{
+                    scheduleNextPoll(2000);
+                })
+           
+
+        } catch (err) {
+
+            pollInProgress = false;
+
+            console.error(
+                "Unexpected Power Automate polling error:",
+                err
+            );
+
+            scheduleNextPoll(2000);
+        }
+    }
+
+
+    /*
+     * Listen for DocuSign postMessage event.
+     */
+    function listener(event) {
+
+        console.log(
+            "Message received:",
+            event
+        );
+
+
+        /*
+         * Security origin validation.
+         */
+        if (
+            event.origin !== baseUrl
+        ) {
+
+            console.log(
+                "Ignoring message from origin:",
+                event.origin
+            );
+
+            return;
+        }
+
+
+        /*
+         * Only process DocuSign events.
+         */
+        if (
+            event.data?.source !==
+            "DOCUSIGN"
+        ) {
+
+            return;
+        }
+
+
+        console.log(
+            "DOCUSIGN message received. Starting status polling."
+        );
+
+
+        /*
+         * Safe to call multiple times.
+         * pollInProgress prevents duplicate requests.
+         */
+        poll();
+    }
+
+
+    /*
+     * Render submitted documents.
+     */
+    function renderSubmittedDocuments(
+        documents
+    ) {
+
+        const container =
+            document.getElementById(
+                "submittedDocuments"
+            );
+
+        if (!container) {
+            return;
+        }
+
+        container.innerHTML = "";
+
+        documents.forEach(
+            function (doc) {
+
+                const row =
+                    document.createElement(
+                        "div"
+                    );
+
+                row.className =
+                    "submitted-document";
+
+                row.innerHTML = `
+                    <div>
+                        <strong>
+                            ${escapeHtml(
+                                doc.title || ""
+                            )}
+                        </strong>
+                    </div>
+
+                    <div>
+                        ${escapeHtml(
+                            doc.date || ""
+                        )}
+                    </div>
+
+                    <div>
+                        ${escapeHtml(
+                            doc.status || ""
+                        )}
+                    </div>
+                `;
+
+                container.appendChild(
+                    row
+                );
+            }
+        );
+    }
+
+
+    /*
+     * Basic HTML escaping.
+     */
+    function escapeHtml(value) {
+
+        return String(value)
+
+            .replace(
+                /&/g,
+                "&amp;"
+            )
+
+            .replace(
+                /</g,
+                "&lt;"
+            )
+
+            .replace(
+                />/g,
+                "&gt;"
+            )
+
+            .replace(
+                /"/g,
+                "&quot;"
+            )
+
+            .replace(
+                /'/g,
+                "&#039;"
+            );
+    }
+
+
+    /*
+     * Initialize.
+     */
+    document.addEventListener(
+        "DOMContentLoaded",
+        function () {
+
+            window.addEventListener(
+                "message",
+                listener
+            );
+
+            console.log(
+                "DocuSign message listener registered"
+            );
+        }
+    );
+
+
+    /*
+     * Cleanup when leaving page.
+     */
+    window.addEventListener(
+        "beforeunload",
+        function () {
+
+            signatureCompleted = true;
+
+            if (pollTimer) {
+
+                clearTimeout(
+                    pollTimer
+                );
+
+                pollTimer = null;
+            }
+
+            window.removeEventListener(
+                "message",
+                listener
+            );
+        }
+    );
+
+})();
+</script>s

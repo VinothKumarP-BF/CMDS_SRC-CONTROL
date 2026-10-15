@@ -1,0 +1,590 @@
+{% include 'cmdspp_ToastModal' %}
+<style>
+
+body{
+    background:#f7f8fa;
+}
+form#Register {
+    height: 0px;
+}
+div#ContentContainer_MainContent_MainContent_SecureRegister {
+    display: none;
+}
+.wrapper-body {
+    min-height: calc(100% - 124px)  !important;
+    margin-bottom: 0px  !important;
+    max-width: 100%  !important;
+    padding: 0px  !important;
+}
+
+.register-wrapper{
+    display: flex;
+    min-height: calc(100vh - 124px);
+    align-items: center;
+    justify-content: space-between;
+    padding: clamp(40px, 11vh, 105px) clamp(24px, 5.5vw, 80px);
+
+}
+
+.register-left{
+    width:35%;
+    min-width: 600px; 
+}
+
+.badge-secure{
+    display:inline-block;
+    background:#0B3A6F1A;
+    border:1px solid #0B3A6F26;
+    padding:7px 17px;
+    border-radius:20px;
+    color:#0B3A6FE5;
+    margin-bottom:30px;
+    font-weight: 400;
+    font-size: 12px;
+    line-height: 16px;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+    span{
+        color: #00D492 !important;
+        margin-right: 8px;
+    }
+}
+
+.register-left h1{
+    color: #0B3A6F;
+    font-size: 54px;
+    font-weight: 400 !important;
+    line-height: 62px;
+    margin-bottom: 34px;
+    margin-top: 0px !important;
+}
+
+.register-subtext{
+    font-size: 16px;
+    color: #0B3A6F;
+    line-height: 26px;
+    margin-bottom: 76px;
+    font-weight: 400 !important;
+}
+
+
+.cmdspp-benefits{
+    display: flex;
+    gap: 25px;
+
+}
+.cmdspp-benefits div{
+    margin-bottom: 10px;
+    color: #0B3A6F;
+    line-height: 20px;
+    font-weight: 400 !important;
+    font-size: 10px;
+    line-height: 20px;
+    letter-spacing: 0px;
+}
+.cmdspp-benefits div img{
+    margin-right:10px;
+}
+
+
+/* .rules-card{
+    display:none;
+    background:#ffffff;
+    width:254px;
+    border-radius:5px;
+    padding:16px;
+    box-shadow: 0px 0px 14px 0px #00000033;
+} */
+
+.rules-card{
+    display:none;
+    position:absolute;
+    right:calc(100% - 26px);
+    top:110px;
+    width:254px;
+    background:#ffffff;
+    border-radius:5px;
+    padding:16px;
+    box-shadow:0px 0px 14px 0px #00000033;
+    z-index:20;
+}
+
+.rule{
+    font-weight: 400 !important;
+    font-size: 14px;
+    color: #110000BF;
+    line-height: 20px;
+    letter-spacing: 0px;
+    img{
+        margin-right: 10px !important;
+    }
+}
+
+.rule:not(:last-child) {
+    margin-bottom:10px;
+}
+
+.password-card {
+    /* position: relative; */
+    width: 498px;
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 32px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    /* overflow: hidden; */
+    border-top:4px solid #295a9f;
+}
+
+/* .password-card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+
+    width: 100%;
+    height: 4px;
+
+    background: linear-gradient(
+        90deg,
+        #1A3A6B 0%,
+        #00A6F4 50%,
+        #1A3A6B 100%
+    );
+} */
+
+.password-card h2{
+    font-weight: 400 !important;
+    font-size: 22.4px;
+    line-height: 33.6px;
+    letter-spacing: 0px;
+    text-align: center;
+    text-transform: capitalize;
+    margin: 0 0 5.7px;
+    color: #0F1F3D;
+}
+
+.password-card p{
+    font-weight: 400 !important;
+    font-size: 12px;
+    line-height: 16px;
+    letter-spacing: 0px;
+    text-align: center;
+    color: #5A7099;
+    margin-bottom: 32px;
+}
+
+.password-card label{
+    display:block;
+    font-weight: 400 !important;
+    font-size: 12px;
+    line-height: 16px;
+    letter-spacing: 0px;
+    margin-bottom:4px;
+    color: #0B3A6F;
+}
+
+.password-card input{
+    width:100%;
+    height:36px;
+    padding:8px;
+    border:1px solid #E3E8EE;
+    border-radius:4px;
+    margin-bottom:16px;
+    box-shadow: 0px 1px 2px rgba(55, 65, 81, 0.08);
+    outline: none !important;
+    font-size: 14px;
+    line-height: 24px;
+    color: #0B3A6F;
+}
+
+#btnCreateAccount{
+    width:100%;
+    height:40px;
+    background:#274463;
+    box-shadow: 0px 1px 2px -1px #0000001A;
+    border:none;
+    color:white;
+    border-radius:8px;
+    cursor:pointer;
+    margin-top: 18px;
+    font-weight: 400 !important;
+    font-size: 14px;
+    line-height: 20px;
+    letter-spacing: 0px;
+    text-align: center;
+}
+
+/* Hide native fields */
+
+.alert-info,
+.login-heading-section,
+#ContentContainer_MainContent_MainContent_ShowEmail,
+#ContentContainer_MainContent_MainContent_ShowUserName,
+#SubmitButton,
+.nav-account,
+.cmdspp-login-btn,
+#PasswordTextBox,
+#ConfirmPasswordTextBox,
+label[for="PasswordTextBox"],
+label[for="ConfirmPasswordTextBox"]
+{
+    display:none !important;
+}
+
+.password-card{
+    position: relative;
+    z-index: 10;
+}
+
+.cmdspp-registration-pages-bg{
+    width: 100vw;
+    margin-left: calc(50% - 50vw);
+    min-height: calc(100vh - 124px);
+    background-position: center center !important;
+    background-size: cover !important;
+}
+
+.password-input-wrapper {
+    position: relative;
+}
+
+.eye-open,
+.eye-close {
+    position: absolute;
+    right: 10px;
+    top: 38%;
+    transform: translateY(-50%);
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+}
+
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear {
+    display: none;
+}
+
+input[type="text"]::placeholder,
+input[type="password"]::placeholder {
+    text-decoration: none !important;
+    font-size: 14px;
+    font-weight: 400 !important;
+    line-height: 20px;
+    color: #0B3A6F; 
+    opacity: 0.4;
+}
+
+input[type="text"]:focus,
+input[type="password"]:focus {
+    box-shadow: 0px 0px 0px 1px #6C8EEF inset, 0px 0px 0px 2px #D6ECFF !important;
+}
+
+.cmdspp-field-error {
+    box-shadow: inset 0 0 0 1px #CD3D64, 0 0 0 2px #FDE2DD !important;
+}
+
+</style>
+
+<div class="register-wrapper cmdspp-registration-pages-bg">
+
+    <div class="register-left">
+
+        <div class="badge-secure">
+            <span>•</span> OFFICIAL GOVERNMENT PORTAL · SECURE CONNECTION
+        </div>
+
+        <h1>
+            Set Your Password
+        </h1>
+
+        <div class="register-subtext">
+            Set password to access your registered account
+        </div>
+
+        <div class="cmdspp-benefits">
+      <div><img src="/cmdspp_greenTickCircle"/>  HIPAA Compliant Infrastructure</div>
+      <div><img src="/cmdspp_greenTickCircle"/>  256-bit TLS Encryption</div>
+      <div><img src="/cmdspp_greenTickCircle"/>  ISO 27001:2022 Certified</div>
+    </div>
+
+    </div>
+
+    <div class="password-card">
+        <div class="rules-card">
+
+        <div id="ruleLength" class="rule">
+            <img src="/cmdspp_whiteTickCircle" id="cmdspp-ruleLength-icon"/> Minimum 8 characters long
+        </div>
+
+        <div id="ruleNumber" class="rule">
+            <img src="/cmdspp_whiteTickCircle" id="cmdspp-ruleNumber-icon"/> At least one numeric
+        </div>
+
+        <div id="ruleUpper" class="rule">
+            <img src="/cmdspp_whiteTickCircle" id="cmdspp-ruleUpper-icon"/> At least one upper case letter
+        </div>
+
+        <div id="ruleLower" class="rule">
+            <img src="/cmdspp_whiteTickCircle" id="cmdspp-ruleLower-icon"/> At least one lower case letter
+        </div>
+
+        <div id="ruleSpecial" class="rule">
+            <img src="/cmdspp_whiteTickCircle" id="cmdspp-ruleSpecial-icon"/> At least one special character
+        </div>
+
+    </div>
+
+        <h2>Set Password</h2>
+
+        <p>
+            Authorised personnel only. All sessions are monitored.
+        </p>
+
+        <label>New Password</label>
+
+        
+<div class="password-input-wrapper">
+
+    <input id="customPassword" placeholder="New Password" maxlength="50" type="password">
+
+    <img
+        class="eye-open"
+        data-target="customPassword"
+        src="/cmdspp_showPasswordEye"
+        alt="Hide Password">
+    <img
+        class="eye-close"
+        data-target="customPassword"
+        src="/cmdspp_hidePasswordEye"
+        alt="Show Password"
+        style="display:none;">    
+
+</div>
+
+
+            
+
+        <label>Confirm Password</label>
+        
+<div class="password-input-wrapper">
+
+    <input id="customConfirmPassword" maxlength="50" placeholder="Confirm Password" type="password">
+
+    <img
+        class="eye-open"
+        data-target="customPassword"
+        src="/cmdspp_showPasswordEye"
+        alt="Hide Password">
+    <img
+        class="eye-close"
+        data-target="customPassword"
+        src="/cmdspp_hidePasswordEye"
+        alt="Show Password"
+        style="display:none;">    
+
+</div>
+    
+
+        <button
+            id="btnCreateAccount"
+            type="button">
+
+            Submit
+
+        </button>
+
+    </div>
+
+</div>
+
+<script>
+function updateRule(selector, valid){
+
+    $(selector).attr("src", valid ? "/cmdspp_greenTickCircle" : "/cmdspp_whiteTickCircle");
+
+}
+
+$(".eye-open, .eye-close").on("click", function () {
+
+    const wrapper = $(this).closest(".password-input-wrapper");
+
+    const input = wrapper.find("input");
+
+    const eyeOpen = wrapper.find(".eye-open");
+    const eyeClose = wrapper.find(".eye-close");
+
+    if (input.attr("type") === "password") {
+
+        input.attr("type", "text");
+
+        eyeOpen.hide();
+        eyeClose.show();
+
+    } else {
+
+        input.attr("type", "password");
+
+        eyeClose.hide();
+        eyeOpen.show();
+
+    }
+
+});
+
+$(document).ready(function(){
+const url = new URL(window.location.href);
+ 
+url.searchParams.set(
+"returnUrl",
+"/postLogin"
+);
+ 
+window.history.replaceState({}, "", url);
+
+const form = document.getElementById("Register");
+
+const url2 = new URL(form.action);
+
+url2.searchParams.set("returnUrl", "/postLogin");
+
+form.action = url.toString();
+
+    $("#customPassword").on("keyup", function(){
+        $("#customPassword").removeClass("cmdspp-field-error");
+        $("#customConfirmPassword").removeClass("cmdspp-field-error");
+
+
+        $(".rules-card").css("display", "block");
+        const pwd = $(this).val();
+
+        updateRule(
+            "#cmdspp-ruleLength-icon",
+            pwd.length >= 8
+        );
+
+        updateRule(
+            "#cmdspp-ruleNumber-icon",
+            /\d/.test(pwd)
+        );
+
+        updateRule(
+            "#cmdspp-ruleUpper-icon",
+            /[A-Z]/.test(pwd)
+        );
+
+        updateRule(
+            "#cmdspp-ruleLower-icon",
+            /[a-z]/.test(pwd)
+        );
+
+        updateRule(
+            "#cmdspp-ruleSpecial-icon",
+            /[^A-Za-z0-9]/.test(pwd)
+        );
+
+    });
+
+    $("#btnCreateAccount").click(function(){
+
+        const pwd =
+          $("#customPassword").val();
+
+        const confirmPwd =
+          $("#customConfirmPassword").val();
+
+        
+const errors = [];
+    if(!pwd){
+        errors.push("New password is required");
+        $("#customPassword").addClass("cmdspp-field-error");
+    }
+
+    if (pwd.length < 8) {
+        errors.push("Password must be at least 8 characters long");
+        $("#customPassword").addClass("cmdspp-field-error");
+    }
+
+    if (!/\d/.test(pwd) || !/[A-Z]/.test(pwd) || !/[a-z]/.test(pwd) || !/[^A-Za-z0-9]/.test(pwd)) {
+        errors.push("Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character");
+        $("#customPassword").addClass("cmdspp-field-error");
+    }
+
+    if(errors.length == 0){
+       if (pwd !== confirmPwd) {
+          errors.push("Passwords do not match");
+          $("#customConfirmPassword").addClass("cmdspp-field-error");
+       }
+    }
+
+    
+
+    if (errors.length > 0) {
+
+        cmdsppShowToast(
+            "error",
+            errors[0]    // show only first error
+        );
+
+        return;
+    }
+
+
+        /*
+           Replace these IDs
+           with actual Power Pages IDs
+           from F12 if required.
+        */
+
+        $("#PasswordTextBox")
+            .val(pwd);
+
+        $("#ConfirmPasswordTextBox")
+            .val(confirmPwd);
+
+        
+        sessionStorage.setItem("cmdsppForceLogout","true");
+    
+
+        $("#SubmitButton").click();
+
+    });
+
+    setTimeout(function() {
+        var emailField = document.getElementById('EmailTextBox');
+        var usernameField = document.getElementById('UserNameTextBox');
+
+        function setUsername(email) {
+            var username = email
+            // Set value
+            usernameField.value = username;
+            // Trigger events so portal recognizes the value
+            usernameField.dispatchEvent(new Event('input', { bubbles: true }));
+            usernameField.dispatchEvent(new Event('change', { bubbles: true }));
+            usernameField.dispatchEvent(new Event('blur', { bubbles: true }));
+
+        }
+
+        if (emailField && usernameField) {
+            // Auto-fill on load if email already has value
+            if (emailField.value) {
+                setUsername(emailField.value);
+            }
+
+            // Auto-fill on typing
+            emailField.addEventListener('input', function() {
+                setUsername(this.value);
+            });
+
+            // Also trigger on paste
+            emailField.addEventListener('paste', function() {
+                setTimeout(function() {
+                    setUsername(emailField.value);
+                }, 100);
+            });
+        }
+
+    }, 500);
+
+});
+
+</script>

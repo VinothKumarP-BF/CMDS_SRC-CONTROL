@@ -1,0 +1,4939 @@
+{% include 'cmdspp_Enrollment-PP-commonPopUP' %}
+{% include  'cmdspp_ToastModal'%}
+<div id="cmdspp-page-loader" class="cmdspp-loader-overlay">
+  <div class="cmdspp-loader-content">
+    <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+    <div class="mt-3 fw-bold text-secondary">Loading Application Form...</div>
+  </div>
+</div>
+<div id="wizardContainer"></div>
+
+<style>
+  .cmdspp-form-body {
+    padding: 24px;
+    padding-top: 10px !important;
+    width: 100%;
+    gap: 16px
+  }
+
+  .accordion-container {
+    width: 100%
+  }
+
+  .cmdspp-loader-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(4px);
+    z-index: 99999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+  }
+
+  .cmdspp-loader-content {
+    text-align: center;
+  }
+
+  .cmdspp-loader-overlay.hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+</style>
+
+
+  
+<script>
+  (function () {
+    "use strict";
+   
+    // ================================
+// GLOBAL READ-ONLY STATE
+// ================================
+// Determines whether the application form should be displayed in read-only mode.
+window.cmdsppIsReadOnly = false;
+function checkApplicationReadOnlyStatus() {
+    return new Promise((resolve) => {
+        const recordId = new URLSearchParams(window.location.search).get("record");
+
+        if (!recordId) {
+            resolve(false);
+            return;
+        }
+
+        webapi.safeAjax({
+            type: "GET",
+            url: "/_api/cmdspp_p_dtl_tbs" +
+                 "?$select=cmdspp_p_appln_status" +
+                 "&$filter=cmdspp_p_dtl_tbid eq " + recordId,
+
+            success: function (res) {
+                if (!res?.value?.length) {
+                    resolve(false);
+                    return;
+                }
+
+                const status = Number(res.value[0].cmdspp_p_appln_status);
+
+                // Awaiting Signature -> lock the whole form
+                window.cmdsppIsReadOnly = (status === 2);
+                resolve(window.cmdsppIsReadOnly);
+            },
+
+            error: function (err) {
+                console.error("Unable to fetch application status", err);
+                resolve(false);
+            }
+        });
+    });
+}
+
+    // Global Caches
+    window.cmdsppOptionMaps = window.cmdsppOptionMaps || {};
+    window.cmdsppLookupCache = window.cmdsppLookupCache || {};
+    window.cmdsppDynamicSourceCache = window.cmdsppDynamicSourceCache || {};
+    window.loadedSections = window.loadedSections || new Set();
+    
+    let cachedToken = null;
+    // ================================
+// LOCK ALL FIELDS / BUTTONS (generic, works for any section markup)
+// ================================
+// Determines whether the application form should be displayed in read-only mode.
+function applyReadOnlyMode(root) {
+    if (!window.cmdsppIsReadOnly) return;
+    const scope = root || document;
+
+    scope.querySelectorAll('input[type="text"], input[type="date"], input[type="number"], input[type="email"], input[type="tel"], textarea')
+        .forEach(el => { el.readOnly = true; el.classList.add('cmdspp-readonly'); });
+
+    scope.querySelectorAll('select, input[type="radio"], input[type="checkbox"]')
+        .forEach(el => { el.disabled = true; el.classList.add('cmdspp-readonly'); });
+
+    // Add / Update / Cancel-edit / Edit / Delete / Reset — all data-mutating controls
+    scope.querySelectorAll(
+        '.cmdspp-submit-btn, .cmdspp-cancel-btn, .cmdspp-edit-btn, .cmdspp-delete-btn, ' +
+        '[data-action="edit"], [data-action="delete"], .btn-reset-custom, .cmdspp-msc-toggle'
+    ).forEach(el => {
+        el.disabled = true;
+        el.style.pointerEvents = 'none';
+        el.style.opacity = '0.5';
+    });
+
+    // Continue / Back are intentionally left enabled so the user can still navigate.
+}
+// Update section lookup in Provider Detail table
+async function updateProviderDetailSectionLookup(
+  section,
+  sectionRecordId,
+  sectionEntitySet
+) {
+  // Run only when the flag is true
+  if (section.updateProviderDtlLookup !== true) {
+    return;
+  }
+
+  // Run only for sections without a UI table
+  if (section.tableId) {
+    return;
+  }
+
+  const lookupField = section.providerDtlLookupField;
+
+  // Get Provider Detail record ID from URL
+  const recordId = new URLSearchParams(
+    window.location.search
+  ).get("record");
+
+  // Stop if required values are unavailable
+  if (
+    !lookupField ||
+    !recordId ||
+    !sectionRecordId ||
+    !sectionEntitySet
+  ) {
+    return;
+  }
+
+  const payload = {
+    [`${lookupField}@odata.bind`]:
+      `/${sectionEntitySet}(${sectionRecordId})`
+  };
+
+  await safeWebApiClient({
+    type: "PATCH",
+    url: `/_api/cmdspp_p_dtl_tbs(${recordId})`,
+    data: JSON.stringify(payload)
+  });
+}
+
+// ================================
+// CATCH FIELDS/BUTTONS ADDED LATER
+// (section re-renders, lazy-loaded accordions, grid redraws, etc.)
+// ================================
+function observeAndLockNewFields() {
+    if (!window.cmdsppIsReadOnly) return;
+    const container = document.getElementById('wizardContainer') || document.body;
+
+    const observer = new MutationObserver((mutations) => {
+        mutations.forEach(m => {
+            m.addedNodes.forEach(node => {
+                if (node.nodeType === 1) applyReadOnlyMode(node);
+            });
+        });
+    });
+
+    observer.observe(container, { childList: true, subtree: true });
+}
+    
+
+    // Memoized token fetch - prevents network delays on token check
+    async function getAntiForgeryToken() {
+      if (cachedToken) return cachedToken;
+      return new Promise((resolve) => {
+        if (window.shell && typeof window.shell.getTokenDeferred === "function") {
+          window.shell.getTokenDeferred().done((token) => { cachedToken = token; resolve(token); })
+            .fail(() => { cachedToken = fallbackToken(); resolve(cachedToken); });
+          return;
+        }
+        if (typeof window.getAuthenticationToken === "function") {
+          try {
+            const token = window.getAuthenticationToken();
+            if (token) { cachedToken = token; return resolve(token); }
+          } catch (e) { }
+        }
+        cachedToken = fallbackToken();
+        resolve(cachedToken);
+      });
+    }
+
+    function fallbackToken() {
+      const inputToken = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+      return inputToken || window.__RequestVerificationToken || "";
+    }
+
+    async function safeWebApiClient(options) {
+      const token = await getAntiForgeryToken();
+      if (window.webapi && typeof window.webapi.safeAjax === "function") {
+        return window.webapi.safeAjax(options);
+      }
+      return $.ajax({
+        ...options,
+        headers: {
+          "__RequestVerificationToken": token,
+          "Accept": "application/json",
+          "Content-Type": "application/json; charset=utf-8",
+          ...(options.headers || {})
+        }
+      });
+    }
+
+    try {
+      const schemaEl = document.getElementById("wizardSchemaData");
+
+      window.wizardSchema = schemaEl
+        ? JSON.parse(schemaEl.textContent || "[]")
+        : [];
+
+      /*
+       * Sort dynamically by headerPrefix.
+       * No hard-coded prefix list required.
+       */
+      window.wizardSchema.sort(function (a, b) {
+
+        const prefixA = String(
+          a.headerPrefix || ""
+        ).trim();
+
+        const prefixB = String(
+          b.headerPrefix || ""
+        ).trim();
+
+        return prefixA.localeCompare(
+          prefixB,
+          undefined,
+          {
+            numeric: true,
+            sensitivity: "base"
+          }
+        );
+
+      });
+
+      console.log(
+        "SORTED wizardSchema:",
+        window.wizardSchema
+      );
+      //console.log("window.wizardSchema",window.wizardSchema);
+    } catch (err) {
+      // alert("System Error - Pls contact technical support !")
+      cmdsppShowToast("System Error - Pls contact technical support !");
+
+      window.wizardSchema = [];
+    }
+
+    if (!window.wizardSchema.length) return;
+
+    function getEntitySet(logicalName) {
+      if (!logicalName) return "";
+      if (logicalName.endsWith("s")) return logicalName;
+      if (logicalName.endsWith("y")) return logicalName.slice(0, -1) + "ies";
+      return logicalName + "s";
+    }
+
+    function toISODateString(val) {
+      if (!val) return "";
+      if (typeof val === "string" && val.includes("T")) return val.split("T")[0];
+      const d = new Date(val);
+      return isNaN(d) ? val : d.toISOString().split("T")[0];
+    }
+
+      function parseTimeLabelToMinutes(label) {
+          if (!label) return null;
+
+          const match = String(label).trim().match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+          if (!match) return null;
+
+          let hours = parseInt(match[1], 10);
+          const minutes = parseInt(match[2], 10);
+          const meridiem = match[3].toUpperCase();
+
+          if (hours === 12) hours = 0;
+          if (meridiem === "PM") hours += 12;
+
+          return hours * 60 + minutes;
+    }
+
+    // Resolve a lookup field's selected GUID to its label using the field's own
+    function resolveFieldOptionLabel(formInstance, fieldName, guidValue) {
+      if (!guidValue) return "";
+
+      const fieldDef = formInstance.formDefinition.find(f => f.name === fieldName);
+      const normalizedGuid = String(guidValue).replace(/[{}]/g, "").trim().toLowerCase();
+
+      const matched = (fieldDef?.options || []).find(opt =>
+        String(opt.value).replace(/[{}]/g, "").trim().toLowerCase() === normalizedGuid
+      );
+
+      if (matched?.label) return matched.label;
+
+      return getLabelFromLookupCache(guidValue);
+    }
+
+    function getLabelFromLookupCache(value) {
+      if (value === undefined || value === null || value === "") return "";
+
+      const normalizedValue =
+        String(value).replace(/[{}]/g, "").trim().toLowerCase();
+
+      if (window.cmdsppOptionMaps) {
+        const direct =
+          window.cmdsppOptionMaps[value] ??
+          window.cmdsppOptionMaps[normalizedValue];
+
+        if (direct !== undefined && direct !== null && direct !== "") {
+          return direct;
+        }
+      }
+
+      for (const key in window.cmdsppLookupCache) {
+        const optionsList = window.cmdsppLookupCache[key];
+
+        if (Array.isArray(optionsList)) {
+          const match = optionsList.find(opt => {
+            if (!opt || opt.value === undefined || opt.value === null) {
+              return false;
+            }
+
+            return String(opt.value)
+              .replace(/[{}]/g, "")
+              .trim()
+              .toLowerCase() === normalizedValue;
+          });
+
+          if (match) {
+            return match.label;
+          }
+        }
+      }
+
+      return value;
+    }
+
+
+    // ---------------------------------------------------------------------------
+    // JSON-driven Specialty / Taxonomy lookup sources
+    // ---------------------------------------------------------------------------
+    // Keeps normal r_VV lookup behavior unchanged.
+    // Supported source.type values:
+    //   providerSpecialties   -> options are Specialty GUID + description
+    //   dependentTaxonomies  -> options are Taxonomy GUID + description, filtered
+    //                           by ALL active Specialty grid rows.
+    // ---------------------------------------------------------------------------
+    function normalizeDynamicGuid(value) {
+      return value ? String(value).replace(/[{}]/g, "").trim().toLowerCase() : "";
+    }
+
+    function getCurrentApplicationGuidForDynamicSource() {
+      return normalizeDynamicGuid(
+        new URLSearchParams(window.location.search).get("record") ||
+        new URLSearchParams(window.location.search).get("id")
+      );
+    }
+
+    function addUniqueDynamicOption(options, value, label) {
+      const guid = normalizeDynamicGuid(value);
+      if (!guid) return;
+      if (options.some(option => normalizeDynamicGuid(option.value) === guid)) return;
+
+      const option = {
+        value: guid,
+        label: label == null ? "" : String(label)
+      };
+
+      options.push(option);
+      window.cmdsppOptionMaps[guid] = option.label;
+    }
+
+    function resolveDynamicSourceConfig(source) {
+      if (!source) return source || {};
+
+      // dependentTaxonomies may reuse provider/relation configuration from the
+      // Specialty field so the Taxonomy JSON only needs to declare dependency.
+      if (source.providerType && source.relation) return source;
+
+      const dependsOn = source.dependsOn;
+      if (!dependsOn?.sectionId || !dependsOn?.field) return source;
+
+      const dependencySection = (window.wizardSchema || []).find(
+        section => section.sectionId === dependsOn.sectionId
+      );
+      const dependencyField = dependencySection?.fields?.find(
+        field => field.name === dependsOn.field
+      );
+      const dependencySource = dependencyField?.source || {};
+
+      return {
+        ...dependencySource,
+        ...source,
+        providerType: source.providerType || dependencySource.providerType,
+        relation: {
+          ...(dependencySource.relation || {}),
+          ...(source.relation || {})
+        }
+      };
+    }
+
+    async function fetchDynamicProviderTypeGuid(source) {
+      const resolvedSource = resolveDynamicSourceConfig(source);
+      const appGuid = getCurrentApplicationGuidForDynamicSource();
+      if (!appGuid) throw new Error("Application ID not found for provider-dependent lookup.");
+
+      const cfg = resolvedSource.providerType || {};
+      if (!cfg.table || !cfg.valueField || !cfg.parentField) {
+        throw new Error("providerType.table, providerType.parentField and providerType.valueField are required.");
+      }
+
+      const url =
+        `/_api/${cfg.table}` +
+        `?$select=${cfg.valueField}` +
+        `&$filter=${cfg.parentField} eq ${appGuid}`;
+
+      const response = await safeWebApiClient({ type: "GET", url });
+      return normalizeDynamicGuid(response?.value?.[0]?.[cfg.valueField]);
+    }
+
+    async function fetchDynamicProviderRelationRows(source) {
+      const resolvedSource = resolveDynamicSourceConfig(source);
+      const providerTypeGuid = await fetchDynamicProviderTypeGuid(resolvedSource);
+      if (!providerTypeGuid) return [];
+
+      const relation = resolvedSource.relation || {};
+      const required = [
+        "table",
+        "providerFilterField",
+        "specialtyExpand",
+        "specialtyIdField",
+        "specialtyLabelField",
+        "taxonomyExpand",
+        "taxonomyIdField",
+        "taxonomyLabelField"
+      ];
+
+      const missing = required.filter(key => !relation[key]);
+      if (missing.length) {
+        throw new Error(`Missing dynamic lookup relation configuration: ${missing.join(", ")}`);
+      }
+
+      const relationSpecialtyField =
+        relation.relationSpecialtyField || "_cmdspp_p_specl_pvdty_fkid_value";
+      const relationTaxonomyField =
+        relation.relationTaxonomyField || "_cmdspp_p_txnmy_fkid_value";
+
+      // Keep the relationship query exactly aligned with the working query:
+      // provider type -> specialty expand + taxonomy expand.
+      const filter =
+        `${relation.providerFilterField} eq '${providerTypeGuid}' and statecode eq 0`;
+
+      const select = `${relationSpecialtyField},${relationTaxonomyField}`;
+      const expand =
+        `${relation.specialtyExpand}($select=${relation.specialtyLabelField},${relation.specialtyIdField}),` +
+        `${relation.taxonomyExpand}($select=${relation.taxonomyLabelField},${relation.taxonomyIdField})`;
+
+      const url =
+        `/_api/${relation.table}` +
+        `?$filter=${filter}` +
+        `&$select=${select}` +
+        `&$expand=${expand}`;
+
+      console.log("[Dynamic lookup relation]", url);
+
+      const response = await safeWebApiClient({
+        type: "GET",
+        url,
+        headers: {
+          "Prefer": 'odata.include-annotations="OData.Community.Display.V1.FormattedValue"'
+        }
+      });
+
+      return response?.value || [];
+    }
+
+    function getSpecialtyGridDependencyValues(source) {
+      const dependsOn = source?.dependsOn;
+      if (!dependsOn?.sectionId || !dependsOn?.field) return [];
+
+      const specialtySection = (window.wizardSchema || []).find(
+        section => section.sectionId === dependsOn.sectionId
+      );
+
+      if (!specialtySection) return [];
+
+      // IMPORTANT: Specialty is a SINGLE lookup in the Add/Edit form. Multiple
+      // specialties come from multiple sub-grid rows, therefore Taxonomy must
+      // read section.records, not the current specialty input control.
+      const values = [];
+      (specialtySection.records || []).forEach(record => {
+        if (!record || record.isDeleted) return;
+
+        const value =
+          record[dependsOn.field] ??
+          record[`_${dependsOn.field}_value`];
+
+        if (Array.isArray(value)) values.push(...value);
+        else if (value) values.push(value);
+      });
+
+      return [...new Set(values.map(normalizeDynamicGuid).filter(Boolean))];
+    }
+
+    async function loadProviderSpecialtyOptions(field) {
+      const source = field.source || {};
+      const appGuid = getCurrentApplicationGuidForDynamicSource();
+      const cacheKey = `providerSpecialties_${appGuid}`;
+
+      if (window.cmdsppDynamicSourceCache[cacheKey]) {
+        field.options = window.cmdsppDynamicSourceCache[cacheKey].map(option => ({ ...option }));
+        return field.options;
+      }
+
+      const rows = await fetchDynamicProviderRelationRows(source);
+      const relation = resolveDynamicSourceConfig(source).relation || {};
+      const options = [];
+
+      rows.forEach(row => {
+        const specialty = row[relation.specialtyExpand];
+        if (!specialty) return;
+
+        // Specialty dropdown value = SPECIALTY GUID, label = Specialty description.
+        addUniqueDynamicOption(
+          options,
+          specialty[relation.specialtyIdField],
+          specialty[relation.specialtyLabelField]
+        );
+      });
+
+      window.cmdsppDynamicSourceCache[cacheKey] = options.map(option => ({ ...option }));
+      field.options = options;
+      return field.options;
+    }
+
+    async function loadDependentTaxonomyOptions(field) {
+      const source = field.source || {};
+      const selectedSpecialties = getSpecialtyGridDependencyValues(source);
+      const appGuid = getCurrentApplicationGuidForDynamicSource();
+      const cacheKey =
+        `dependentTaxonomies_${appGuid}_${selectedSpecialties.slice().sort().join(",")}`;
+
+      if (!selectedSpecialties.length) {
+        field.options = [];
+        return field.options;
+      }
+
+      if (window.cmdsppDynamicSourceCache[cacheKey]) {
+        field.options = window.cmdsppDynamicSourceCache[cacheKey].map(option => ({ ...option }));
+        return field.options;
+      }
+
+      const resolvedSource = resolveDynamicSourceConfig(source);
+      const relation = resolvedSource.relation || {};
+      const rows = await fetchDynamicProviderRelationRows(resolvedSource);
+      const options = [];
+
+      rows.forEach(row => {
+        const specialty = row[relation.specialtyExpand];
+        const taxonomy = row[relation.taxonomyExpand];
+
+        const specialtyGuid = normalizeDynamicGuid(
+          specialty?.[relation.specialtyIdField] ??
+          row[relation.relationSpecialtyField || "_cmdspp_p_specl_pvdty_fkid_value"]
+        );
+
+        if (!specialtyGuid || !selectedSpecialties.includes(specialtyGuid)) return;
+        if (!taxonomy) return;
+
+        // IMPORTANT: Taxonomy dropdown value = TAXONOMY GUID and the displayed
+        // text = TAXONOMY description. Never use specialty id/description here.
+        addUniqueDynamicOption(
+          options,
+          taxonomy[relation.taxonomyIdField],
+          taxonomy[relation.taxonomyLabelField]
+        );
+      });
+
+      window.cmdsppDynamicSourceCache[cacheKey] = options.map(option => ({ ...option }));
+      field.options = options;
+      return field.options;
+    }
+
+    async function loadJsonDrivenLookupSource(field) {
+      if (field?.source?.type === "providerSpecialties") {
+        return loadProviderSpecialtyOptions(field);
+      }
+
+      if (field?.source?.type === "dependentTaxonomies") {
+        return loadDependentTaxonomyOptions(field);
+      }
+
+      return null;
+    }
+
+    async function refreshTaxonomyDependencies(changedSectionId, changedFieldName) {
+      const dependentSections = (window.wizardSchema || []).filter(section =>
+        (section.fields || []).some(field =>
+          field.source?.type === "dependentTaxonomies" &&
+          field.source?.dependsOn?.sectionId === changedSectionId &&
+          field.source?.dependsOn?.field === changedFieldName
+        )
+      );
+
+      for (const section of dependentSections) {
+        const form = window.cmdsppForms?.[section.containerId];
+        if (!form) continue;
+
+        const dependentFields = form.formDefinition.filter(field =>
+          field.source?.type === "dependentTaxonomies" &&
+          field.source?.dependsOn?.sectionId === changedSectionId &&
+          field.source?.dependsOn?.field === changedFieldName
+        );
+
+        for (const field of dependentFields) {
+          const oldValue = form.formValues[field.name];
+          await loadDependentTaxonomyOptions(field);
+
+          const stillValid = (field.options || []).some(
+            option => normalizeDynamicGuid(option.value) === normalizeDynamicGuid(oldValue)
+          );
+
+          if (oldValue && !stillValid) {
+            form.formValues[field.name] = "";
+          }
+        }
+
+        // Re-resolve labels for already-fetched dependent lookup rows.
+        // Taxonomy options are dynamic and may become available only after
+        // Specialty section.records are loaded.
+        (section.records || []).forEach(record => {
+          if (!record || record.isDeleted) return;
+
+          dependentFields.forEach(field => {
+            const currentValue = record[field.name];
+
+            if (
+              currentValue === undefined ||
+              currentValue === null ||
+              currentValue === ""
+            ) {
+              return;
+            }
+
+            const normalizedValue = normalizeDynamicGuid(currentValue);
+
+            const matchedOption = (field.options || []).find(
+              option =>
+                normalizeDynamicGuid(option?.value) === normalizedValue
+            );
+
+            if (matchedOption?.label) {
+              record[`${field.name}_label`] = matchedOption.label;
+              window.cmdsppOptionMaps[normalizedValue] = matchedOption.label;
+            }
+          });
+        });
+
+        // Re-render using the form's existing state. Dynamic label behavior is
+        // preserved because renderFieldHtml still calls getFieldLabel().
+        form.renderForm();
+        form.updateVisibility();
+
+        // IMPORTANT: the Taxonomy grid may already have been rendered before
+        // Specialty records finished loading. Re-render it now so the newly
+        // loaded GUID -> label mapping is reflected in existing fetched rows.
+        const grid = window.cmdsppGrids?.[section.tableId];
+        if (grid) {
+          grid.render(section.columns, section.records, section.fields);
+        }
+      }
+    }
+
+    // ---------------------------------------------------------------------------
+    // JSON-driven conditional sub-grid behavior
+    // ---------------------------------------------------------------------------
+    function getConditionalGridConfig(section) {
+      // 1. Explicit configuration is still supported.
+      const explicitCfg = section?.conditionalGrid;
+      if (explicitCfg?.field) {
+        return explicitCfg;
+      }
+
+      // 2. Otherwise infer the behavior directly from the EXISTING JSON
+      // visibility dependencies. This avoids requiring another section-level
+      // JSON property.
+      //
+      // Example already present in the user's JSON:
+      // dependency: [{
+      //   type: "visibility",
+      //   value: "Yes",
+      //   depId: ["cmdspp_p_qstnr_relatv_q1"]
+      // }]
+      //
+      // If the sub-grid detail fields share the same dependency, that parent
+      // field becomes the grid gate. "Yes" means details can be added; any
+      // other selected value (for example "No") means save the answer on
+      // Continue but do not create/show a detail row.
+      if (
+        !section ||
+        !section.tableId ||
+        !Array.isArray(section.fieldMappings)
+      ) {
+        return null;
+      }
+
+      const displayColumnFields = new Set(
+        (section.columns || [])
+          .filter(column =>
+            column &&
+            column.field &&
+            column.field !== "actions" &&
+            column.type !== "actions"
+          )
+          .map(column => column.field)
+      );
+
+      const detailFields = (section.fields || []).filter(
+        field => displayColumnFields.has(field.name)
+      );
+
+      const dependencyCandidates = [];
+
+      detailFields.forEach(field => {
+        (field.dependency || [])
+          .filter(dep =>
+            dep &&
+            dep.type === "visibility" &&
+            !dep.fieldHide &&
+            Array.isArray(dep.depId) &&
+            dep.depId.length === 1 &&
+            dep.value !== undefined &&
+            dep.value !== null
+          )
+          .forEach(dep => {
+            dependencyCandidates.push({
+              field: dep.depId[0],
+              showValue: dep.value
+            });
+          });
+      });
+
+      if (!dependencyCandidates.length) {
+        return null;
+      }
+
+      // Pick a dependency that is shared by all detail fields which have a
+      // visibility dependency.
+      const first = dependencyCandidates[0];
+      const sameDependency = dependencyCandidates.every(candidate =>
+        String(candidate.field) === String(first.field) &&
+        String(candidate.showValue) === String(first.showValue)
+      );
+
+      if (!sameDependency) {
+        return null;
+      }
+
+      return {
+        field: first.field,
+        showValue: first.showValue,
+        inferredFromVisibility: true,
+        hideAddWhenNoDetail: true,
+        saveOnContinue: true,
+        hideSavedRecord: true
+      };
+    }
+
+    function normalizeConditionalGridValue(section, fieldName, value) {
+      if (value === undefined || value === null || value === "") return "";
+
+      const fieldDef = (section?.fields || []).find(
+        field => field?.name === fieldName
+      );
+
+      if (typeof value === "boolean") {
+        const optionValues = (fieldDef?.options || []).map(
+          option => String(option?.value ?? "").trim().toLowerCase()
+        );
+
+        if (optionValues.includes("yes") && optionValues.includes("no")) {
+          return value ? "yes" : "no";
+        }
+      }
+
+      return String(value).trim().toLowerCase();
+    }
+
+    function isConditionalGridNoDetail(section, values) {
+      const cfg = getConditionalGridConfig(section);
+      if (!cfg) return false;
+
+      const currentValue = normalizeConditionalGridValue(
+        section,
+        cfg.field,
+        values?.[cfg.field]
+      );
+
+      // Nothing selected yet is not treated as a saved "No details" answer.
+      if (!currentValue) {
+        return false;
+      }
+
+      // Explicit no-detail values.
+      if (
+        cfg.noDetailValues !== undefined &&
+        cfg.noDetailValues !== null
+      ) {
+        const noDetailValues = Array.isArray(cfg.noDetailValues)
+          ? cfg.noDetailValues
+          : [cfg.noDetailValues];
+
+        return noDetailValues
+          .filter(value => value !== undefined && value !== null)
+          .some(value =>
+            normalizeConditionalGridValue(section, cfg.field, value) ===
+            currentValue
+          );
+      }
+
+      // Inferred visibility rule:
+      // if detail fields are configured to show only when parent == showValue,
+      // any other selected value means there are no detail rows to add.
+      if (
+        cfg.showValue !== undefined &&
+        cfg.showValue !== null
+      ) {
+        const showValue = normalizeConditionalGridValue(
+          section,
+          cfg.field,
+          cfg.showValue
+        );
+
+        return currentValue !== showValue;
+      }
+
+      return false;
+    }
+
+    function shouldHideConditionalGridRecord(section, record) {
+      if (!record) return false;
+
+      const cfg = getConditionalGridConfig(section);
+      if (!cfg || cfg.hideSavedRecord === false) return false;
+
+      // Primary rule: configured No-detail answer.
+      if (isConditionalGridNoDetail(section, record)) {
+        return true;
+      }
+
+      // Secondary rule: a conditional section must never show a completely
+      // blank visible table row.
+      const meaningfulColumns = (section.columns || []).filter(
+        column =>
+          column &&
+          column.field &&
+          column.field !== "actions" &&
+          column.type !== "actions"
+      );
+
+      if (!meaningfulColumns.length) return false;
+
+      const hasVisibleValue = meaningfulColumns.some(column => {
+        const value = record[column.field];
+
+        if (Array.isArray(value)) {
+          return value.length > 0;
+        }
+
+        return !(
+          value === undefined ||
+          value === null ||
+          String(value).trim() === ""
+        );
+      });
+
+      return !hasVisibleValue;
+    }
+
+    function markConditionalGridRecord(section, record) {
+      if (!record) return record;
+      record.__hideFromGrid = shouldHideConditionalGridRecord(section, record);
+      return record;
+    }
+
+    function hasAnyGridDisplayValue(section, record) {
+      if (!section || !record) return false;
+
+      const displayColumns = (section.columns || []).filter(
+        column =>
+          column &&
+          column.field &&
+          column.field !== "actions" &&
+          column.type !== "actions"
+      );
+
+      // If there are no display columns, do not treat the record as empty.
+      if (!displayColumns.length) return true;
+
+      return displayColumns.some(column => {
+        const value = record[column.field];
+
+        if (Array.isArray(value)) {
+          return value.length > 0;
+        }
+
+        return !(
+          value === undefined ||
+          value === null ||
+          String(value).trim() === ""
+        );
+      });
+    }
+
+    class CommonTableTemplate {
+      constructor(tableId, options = {}) {
+        this.tableId = tableId;
+        this.options = options;
+        this.pageSize = options.pageSize || 4;
+        this.currentPage = 1;
+        this._allRecords = [];
+        this._columns = [];
+      }
+
+      static formatDate(value) {
+        if (!value) return "";
+        const cleanVal = toISODateString(value);
+        const parts = cleanVal.split("-");
+        return parts.length === 3 ? `${parts[1]}/${parts[2]}/${parts[0]}` : value;
+      }
+
+      getDisplayValue(column, record, fields) {
+        // Look for the value under the column's field name first,
+        // fall back to partsGuid (used by multiSelect sub-grid rows).
+        let val = record[column.field];
+
+        if (
+          (val === undefined || val === null || val === "") &&
+          record.partsGuid !== undefined
+        ) {
+          val = record.partsGuid;
+        }
+
+        if (
+          val === undefined ||
+          val === null ||
+          val === ""
+        ) {
+          return "";
+        }
+
+        const fieldDef = (fields || []).find(
+          field =>
+            field &&
+            field.name === column.field
+        );
+
+        const parts =
+          String(val)
+            .split(",")
+            .map(part => part.trim())
+            .filter(Boolean);
+
+        /*
+         * IMPORTANT:
+         * Resolve the raw GUID against THIS FIELD'S CURRENT OPTIONS first.
+         *
+         * This makes an initially fetched record behave exactly like a row
+         * added from the form:
+         *
+         *   record[field] = GUID
+         *          ↓
+         *   field.options.find(option.value === GUID)
+         *          ↓
+         *   display option.label
+         *
+         * Do this for any field that has options rather than depending on a
+         * particular field.type. Specialty/Taxonomy are JSON-driven and their
+         * current option arrays are the source of truth for grid display.
+         */
+        if (
+          fieldDef &&
+          Array.isArray(fieldDef.options) &&
+          fieldDef.options.length
+        ) {
+
+          const labels =
+            parts.map(guid => {
+              const normalizedGuid =
+                normalizeDynamicGuid(guid);
+
+              const matchedOption =
+                fieldDef.options.find(
+                  option =>
+                    normalizeDynamicGuid(
+                      option?.value
+                    ) === normalizedGuid
+                );
+
+              /*
+               * If the GUID exists in this field's option set, always use
+               * that field-specific label.
+               */
+              if (
+                matchedOption &&
+                matchedOption.label !== undefined &&
+                matchedOption.label !== null
+              ) {
+                return String(
+                  matchedOption.label
+                );
+              }
+
+              /*
+               * Preserve existing generic behavior for values not present
+               * in this particular option list.
+               */
+              const cachedLabel =
+                window.cmdsppOptionMaps?.[
+                  normalizedGuid
+                ] ||
+                window.cmdsppOptionMaps?.[
+                  guid
+                ];
+
+              return (
+                cachedLabel ||
+                guid
+              );
+            });
+
+          return labels.join(", ");
+        }
+
+        /*
+         * Existing non-option-field behavior stays unchanged.
+         */
+        if (
+          record[
+            column.field + "_label"
+          ]
+        ) {
+          return record[
+            column.field + "_label"
+          ];
+        }
+
+        return getLabelFromLookupCache(
+          val
+        );
+      }
+
+      render(columns, records, fields) {
+        this._columns = columns || this._columns;
+        this._allRecords = records || this._allRecords;
+        this.fields = fields || this.fields;
+        this._renderCurrentPage();
+      }
+
+      goToPage(page) {
+        this.currentPage = page;
+        this._renderCurrentPage();
+      }
+
+      _renderCurrentPage() {
+        const activeRecords = (this._allRecords || []).filter(record => {
+          if (!record || record.isDeleted) return false;
+
+          const section = this.options?.section;
+
+          // Hard grid-level protection driven by JSON.
+          // This is independent of the Yes/No storage field, so a persisted
+          // "No" record whose visible detail columns are all empty can never
+          // appear as a blank table row.
+          if (
+            (
+              section?.hideEmptyGridRows === true ||
+              !!getConditionalGridConfig(section)
+            ) &&
+            !hasAnyGridDisplayValue(section, record)
+          ) {
+            return false;
+          }
+
+          if (
+            section &&
+            shouldHideConditionalGridRecord(section, record)
+          ) {
+            return false;
+          }
+
+          return record.isEdited || !record.__hideFromGrid;
+        });
+        const totalCount = activeRecords.length;
+        const pageSize = this.pageSize > 0 ? this.pageSize : totalCount || 1;
+        const totalPages = Math.ceil(totalCount / pageSize) || 1;
+
+        if (this.currentPage > totalPages) this.currentPage = totalPages;
+
+        const start = (this.currentPage - 1) * pageSize;
+        const pageRecords = activeRecords.slice(start, start + pageSize);
+
+        this._draw(this._columns, pageRecords, {
+          visibleCount: pageRecords.length,
+          totalCount: totalCount,
+          currentPage: this.currentPage,
+          hasPrev: this.currentPage > 1,
+          hasNext: start + pageSize < totalCount,
+          onPrev: () => this.goToPage(this.currentPage - 1),
+          onNext: () => this.goToPage(this.currentPage + 1)
+        });
+      }
+
+      _draw(columns, records, pagination) {
+        const root = document.getElementById(this.tableId);
+        if (!root) return;
+
+        const header = root.querySelector("#cmdspp-table-header");
+        const body = root.querySelector("#cmdspp-table-body");
+
+        if (header) header.innerHTML = `<tr>${columns.map(col => `<th>${col.label}</th>`).join("")}</tr>`;
+
+        if (body) {
+          if (!records || records.length === 0) {
+            body.innerHTML = `<tr><td colspan="${columns.length}" class="cmdspp-no-data">No Records Found</td></tr>`;
+          } else {
+            body.innerHTML = records.map((record) => {
+              const recordKey = record.recordId || record.dbId;
+              return `
+              <tr data-record-id="${recordKey}">
+                ${columns.map(column => {
+                if (column.field === "actions" || column.type === "actions") {
+                   const hideEdit = column.HideEdit === true;
+                  return `
+                      <td>
+                        <div class="cmdspp-action-group">
+                        ${hideEdit ? "" : `
+                          <button type="button" class="cmdspp-action-icon cmdspp-edit-btn" data-action="edit" data-record-id="${recordKey}" title="Edit">
+                            <img src="/tableediticon.svg" alt="Edit" style="pointer-events:none;">
+                          </button>
+                          `}
+                          <button type="button" class="cmdspp-action-icon cmdspp-delete-btn" data-action="delete" data-record-id="${recordKey}" title="Delete">
+                            <img src="/tablecancelicon.svg" alt="Delete" style="pointer-events:none;">
+                          </button>
+                        </div>
+                      </td>`;
+                }
+                if (column.type === "date") {
+                  return `<td>${CommonTableTemplate.formatDate(record[column.field])}</td>`;
+                }
+                return `<td>${this.getDisplayValue(column, record, this.fields)}</td>`;
+              }).join("")}
+              </tr>`;
+            }).join("");
+
+            body.onclick = (e) => {
+              const btn = e.target.closest(".cmdspp-action-icon");
+              if (!btn) return;
+              e.preventDefault();
+              e.stopPropagation();
+
+              const action = btn.getAttribute("data-action");
+              const recId = btn.getAttribute("data-record-id");
+              const record = this._allRecords.find(r => String(r.recordId || r.dbId) === String(recId));
+
+              if (!record) return;
+
+              if (action === "edit" && this.options.actions?.onEdit) {
+                this.options.actions.onEdit(record);
+              } else if (action === "delete" && this.options.actions?.onDelete) {
+                this.options.actions.onDelete(record);
+              }
+            };
+          }
+        }
+        this.renderPagination(pagination, records.length, root);
+      }
+
+      renderPagination(pagination, totalRecords, root) {
+        const infoLabel = root.querySelector("#cmdspp-pagination-info");
+        const pageNumbersContainer = root.querySelector("#cmdspp-page-numbers");
+        const prevBtn = root.querySelector("#cmdspp-prev-page");
+        const nextBtn = root.querySelector("#cmdspp-next-page");
+
+        if (!pagination) return;
+        if (infoLabel) infoLabel.innerText = `Showing ${pagination.visibleCount} of ${pagination.totalCount} records`;
+        if (pageNumbersContainer) pageNumbersContainer.innerHTML = `<button type="button" class="cmdspp-page-number active" data-page="${pagination.currentPage}" disabled>${pagination.currentPage}</button>`;
+
+        if (prevBtn) {
+          prevBtn.disabled = !pagination.hasPrev;
+          prevBtn.onclick = () => pagination.hasPrev && pagination.onPrev();
+        }
+        if (nextBtn) {
+          nextBtn.disabled = !pagination.hasNext;
+          nextBtn.onclick = () => pagination.hasNext && pagination.onNext();
+        }
+      }
+    }
+
+    class cmdsppFormRenderer {
+      constructor(formData) {
+        this.formData = formData;
+        this.containerId = formData.containerId;
+        this.formDefinition = formData.fields || [];
+        this.formValues = {};
+        this.errors = {};
+
+        /*
+         * UI-only flag.
+         * Update / Cancel Edit are shown only when the user explicitly
+         * clicks Edit on a grid row.
+         *
+         * Existing __editingId behavior is intentionally left unchanged
+         * because it may still be needed by the existing save/update logic.
+         */
+        this._gridEditClicked = false;
+
+        this.initValues();
+      }
+
+      initValues() {
+        this.formDefinition.forEach(field => {
+          const initial = field.value;
+          if (field.type === "checkbox") this.formValues[field.name] = !!initial;
+          else if (field.type === "checkboxgroup" || field.type === "multiselect" || field.type === "multiselectcheckbox" ) this.formValues[field.name] = Array.isArray(initial) ? initial : [];
+          else if (field.type === "date" && initial) this.formValues[field.name] = toISODateString(initial);
+          else if (initial !== undefined && initial !== null && initial !== "") this.formValues[field.name] = initial;
+
+          if (field.options) {
+            field.options.forEach(opt => window.cmdsppOptionMaps[opt.value] = opt.label);
+          }
+        });
+      }
+
+      setWithExpiry(key, value, ttlInMinutes = 60) {
+        const item = {
+          value: value,
+          expiry: Date.now() + ttlInMinutes * 60 * 1000,
+        };
+        localStorage.setItem(key, JSON.stringify(item));
+      }
+
+      getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key);
+        if (!itemStr) return null;
+
+        const item = JSON.parse(itemStr);
+        if (Date.now() > item.expiry) {
+          localStorage.removeItem(key);
+          return null; // Expired
+        }
+        return item.value;
+      }
+
+      async loadLookups() {
+        const lookupFields = this.formDefinition.filter(
+          f =>
+            (f.type === "lookup" || f.type === "checkboxgroup" || f.type === "multiselect" || f.type === "select" || f.type === "multiselectcheckbox") &&
+            !!f?.source
+        );
+
+        if (!lookupFields.length) return;
+
+        const promises = lookupFields.map(async field => {
+          try {
+            // JSON-driven provider Specialty / dependent Taxonomy lookups.
+            if (
+              field.source?.type === "providerSpecialties" ||
+              field.source?.type === "dependentTaxonomies"
+            ) {
+              await loadJsonDrivenLookupSource(field);
+              return;
+            }
+
+            // Existing normal r_VV lookup behavior remains unchanged.
+            if (!field.source?.table) return;
+
+            const cacheKey = `${field.source.table}_${field.source.domainName}_${field.source.domainVal}`;
+
+            if (window.cmdsppLookupCache[cacheKey]) {
+              field.options = window.cmdsppLookupCache[cacheKey];
+              return;
+            }
+
+            const cachedData = this.getWithExpiry(cacheKey);
+            if (cachedData) {
+              window.cmdsppLookupCache[cacheKey] = cachedData;
+              field.options = cachedData;
+              return;
+            }
+
+            const url = `/_api/${field.source.table}?$filter=${field.source.domainName} eq '${field.source.domainVal}'&$select=${field.source.valueField},${field.source.labelField}`;
+            const response = await safeWebApiClient({ type: "GET", url: url });
+            const options = (response.value || []).map(item => {
+              const val = item[field.source.valueField];
+              const lbl = item[field.source.labelField];
+              window.cmdsppOptionMaps[val] = lbl;
+              return { label: lbl, value: val };
+            });
+
+            window.cmdsppLookupCache[cacheKey] = options;
+            this.setWithExpiry(cacheKey, options, 30);
+            field.options = options;
+          } catch (err) {
+            console.error(`Error loading options for ${field.name}:`, err);
+            field.options = field.options || [];
+          }
+        });
+
+        await Promise.all(promises);
+      }
+
+      isVisible(field) {
+            if (!field.dependency || !field.dependency.length) return true;
+
+            // Hide-on-match deps (type: visibility + fieldHide: true) — OR logic
+            const hideDeps = field.dependency.filter(d => d.type === "visibility" && d.fieldHide);
+            if (hideDeps.length) {
+              const shouldHide = hideDeps.some(dep =>
+                dep.depId.some(parentField => {
+                  const parentLabel = getLabelFromLookupCache(this.formValues[parentField]);
+                  return String(parentLabel) === String(dep.value);
+                })
+              );
+              if (shouldHide) return false;
+            }
+
+            // Show-on-match deps (type: visibility, no fieldHide).
+            // Supports the original exact-value behavior plus JSON-driven
+            // operator: "notEmpty" so a dependent field can appear when the
+            // controlling field has ANY selected value.
+            const showDeps = field.dependency.filter(d => d.type === "visibility" && !d.fieldHide);
+            if (showDeps.length) {
+              return showDeps.every(dep =>
+                (dep.depId || []).every(parentField => {
+                  const parentValue = this.formValues[parentField];
+
+                  if (dep.operator === "notEmpty") {
+                    if (Array.isArray(parentValue)) {
+                      return parentValue.length > 0;
+                    }
+
+                    return !(
+                      parentValue === undefined ||
+                      parentValue === null ||
+                      String(parentValue).trim() === ""
+                    );
+                  }
+
+                  if (parentValue === undefined || parentValue === null || parentValue === "") {
+                    return false;
+                  }
+
+                  if (typeof parentValue === "boolean") {
+                    return parentValue === (
+                      dep.value === "Yes" ||
+                      String(dep.value).toLowerCase() === "yes" ||
+                      dep.value === true
+                    );
+                  }
+
+                  return Array.isArray(parentValue)
+                    ? parentValue.includes(dep.value)
+                    : String(parentValue) === String(dep.value);
+                })
+              );
+            }
+
+            return true;
+          }
+
+      /*
+       * Dynamic label support driven entirely by the JSON dependency config.
+       * Example:
+       * dependency: [
+       *   {
+       *     type: "label",
+       *     depId: ["cmdspp_p_lic_cert_ind_code"],
+       *     deplabelObj: {
+       *       "License": "License",
+       *       "Certificate": "Certification"
+       *     }
+       *   }
+       * ]
+       *
+       * The dependency field's current value is checked first by its lookup
+       * label and then by its raw value.  This keeps it working for both
+       * lookup/select fields and normal text/radio values.
+       */
+      getFieldLabel(field) {
+        const dependencies = (field.dependency || []).filter(
+          dep =>
+            dep &&
+            dep.type === "label" &&
+            dep.deplabelObj &&
+            typeof dep.deplabelObj === "object"
+        );
+
+        for (const dep of dependencies) {
+          const parentFields = Array.isArray(dep.depId)
+            ? dep.depId
+            : (dep.depId ? [dep.depId] : []);
+
+          for (const parentField of parentFields) {
+            const rawValue = this.formValues[parentField];
+
+            if (rawValue === undefined || rawValue === null || rawValue === "") {
+              continue;
+            }
+
+            const possibleKeys = [];
+
+            if (Array.isArray(rawValue)) {
+              rawValue.forEach(value => {
+                possibleKeys.push(String(getLabelFromLookupCache(value)));
+                possibleKeys.push(String(value));
+              });
+            } else {
+              possibleKeys.push(String(getLabelFromLookupCache(rawValue)));
+              possibleKeys.push(String(rawValue));
+
+              if (typeof rawValue === "boolean") {
+                possibleKeys.push(rawValue ? "Yes" : "No");
+              }
+            }
+
+            const labelMap = dep.deplabelObj;
+
+            for (const key of possibleKeys) {
+              if (Object.prototype.hasOwnProperty.call(labelMap, key)) {
+                return labelMap[key];
+              }
+            }
+
+            // Case-insensitive fallback for JSON keys.
+            const matchedKey = Object.keys(labelMap).find(
+              key => possibleKeys.some(value =>
+                String(key).trim().toLowerCase() === String(value).trim().toLowerCase()
+              )
+            );
+
+            if (matchedKey) return labelMap[matchedKey];
+          }
+        }
+
+        return field.label || "";
+      }
+
+      updateDynamicLabels() {
+        const root = document.getElementById(this.containerId);
+        if (!root) return;
+
+        this.formDefinition.forEach(field => {
+          const hasLabelDependency = (field.dependency || []).some(
+            dep =>
+              dep &&
+              dep.type === "label" &&
+              dep.deplabelObj &&
+              typeof dep.deplabelObj === "object"
+          );
+
+          if (!hasLabelDependency) return;
+
+          const labelElements = root.querySelectorAll(
+            `[data-field-label="${field.name}"]`
+          );
+
+          if (!labelElements.length) return;
+
+          const label = this.getFieldLabel(field);
+          const required = this.getRequiredMarkup(field);
+
+          labelElements.forEach(labelEl => {
+            // Do not alter option/checkbox text labels that share the same
+            // data-field-label value; only replace the field's main label.
+            if (
+              labelEl.classList.contains("form-label") ||
+              labelEl.classList.contains("cmdspp-radio-row-label")
+            ) {
+              labelEl.innerHTML = `${label} ${required}`;
+            }
+          });
+        });
+      }
+
+      getRequiredMarkup(field) {
+        return field.validations?.some(v => v.type === "mandatory")
+          ? '<span class="text-danger">*</span>'
+          : '';
+      }
+
+      renderFieldHtml(field) {
+        let value = this.formValues[field.name] ?? "";
+        if (field.type === "date" && value) value = toISODateString(value);
+
+        const fieldLabel = this.getFieldLabel(field);
+        const required = this.getRequiredMarkup(field);
+        const invalid = this.errors[field.name] ? "is-invalid" : "";
+        const errorMsg = this.errors[field.name] ? `<div class="text-danger small mt-1">${this.errors[field.name]}</div>` : "";
+
+        switch (field.type) {
+          // case "input":
+          //   return `<label class="form-label" data-field-label="${field.name}">${fieldLabel} ${required}</label>
+          //           <input type="text" class="form-control ${invalid}" data-field="${field.name}" value="${value}" maxLength="${field.maxLength}" placeholder="${field.placeholder || ''}" />${errorMsg}`;
+          case "input":
+            let extraHtml = "";
+            let autoCompleteAttr = "";
+
+            if (field.addrFill) {
+              extraHtml = `<ul id="cmdspp_melissa_suggestions_${this.containerId}_${field.name}" class="list-group shadow-sm" style="position: absolute; z-index: 1050; width: 95%; display: none; max-height: 200px; overflow-y: auto; margin-top: 2px;"></ul>`;
+              autoCompleteAttr = `autocomplete="off"`;
+
+              return `<div style="position: relative;">
+                          <label class="form-label" data-field-label="${field.name}">${fieldLabel} ${required}</label>
+                          <input type="text" class="form-control ${invalid}" data-field="${field.name}" value="${value}" maxLength="${field.maxLength || ''}" placeholder="${field.placeholder || ''}" ${autoCompleteAttr} />
+                          ${extraHtml}${errorMsg}
+                        </div>`;
+            }
+
+            // Default input rendering
+            return `<label class="form-label" data-field-label="${field.name}">${fieldLabel} ${required}</label>
+                  <input type="text" ${field.readOnly ? "disabled" : ""} class="form-control ${invalid}" data-field="${field.name}" value="${value}" maxLength="${field.maxLength || ''}" placeholder="${field.placeholder || ''}" />${errorMsg}`;
+          case "number":
+            return `<label class="form-label" data-field-label="${field.name}">${fieldLabel} ${required}</label>
+                  <input type="number" class="form-control ${invalid}" data-field="${field.name}" value="${value}" placeholder="${field.placeholder || ''}" />${errorMsg}`;
+          case "date": {
+              const dateClass = value ? "has-value" : "is-placeholder";
+              return `<label class="form-label" data-field-label="${field.name}">${fieldLabel} ${required}</label>
+                      <input type="date" class="form-control date-fld-plachol ${invalid} ${dateClass}" data-field="${field.name}" value="${value}" />${errorMsg}`;
+          }
+          case "checkbox":
+  return `
+    <div class="form-check">
+      <input 
+        type="checkbox"
+        class="form-check-input ${invalid}"
+        data-field="${field.name}"
+        id="${field.name}"
+        ${value ? "checked" : ""}
+        ${field.readOnly ? "disabled" : ""}
+      />
+      <label class="form-check-label" data-field-label="${field.name}" for="${field.name}">
+        ${fieldLabel} ${required}
+      </label>
+    </div>
+    ${errorMsg}`;
+          case "checkboxgroup":
+          case "multiselect": {
+            const selected = Array.isArray(value) ? value.map(String) : [];
+            return `
+            <div class="${field.checkboxstyle?field.checkboxstyle:""}">
+            <label class="form-label">${field.label} ${field.label ? required :""}</label>
+                  <div class="cmdspp-checkbox-group" data-checkbox-group="${field.name}">
+                    ${(field.options || []).map(o => `
+                      <div class="form-check">
+                        <input type="checkbox" class="form-check-input" 
+                              name="${field.name}" 
+                              value="${o.value}" 
+                              data-field-group="${field.name}"
+                              id="${field.name}_${o.value}"
+                              ${selected.includes(String(o.value)) ? "checked" : ""}>
+                        <label class="form-check-label" for="${field.name}_${o.value}">${o.label}</label>
+                      </div>
+                    `).join("")}
+                  </div>
+                  </div>${errorMsg}`;
+          }
+          case "multiselectcheckbox": {
+            const selected = Array.isArray(value) ? value.map(String) : [];
+            const opts = field.options || [];
+            const summaryLabels = opts
+              .filter(o => selected.includes(String(o.value)))
+              .map(o => o.label);
+
+            let summaryText = "Select";
+            if (summaryLabels.length > 0) {
+              const shown = summaryLabels.slice(0, 5).join(", ");
+              const extra = summaryLabels.length > 5 ? ` +${summaryLabels.length - 5}` : "";
+              summaryText = shown + extra;
+            }
+
+            return `<label class="form-label" data-field-label="${field.name}">${fieldLabel} ${required}</label>
+                  <div class="cmdspp-msc-wrapper" data-msc="${field.name}">
+                    <button type="button" class="form-select cmdspp-msc-toggle ${selected.length ? "has-value" : "is-placeholder"}">
+                      ${summaryText}
+                    </button>
+                    <div class="cmdspp-msc-panel" style="display:none;">
+                      ${opts.map(o => `
+                        <div class="form-check">
+                          <input type="checkbox" class="form-check-input"
+                                name="${field.name}"
+                                value="${o.value}"
+                                data-field-group="${field.name}"
+                                id="${field.name}_${o.value}"
+                                ${selected.includes(String(o.value)) ? "checked" : ""}>
+                          <label class="form-check-label" for="${field.name}_${o.value}">${o.label}</label>
+                        </div>
+                      `).join("")}
+                    </div>
+                  </div>${errorMsg}`;
+          }
+          case "lookup":
+         case "select": {
+  const selectClass = value ? "has-value" : "is-placeholder";
+
+  return `<label class="form-label" data-field-label="${field.name}">${fieldLabel} ${required}</label>
+                  <select class="form-select ${invalid} ${selectClass}" data-field="${field.name}" id="${field.name}" ${field.readOnly ? "disabled" : ""}>
+                    <option value="">Select</option>
+                    ${(field.options || []).map(o => `<option value="${o.value}" ${String(value) === String(o.value) ? "selected" : ""}>${o.label}</option>`).join("")}
+                  </select>${errorMsg}`;
+         }
+          case "radio":
+            return `
+                  <div class="cmdspp-radio-row">
+                 <label class="form-label cmdspp-radio-row-label" data-field-label="${field.name}">${fieldLabel} ${required}</label>
+                  <div class="cmdspp-segmented">
+                    ${(field.options || []).map(o => `
+                      <label class="cmdspp-segment-item">
+                        <input type="radio" name="${field.name}_${this.containerId}" value="${o.value}" data-field="${field.name}" ${String(value) === String(o.value) ? "checked" : ""}>
+                        <span class="cmdspp-segment-text">${o.label}</span>
+                      </label>
+                    `).join("")}
+                  </div>
+                  </div>${errorMsg}`;
+          default: return "";
+        }
+      }
+
+      renderForm() {
+        const host = document.getElementById(this.containerId);
+        if (!host) return;
+
+        let html = `<div class="cmdspp-form-card">`;
+
+        // Render note from JSON before fields
+        if (this.formData.note && this.formData.note.text) {
+
+          const noteType = this.formData.note.type || "info";
+
+          html += `
+            <div class="cmdspp-form-note form-label mb-3">
+                ${this.formData.note.text}
+            </div>
+        `;
+        }
+
+        html += `<div class="row">`;
+
+        this.formDefinition.forEach(field => {
+
+          const displayStyle = this.isVisible(field)
+            ? "block"
+            : "none";
+
+          html += `
+            <div
+                class="col-md-${field.column || 6} ${field.fullwidth?field.fullwidth:""} mb-3"
+                data-field-container="${field.name}"
+                style="display: ${displayStyle};">
+
+                ${this.renderFieldHtml(field)}
+
+            </div>
+        `;
+        });
+
+        html += `</div>`;
+
+        /*
+         * Keep existing __editingId for the existing save/update behavior,
+         * but use the explicit grid-click flag for EDIT UI only.
+         */
+        const isEditing =
+          this._gridEditClicked === true;
+
+        const isSubGridSection =
+          !!this.formData.tableId &&
+          Array.isArray(this.formData.fieldMappings);
+
+        if (
+          this.formData.showSubmitButton !== false &&
+          isSubGridSection
+        ) {
+
+          const hideAddForNoDetail =
+            getConditionalGridConfig(this.formData)?.hideAddWhenNoDetail !== false &&
+            isConditionalGridNoDetail(this.formData, this.formValues);
+
+          html += `
+            <div class="cmdspp-action-bar mt-3 d-flex gap-2 ${this.formData.notemsg && this.formData.notemsg.text ? 'has-note' : ''}">
+
+                <button
+                    type="button"
+                    id="${this.formData.addBtnId}"
+                    class="btn btn-primary cmdspp-submit-btn"
+                    style="${hideAddForNoDetail &&  this.formData.showtablebuttonradio !="Yes"? "display:none;" : ""}">
+
+                    ${isEditing
+              ? (this.formData.editBtnLabel || "Update")
+              : this.formData.primaryBtnLabel
+            }
+
+                </button>
+
+                ${isEditing
+              ? `
+                            <button
+                                type="button"
+                                class="btn btn-outline-secondary cmdspp-cancel-btn">
+                                Cancel Edit
+                            </button>
+                          `
+              : ""
+            }
+             ${
+            this.formData.notemsg && this.formData.notemsg.text
+                ? `
+                    <div class="cmdspp-form-note cmdspp-note-${this.formData.notemsg.type || "info"}">
+                        ${this.formData.notemsg.text}
+                    </div>
+                `
+                : ""
+        }
+
+            </div>
+        `;
+        }
+
+        html += `</div>`;
+
+        host.innerHTML = html;
+
+        this.bindEvents();
+
+        /*
+         * Apply edit-button visibility on initial fetch/render.
+         */
+        this.updateDependencyEditButtonVisibility();
+      }
+
+      isEmptyValue(value) {
+
+        if (Array.isArray(value)) {
+          return value.length === 0;
+        }
+
+        return value === undefined || value === null || String(value).trim() === "";
+      }
+
+      validateField(field) {
+
+        if (!this.isVisible(field))
+          return null;
+
+        const value = this.formValues[field.name];
+
+        if (!field.validations)
+          return null;
+
+        for (let validation of field.validations) {
+
+          switch (validation.type) {
+
+            case "mandatory":
+
+              if (this.isEmptyValue(value)) {
+                return validation.message ||
+                  `${field.label} is required`;
+              }
+              if(field.type==="checkbox" && !value){
+                 return validation.message || `${field.label} is required`;
+              }
+
+              break;
+
+
+            case "email":
+
+              if (value) {
+
+                const regex =
+                  /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+                if (!regex.test(String(value)))
+                  return validation.message;
+              }
+
+              break;
+
+
+            case "pattern":
+
+              if (value !== undefined &&
+                value !== null &&
+                String(value).length > 0) {
+
+                try {
+
+                  const regex =
+                    new RegExp(validation.regex);
+
+                  if (!regex.test(String(value))) {
+
+                    return validation.message ||
+                      `Invalid ${field.label}.`;
+
+                  }
+
+                } catch (error) {
+
+                  console.error(
+                    `Invalid regex for ${field.name}:`,
+                    validation.regex,
+                    error
+                  );
+
+                }
+
+              }
+
+              break;
+
+
+            case "numeric":
+
+              if (
+                value &&
+                isNaN(value)
+              ) {
+                return validation.message;
+              }
+
+              break;
+
+
+            case "minLength":
+
+              if (
+                value &&
+                value.length < validation.value
+              ) {
+                return validation.message;
+              }
+
+              break;
+
+
+            case "maxLength":
+
+              if (
+                value &&
+                value.length > validation.value
+              ) {
+                return validation.message;
+              }
+
+              break;
+
+
+            case "minValue":
+
+              if (
+                value &&
+                Number(value) < validation.value
+              ) {
+                return validation.message;
+              }
+
+              break;
+
+
+            case "maxValue":
+
+              if (
+                value &&
+                Number(value) > validation.value
+              ) {
+                return validation.message;
+              }
+
+              break;
+
+
+            case "pastDate":
+
+              if (
+                value &&
+                new Date(value) > new Date()
+              ) {
+                return validation.message;
+              }
+
+              break;
+
+           case "notEqualField":
+
+              if (value && this.formValues[validation.field]) {
+                const currentLabel = getLabelFromLookupCache(value);
+                const otherLabel = getLabelFromLookupCache(this.formValues[validation.field]);
+
+                if (String(currentLabel) === String(otherLabel)) {
+                  return validation.message || `${field.label} cannot be the same as the related field.`;
+                }
+              }
+
+              break;
+
+                          case "timeAfter":
+
+              if (value && validation.compareWith && this.formValues[validation.compareWith]) {
+                const currentLabel = resolveFieldOptionLabel(this, field.name, value);
+                const compareLabel = resolveFieldOptionLabel(this, validation.compareWith, this.formValues[validation.compareWith]);
+
+                const currentMinutes = parseTimeLabelToMinutes(currentLabel);
+                const compareMinutes = parseTimeLabelToMinutes(compareLabel);
+
+                console.log("[timeAfter check]", { currentLabel, compareLabel, currentMinutes, compareMinutes });
+
+                if (
+                  currentMinutes !== null &&
+                  compareMinutes !== null &&
+                  currentMinutes <= compareMinutes
+                ) {
+                  return validation.message;
+                }
+              }
+
+              break;
+            
+            case "futureDate":
+
+              if (
+                value &&
+                new Date(value) < new Date()
+              ) {
+                return validation.message;
+              }
+
+              break;
+
+              case "dateFormat":
+
+  if (value) {
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+
+    if (!dateRegex.test(String(value))) {
+      return validation.message;
+    }
+
+    const date = new Date(value);
+
+    if (isNaN(date.getTime())) {
+      return validation.message;
+    }
+  }
+
+  break;
+
+
+case "dateComparison":
+
+  if (value && validation.compareWith) {
+
+    const compareValue = this.formValues[validation.compareWith];
+
+    if (compareValue) {
+
+      const currentDate = new Date(value);
+      const compareDate = new Date(compareValue);
+
+      if (validation.operator === "lessThanOrEqual" &&
+          currentDate > compareDate) {
+        return validation.message;
+      }
+
+      if (validation.operator === "greaterThanOrEqual" &&
+          currentDate < compareDate) {
+        return validation.message;
+      }
+    }
+  }
+
+  break;
+
+          }
+        }
+
+        return null;
+      }
+      validateForm() {
+
+        this.errors = {};
+
+        this.formDefinition.forEach(field => {
+
+          if (!this.isVisible(field))
+            return;
+
+          const error =
+            this.validateField(field);
+
+          if (error) {
+            this.errors[field.name] = error;
+          }
+
+        });
+
+        return Object.keys(this.errors).length === 0;
+      }
+
+
+      bindEvents() {
+        const root = document.getElementById(this.containerId);
+
+              // multiselectcheckbox: toggle panel + keep summary text updated
+        root.querySelectorAll("[data-msc]").forEach(wrapper => {
+          const fieldName = wrapper.dataset.msc;
+          const toggleBtn = wrapper.querySelector(".cmdspp-msc-toggle");
+          const panel = wrapper.querySelector(".cmdspp-msc-panel");
+
+          toggleBtn.addEventListener("click", (e) => {
+            e.preventDefault();
+            const isOpening = panel.style.display === "none";
+            if (isOpening) {
+              panel.style.width = `${toggleBtn.getBoundingClientRect().width}px`;
+            }
+            panel.style.display = isOpening ? "block" : "none";
+          });
+
+          panel.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+            cb.addEventListener("change", () => {
+              const previousValue = Array.isArray(this.formValues[fieldName])
+                ? [...this.formValues[fieldName]]
+                : this.formValues[fieldName];
+
+              const checked = Array.from(panel.querySelectorAll("input:checked")).map(c => c.value);
+              this.formValues[fieldName] = checked;
+
+              const fieldDef = this.formDefinition.find(f => f.name === fieldName);
+              const labels = (fieldDef.options || [])
+                .filter(o => checked.includes(String(o.value)))
+                .map(o => o.label);
+
+              let summaryText = "Select";
+              if (labels.length > 0) {
+                const shown = labels.slice(0, 5).join(", ");
+                const extra = labels.length > 5 ? ` +${labels.length - 5}` : "";
+                summaryText = shown + extra;
+              }
+              toggleBtn.textContent = summaryText;
+              toggleBtn.classList.toggle("has-value", checked.length > 0);
+              toggleBtn.classList.toggle("is-placeholder", checked.length === 0);
+
+              const clearedDependents = this.clearLabelDependentValues(
+                fieldName,
+                previousValue,
+                checked
+              );
+
+              // Re-render only when an existing dependent value was actually
+              // cleared. This refreshes the control value as well as its label.
+              if (clearedDependents) {
+                this.renderForm();
+                this.updateVisibility();
+                return;
+              }
+
+              this.updateVisibility();
+            });
+          });
+        });
+
+        document.addEventListener("click", (e) => {
+          root.querySelectorAll("[data-msc]").forEach(wrapper => {
+            if (!wrapper.contains(e.target)) {
+              const panel = wrapper.querySelector(".cmdspp-msc-panel");
+              if (panel) panel.style.display = "none";
+            }
+          });
+        });
+
+
+            root.querySelectorAll("[data-field]").forEach(control => {
+                const fieldName = control.dataset.field;
+
+                // Keep the value from the last completed change. "input" can fire
+                // before "change", so comparing directly with formValues inside
+                // the change event would otherwise miss the old value.
+                control.__cmdsppLastCommittedValue =
+                  Array.isArray(this.formValues[fieldName])
+                    ? [...this.formValues[fieldName]]
+                    : this.formValues[fieldName];
+
+                const syncValue = (e) => {
+                  const currentFieldName = e.target.dataset.field;
+                  const val = e.target.type === "checkbox" ? e.target.checked : e.target.value;
+                  this.formValues[currentFieldName] = val;
+
+                  if (e.target.type === "date" || e.target.tagName === "SELECT") {
+                    e.target.classList.toggle("has-value", !!val);
+                    e.target.classList.toggle("is-placeholder", !val);
+                  }
+
+                  return val;
+                };
+
+          control.addEventListener("input", syncValue);
+          //commented for data loss popup
+          // control.addEventListener("change", (e) => {
+          //   const previousValue = e.target.__cmdsppLastCommittedValue;
+          //   const val = syncValue(e);
+          //   const changedFieldName = e.target.dataset.field;
+
+          //   e.target.__cmdsppLastCommittedValue =
+          //     Array.isArray(val) ? [...val] : val;
+
+          //   const clearedDependents = this.clearLabelDependentValues(
+          //     changedFieldName,
+          //     previousValue,
+          //     val
+          //   );
+
+          //   if (clearedDependents) {
+          //     this.renderForm();
+          //     this.updateVisibility();
+          //     return;
+          //   }
+
+          //   this.updateVisibility();
+          // });
+          // added below code for datalosspopup
+           control.addEventListener("change", async (e) => {
+
+    const previousValue = e.target.__cmdsppLastCommittedValue;
+    const val = syncValue(e);
+    const changedFieldName = e.target.dataset.field;
+
+    const section = window.wizardSchema.find(
+        s => s.containerId === this.containerId
+    );
+
+    const dataLossConfig = section?.dataLossConfirmation;
+
+    // Data Loss Confirmation
+if (
+    dataLossConfig?.enabled &&
+    changedFieldName === dataLossConfig.field &&
+    Array.isArray(section.records) &&
+    section.records.some(r => !r.isDeleted) &&
+    val === dataLossConfig.triggerValue
+) {
+        const activeRecords = (section.records || [])
+            .filter(r => !r.isDeleted);
+
+        if (activeRecords.length > 0) {
+
+            showConfirmationPopup({
+                title: dataLossConfig.title,
+                message: dataLossConfig.message,
+
+                onConfirm: async () => {
+
+                    activeRecords.forEach(rec => {
+                        rec.isDeleted = true;
+                    });
+                    section.dataLossDelete =true
+
+                    await submitSectionBatch(section);
+                      section.dataLossDelete =false
+                    const gridInstance =
+                        window.cmdsppGrids?.[section.tableId];
+
+                    if (gridInstance) {
+                        gridInstance.render(
+                            section.columns,
+                            section.records,
+                            section.fields
+                        );
+                    }
+
+                    e.target.__cmdsppLastCommittedValue =
+                        Array.isArray(val) ? [...val] : val;
+
+                    const clearedDependents =
+                        this.clearLabelDependentValues(
+                            changedFieldName,
+                            previousValue,
+                            val
+                        );
+
+                    if (clearedDependents) {
+                        this.renderForm();
+                        this.updateVisibility();
+                        return;
+                    }
+
+                    this.renderForm();
+                    this.updateVisibility();
+                },
+
+                onCancel: () => {
+
+                    this.formValues[changedFieldName] =
+                        previousValue;
+
+                    this.renderForm();
+                    this.updateVisibility();
+                }
+            });
+
+            return;
+        }
+    }
+
+    e.target.__cmdsppLastCommittedValue =
+        Array.isArray(val) ? [...val] : val;
+
+    const clearedDependents = this.clearLabelDependentValues(
+        changedFieldName,
+        previousValue,
+        val
+    );
+
+    if (clearedDependents) {
+        this.renderForm();
+        this.updateVisibility();
+        return;
+    }
+
+    this.updateVisibility();
+});
+        });
+        root.querySelectorAll("[data-field-group]").forEach(control => {
+          control.addEventListener("change", (e) => {
+            const fieldName = e.target.dataset.fieldGroup;
+            const groupEl = root.querySelector(`[data-checkbox-group="${fieldName}"]`);
+
+            // multiselectcheckbox uses its own [data-msc] handler above.
+            if (!groupEl) return;
+
+            const previousValue = Array.isArray(this.formValues[fieldName])
+              ? [...this.formValues[fieldName]]
+              : this.formValues[fieldName];
+
+            const checked = Array.from(groupEl.querySelectorAll("input:checked")).map(cb => cb.value);
+            this.formValues[fieldName] = checked;
+
+            const clearedDependents = this.clearLabelDependentValues(
+              fieldName,
+              previousValue,
+              checked
+            );
+
+            if (clearedDependents) {
+              this.renderForm();
+              this.updateVisibility();
+              return;
+            }
+
+            this.updateVisibility();
+          });
+        });
+
+        const submitBtn = root.querySelector(".cmdspp-submit-btn");
+        if (submitBtn) {
+          submitBtn.onclick = (e) => {
+            e.preventDefault();
+            if (!this.validateForm()) {
+              this.renderForm(); // redraw with errors
+              cmdsppShowToast("error","Please correct the highlighted validation errors.");
+              return;
+            }
+            this.submitForm();
+          };
+        }
+
+        const cancelBtn = root.querySelector(".cmdspp-cancel-btn");
+        if (cancelBtn) {
+          cancelBtn.onclick = (e) => {
+            e.preventDefault();
+            this.reset();
+          };
+        }
+
+       //Melissa
+        const addrFields = this.formDefinition.filter(f => f.addrFill);
+
+        addrFields.forEach(addrField => {
+          const addressInput = root.querySelector(`input[data-field="${addrField.name}"]`);
+
+          if (addressInput) {
+            let debounceTimer;
+            addressInput.addEventListener("input", (e) => {
+              const searchText = e.target.value;
+              const suggestionBox = root.querySelector(`#cmdspp_melissa_suggestions_${this.containerId}_${addrField.name}`);
+
+              clearTimeout(debounceTimer);
+              if (searchText.length < 4) {
+                suggestionBox.style.display = 'none';
+                return;
+              }
+
+              debounceTimer = setTimeout(async () => {
+                try {
+                  const response = await safeWebApiClient({
+                    type: "POST",
+                    url: "/_api/serverlogics/melissaAutopopulate",
+                    data: JSON.stringify({ searchText: searchText })
+                  });
+
+                  //const result = typeof response === "string" ? JSON.parse(response?.data) : response?.data;
+                  const result = JSON.parse(response?.data);
+                  if (result.status === "success" && result.results.length > 0) {
+                    suggestionBox.innerHTML = '';
+                    result.results.forEach(item => {
+                      const li = document.createElement("li");
+                      li.className = "list-group-item list-group-item-action";
+                      li.style.cursor = "pointer";
+                      li.textContent = `${item.Address.Address1}, ${item.Address.Locality}, ${item.Address.AdministrativeArea} ${item.Address.PostalCode}`;
+
+                      li.onclick = () => {
+                        // 1. Update text input fields directly
+                        this.formValues[addrField.name] = item.Address.Address1;
+                        
+                        const zipDef = this.formDefinition.find(f => f.name.toLowerCase().includes("zip"));
+                        if (zipDef) this.formValues[zipDef.name] = item.Address.PostalCode;
+
+                        // 2. Safely find Dropdowns using the exact Dataverse Source Domain!
+                        const cityDef = this.formDefinition.find(f => f.source?.domainVal === "G_TOWN_CD" || f.label.toLowerCase().includes("city"));
+                        const stateDef = this.formDefinition.find(f => f.source?.domainVal === "G_US_STATE_CD" || f.label.toLowerCase().includes("state"));
+                        const countyDef = this.formDefinition.find(f => f.source?.domainVal === "G_CNTY_CD" || f.label.toLowerCase().includes("county"));
+
+                        const stateMap = {
+                            "AL": "Alabama", "AK": "Alaska", "AZ": "Arizona", "AR": "Arkansas", "CA": "California",
+                            "CO": "Colorado", "CT": "Connecticut", "DE": "Delaware", "FL": "Florida", "GA": "Georgia",
+                            "HI": "Hawaii", "ID": "Idaho", "IL": "Illinois", "IN": "Indiana", "IA": "Iowa",
+                            "KS": "Kansas", "KY": "Kentucky", "LA": "Louisiana", "ME": "Maine", "MD": "Maryland",
+                            "MA": "Massachusetts", "MI": "Michigan", "MN": "Minnesota", "MS": "Mississippi", "MO": "Missouri",
+                            "MT": "Montana", "NE": "Nebraska", "NV": "Nevada", "NH": "New Hampshire", "NJ": "New Jersey",
+                            "NM": "New Mexico", "NY": "New York", "NC": "North Carolina", "ND": "North Dakota", "OH": "Ohio",
+                            "OK": "Oklahoma", "OR": "Oregon", "PA": "Pennsylvania", "RI": "Rhode Island", "SC": "South Carolina",
+                            "SD": "South Dakota", "TN": "Tennessee", "TX": "Texas", "UT": "Utah", "VT": "Vermont",
+                            "VA": "Virginia", "WA": "Washington", "WV": "West Virginia", "WI": "Wisconsin", "WY": "Wyoming"
+                        };
+
+                        const matchDropdownOption = (fieldDef, searchTexts) => {
+                            if (!fieldDef || !fieldDef.options) return null;
+                            
+                            let searchArray = Array.isArray(searchTexts) ? searchTexts : [searchTexts];
+                            searchArray = searchArray.filter(t => t).map(t => String(t).trim().toLowerCase());
+                            
+                            for (let searchLower of searchArray) {
+                                const matched = fieldDef.options.find(opt => 
+                                    String(opt.label).trim().toLowerCase() === searchLower ||
+                                    String(opt.value).trim().toLowerCase() === searchLower
+                                );
+                                if (matched) return matched.value;
+                            }
+                            return null;
+                        };
+
+                        // 3. Map City
+                        if (cityDef) {
+                            const cityVal = matchDropdownOption(cityDef, item.Address.Locality);
+                            if (cityVal) this.formValues[cityDef.name] = cityVal;
+                        }
+
+                        // 4. Map County
+                        if (countyDef) {
+                            const melissaCounty = item.Address.SubAdministrativeArea || "";
+                            const countyVariations = [
+                                melissaCounty, 
+                                melissaCounty.replace(/ county$/i, "").trim(), 
+                                `${melissaCounty} County`
+                            ];
+                            const countyVal = matchDropdownOption(countyDef, countyVariations);
+                            if (countyVal) this.formValues[countyDef.name] = countyVal;
+                        }
+
+                        // 5. Map State 
+                        if (stateDef) {
+                            const melissaState = item.Address.AdministrativeArea;
+                            const fullStateName = stateMap[melissaState] || melissaState;
+                            const stateVal = matchDropdownOption(stateDef, [melissaState, fullStateName]);
+                            if (stateVal) this.formValues[stateDef.name] = stateVal;
+                        }
+
+                        // 6. Hide box & re-render the form
+                        suggestionBox.style.display = 'none';
+                        this.renderForm();
+                        
+                        const newTarget = document.querySelector(`#${this.containerId} input[data-field="${addrField.name}"]`);
+                        if (newTarget) newTarget.blur();
+                      };
+                      suggestionBox.appendChild(li);
+                    });
+                    suggestionBox.style.display = 'block';
+                  }
+                } catch (err) {
+                  console.error("Melissa Autopopulate Error:", err);
+                }
+              }, 400);
+            });
+
+            document.addEventListener('click', (e) => {
+              const suggestionBox = root.querySelector(`#cmdspp_melissa_suggestions_${this.containerId}_${addrField.name}`);
+              if (suggestionBox && e.target !== addressInput && !suggestionBox.contains(e.target)) {
+                suggestionBox.style.display = 'none';
+              }
+            });
+          }
+        });
+
+      }
+
+      /*
+       * Returns true when at least one field controlled by a visibility
+       * dependency is currently visible.
+       *
+       * If the section has no visibility-dependent detail fields at all,
+       * treat it as a normal section so its existing button behavior stays
+       * unchanged.
+       */
+      hasVisibleDependencyDetailFields() {
+        const dependentFields =
+          this.formDefinition.filter(field =>
+            (field.dependency || []).some(
+              dep =>
+                dep &&
+                dep.type === "visibility"
+            )
+          );
+
+        if (!dependentFields.length) {
+          return true;
+        }
+
+        return dependentFields.some(
+          field => this.isVisible(field)
+        );
+      }
+
+      /*
+       * UI-only button visibility.
+       *
+       * - Initial Dataverse fetch: Update / Cancel stay hidden when all
+       *   dependency-controlled detail fields are hidden.
+       * - Dependency changes: same rule is applied immediately.
+       * - Actual grid Edit click: Update / Cancel are allowed.
+       *
+       * Existing save/update functions are NOT changed.
+       */
+      updateDependencyEditButtonVisibility() {
+        const root =
+          document.getElementById(
+            this.containerId
+          );
+
+        if (!root) return;
+
+        const hasVisibleDetails =
+          this.hasVisibleDependencyDetailFields();
+
+        const allowEditButtons =
+          this._gridEditClicked === true;
+
+        const shouldHideEditActions =
+          !hasVisibleDetails &&
+          !allowEditButtons;
+
+        const submitBtn =
+          root.querySelector(
+            ".cmdspp-submit-btn"
+          );
+
+        const cancelBtn =
+          root.querySelector(
+            ".cmdspp-cancel-btn"
+          );
+
+        /*
+         * The action bar uses Bootstrap d-flex, which is !important.
+         * Hide the actual buttons rather than the entire action bar so any
+         * existing note/message inside the action bar is preserved.
+         */
+        if (submitBtn) {
+          if (shouldHideEditActions &&  this.formData.showtablebuttonradio !== "Yes") {
+            submitBtn.style.setProperty(
+              "display",
+              "none",
+              "important"
+            );
+          } else {
+            /*
+             * Remove only this helper's hard hide.
+             * Existing conditional Add-button logic is reapplied below.
+             */
+            submitBtn.style.removeProperty(
+              "display"
+            );
+          }
+        }
+
+        if (cancelBtn &&  this.formData.showtablebuttonradio !== "Yes") {
+          cancelBtn.style.setProperty(
+            "display",
+            shouldHideEditActions
+              ? "none"
+              : "",
+            shouldHideEditActions
+              ? "important"
+              : ""
+          );
+
+          if (!shouldHideEditActions) {
+            cancelBtn.style.removeProperty(
+              "display"
+            );
+          }
+        }
+
+        /*
+         * Preserve the existing No-detail Add-button behavior whenever this
+         * is NOT an explicit grid edit.
+         */
+        if (!allowEditButtons) {
+          const section =
+            window.wizardSchema.find(
+              s =>
+                s.containerId ===
+                this.containerId
+            );
+
+          const cfg =
+            getConditionalGridConfig(
+              section
+            );
+
+          if (
+            submitBtn &&
+            cfg &&
+            cfg.hideAddWhenNoDetail !== false &&
+            isConditionalGridNoDetail(
+              section,
+              this.formValues
+            )
+          ) {
+            submitBtn.style.setProperty(
+              "display",
+              "none",
+              "important"
+            );
+          }
+        }
+      }
+
+      updateConditionalGridAddButton() {
+        const section = window.wizardSchema.find(
+          s => s.containerId === this.containerId
+        );
+
+        const cfg = getConditionalGridConfig(section);
+        if (!cfg) return;
+
+        const root = document.getElementById(this.containerId);
+        const addBtn = root?.querySelector(".cmdspp-submit-btn");
+        if (!addBtn) return;
+
+        const isEditing = !!this.formValues.__editingId;
+        const forceShow =  this.formData.showtablebuttonradio === "Yes";
+        const hide =
+          !isEditing &&
+           !forceShow &&
+          cfg.hideAddWhenNoDetail !== false &&
+          isConditionalGridNoDetail(section, this.formValues);
+
+        addBtn.style.display = hide ? "none" : "";
+      }
+
+      /*
+       * Clear values whose field LABEL depends on a controlling field that the
+       * user has actually changed.
+       *
+       * This is intentionally event-driven rather than render-driven:
+       * - values loaded from Dataverse are preserved on initial render/edit;
+       * - changing the controlling field clears stale dependent data;
+       * - chained label dependencies are cleared recursively.
+       */
+      clearLabelDependentValues(changedFieldName, previousValue, nextValue) {
+        const normalizeForCompare = (value) => {
+          if (Array.isArray(value)) {
+            return JSON.stringify(
+              value.map(v => String(v ?? "")).sort()
+            );
+          }
+
+          if (value === undefined || value === null) return "";
+          return String(value);
+        };
+
+        if (
+          normalizeForCompare(previousValue) ===
+          normalizeForCompare(nextValue)
+        ) {
+          return false;
+        }
+
+        const queue = [changedFieldName];
+        const visitedParents = new Set();
+        let clearedAnyValue = false;
+
+        while (queue.length) {
+          const parentFieldName = queue.shift();
+
+          if (!parentFieldName || visitedParents.has(parentFieldName)) {
+            continue;
+          }
+
+          visitedParents.add(parentFieldName);
+
+          this.formDefinition.forEach(field => {
+            if (!field?.name || field.name === parentFieldName) return;
+
+            const dependsOnParent = (field.dependency || []).some(dep => {
+              if (!dep || dep.type !== "label") return false;
+
+              const parentFields = Array.isArray(dep.depId)
+                ? dep.depId
+                : (dep.depId ? [dep.depId] : []);
+
+              return parentFields.includes(parentFieldName);
+            });
+
+            if (!dependsOnParent) return;
+
+            const currentValue = this.formValues[field.name];
+
+            const hadValue = Array.isArray(currentValue)
+              ? currentValue.length > 0
+              : (
+                  currentValue !== undefined &&
+                  currentValue !== null &&
+                  currentValue !== "" &&
+                  currentValue !== false
+                );
+
+            // Use the correct empty shape for the dependent control.
+            if (
+              field.type === "checkboxgroup" ||
+              field.type === "multiselect" ||
+              field.type === "multiselectcheckbox" ||
+              field.type === "muiltcheckboxgroup"
+            ) {
+              this.formValues[field.name] = [];
+            } else if (field.type === "checkbox") {
+              this.formValues[field.name] = false;
+            } else {
+              this.formValues[field.name] = "";
+            }
+
+            // Remove any stale display-label value that may have arrived from a
+            // fetched/edit record.
+            delete this.formValues[`${field.name}_label`];
+            delete this.errors[field.name];
+
+            if (hadValue) {
+              clearedAnyValue = true;
+            }
+
+            // If this dependent field controls another label-dependent field,
+            // clear that child too.
+            queue.push(field.name);
+          });
+        }
+
+        return clearedAnyValue;
+      }
+
+      updateVisibility() {
+        this.formDefinition.forEach(field => {
+          const el = document.querySelector(`#${this.containerId} [data-field-container="${field.name}"]`);
+          const visible = this.isVisible(field);
+          if (el) el.style.display = visible ? "block" : "none";
+
+          if (!visible) {
+            const hideDeps = (field.dependency || []).filter(d => d.type === "visibility" && d.fieldHide);
+            const matchedDep = hideDeps.find(dep =>
+              dep.depId.some(parentField => {
+                const parentLabel = getLabelFromLookupCache(this.formValues[parentField]);
+                return String(parentLabel) === String(dep.value);
+              })
+            );
+
+            if (matchedDep && matchedDep.autopopulate !== undefined) {
+              const match = (field.options || []).find(o => String(o.label) === String(matchedDep.autopopulate));
+              this.formValues[field.name] = match ? match.value : matchedDep.autopopulate;
+            } else {
+              delete this.formValues[field.name];
+            }
+          }
+        });
+
+        // Refresh JSON-driven labels without rebuilding the form.
+        this.updateDynamicLabels();
+
+        // JSON-driven sub-grid Add visibility.
+        this.updateConditionalGridAddButton();
+
+        /*
+         * Additional UI-only rule for Update / Cancel Edit.
+         */
+        this.updateDependencyEditButtonVisibility();
+      }
+
+      submitForm() {
+                if (window.cmdsppIsReadOnly) return;
+        const isEditing = !!this.formValues.__editingId;
+        const editingId = this.formValues.__editingId;
+        const valuesToSend = { ...this.formValues };
+        delete valuesToSend.__editingId;
+
+        this.formDefinition.forEach(field => {
+          if (valuesToSend[field.name] !== undefined) {
+            const val = valuesToSend[field.name];
+            if (field.type === "date" && val) valuesToSend[field.name] = toISODateString(val);
+
+            const label = getLabelFromLookupCache(val);
+            if (label) valuesToSend[field.name + "_label"] = label;
+          }
+        });
+
+        // NEW: duplicate check — only runs if section.duplicateCheckFields is defined in schema
+        const section = window.wizardSchema.find(s => s.containerId === this.containerId);
+        const isSubGridSection = section && !!section.tableId && Array.isArray(section.fieldMappings);
+
+        // Never dispatch an Add event for a configured "No details" answer.
+        // Continue will persist that answer directly.
+        if (
+          isSubGridSection &&
+          !isEditing &&
+          isConditionalGridNoDetail(section, valuesToSend)
+        ) {
+          console.log("[Conditional grid] Add ignored because detail answer is No.");
+          return;
+        }
+
+        const duplicateFields = (Array.isArray(section?.duplicateCheckFields) && section.duplicateCheckFields.length > 0)
+        ? section.duplicateCheckFields
+        : this.formDefinition.map(f => f.name);
+
+        if (isSubGridSection && !isEditing && Array.isArray(duplicateFields) && duplicateFields.length > 0) {
+          const isDuplicate = (section.records || [])
+            .filter(r => !r.isDeleted)
+            .some(existing =>
+              duplicateFields.every(fieldName => {
+                const newVal = valuesToSend[fieldName];
+                const existingVal = existing[fieldName];
+                if (Array.isArray(newVal) || Array.isArray(existingVal)) {
+                  const a = Array.isArray(newVal) ? [...newVal].map(String).sort() : [];
+                  const b = Array.isArray(existingVal) ? [...existingVal].map(String).sort() : [];
+                  return JSON.stringify(a) === JSON.stringify(b);
+                }
+                return String(newVal ?? "") === String(existingVal ?? "");
+              })
+            );
+
+          if (isDuplicate) {
+            // alert("This record already exists in the table.");
+            cmdsppShowToast("warning","This record already exists in the table.");
+            
+            return; // stop here — do not dispatch, do not reset
+          }
+        }
+
+        window.dispatchEvent(new CustomEvent("dynamicFormSubmit", {
+          detail: {
+            containerId: this.containerId,
+            isEditing,
+            editingId,
+            values: valuesToSend,
+            formFlds: this.formDefinition
+          }
+        }));
+
+        this.reset();
+      }
+
+      setValues(values, editingId) {
+          this.formValues = {};
+          this.initValues();
+
+          if (values && typeof values === "object") {
+            Object.keys(values).forEach(key => {
+              const val = values[key];
+              this.formValues[key] = (val === null || val === undefined) ? "" : val;
+            });
+          }
+
+          this.formDefinition.forEach(field => {
+            if (field.type === "date" && this.formValues[field.name]) {
+              this.formValues[field.name] = toISODateString(this.formValues[field.name]);
+            }
+            if (field.type === "radio" && this.formValues[field.name] !== undefined && this.formValues[field.name] !== null && this.formValues[field.name] !== "") {
+              const currentValue = this.formValues[field.name];
+
+              const radioOptionValues = (field.options || []).map(
+                option => String(option.value).trim().toLowerCase()
+              );
+
+              const isYesNoRadio =
+                radioOptionValues.includes("yes") &&
+                radioOptionValues.includes("no");
+
+              if (isYesNoRadio && typeof currentValue === "boolean") {
+                this.formValues[field.name] = currentValue ? "Yes" : "No";
+              } else {
+                this.formValues[field.name] = currentValue;
+              }
+            }
+
+            // NEW: normalize checkbox-group / multiselect / multiselectcheckbox values.
+            // Grid records store these as comma-separated strings (see buildPayload's
+            if (
+              field.type === "checkboxgroup" ||
+              field.type === "multiselect" ||
+              field.type === "multiselectcheckbox"
+            ) {
+              const raw = this.formValues[field.name];
+
+              if (Array.isArray(raw)) {
+                this.formValues[field.name] = raw
+                  .map(v => String(v).replace(/[{}]/g, "").trim())
+                  .filter(Boolean);
+              } else if (typeof raw === "string" && raw.length) {
+                this.formValues[field.name] = raw
+                  .split(",")
+                  .map(v => v.replace(/[{}]/g, "").trim())
+                  .filter(Boolean);
+              } else {
+                this.formValues[field.name] = [];
+              }
+            }
+          });
+
+          if (editingId !== undefined && editingId !== null) {
+            this.formValues.__editingId = editingId;
+          }
+
+          this.renderForm();
+          this.updateVisibility();
+
+          const el = document.getElementById(this.containerId);
+          if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+      resetsection() {
+        this._gridEditClicked = false;
+        this.formValues = {};
+        this.initValues();
+        // this.renderForm();
+      }
+
+      reset() {
+        this._gridEditClicked = false;
+        this.formValues = {};
+        this.initValues();
+        this.renderForm();
+      }
+
+      async renderMe() {
+        await this.loadLookups();
+        this.renderForm();
+        return this;
+      }
+
+
+    }
+
+    // ---------------------------------------------------------------------------
+    // Multi-table helpers
+    // ---------------------------------------------------------------------------
+    // section.entitySet can contain one or more entity sets separated by commas.
+    // When more than one table is configured, records keep their source table
+    // and primary-key field so EDIT and DELETE always go back to the same table.
+    function getSectionEntitySets(section) {
+      return String(section?.entitySet || "")
+        .split(",")
+        .map(s => s.trim())
+        .filter(Boolean);
+    }
+
+    function getSectionParentLookupFields(section) {
+      return String(section?.parentLookupField || "")
+        .split(",")
+        .map(s => s.trim())
+        .filter(Boolean);
+    }
+
+    function getSectionRecordIdFields(section) {
+      return String(section?.recordIdField || section?.primaryKey || "")
+        .split(",")
+        .map(s => s.trim())
+        .filter(Boolean);
+    }
+
+    function getEntitySetForRecord(section, record) {
+      if (record?._entitySet) return record._entitySet;
+      return getSectionEntitySets(section)[0] || "";
+    }
+
+    function getRecordIdFieldForEntity(section, entitySet, indexHint) {
+      const entitySets = getSectionEntitySets(section);
+      const idFields = getSectionRecordIdFields(section);
+      const index = entitySets.indexOf(entitySet);
+
+      if (index >= 0 && idFields[index]) return idFields[index];
+      if (indexHint !== undefined && idFields[indexHint]) return idFields[indexHint];
+      return idFields[0] || "";
+    }
+
+    function getParentLookupFieldForEntity(section, entitySet, indexHint) {
+      const entitySets = getSectionEntitySets(section);
+      const lookupFields = getSectionParentLookupFields(section);
+      const index = entitySets.indexOf(entitySet);
+
+      if (index >= 0 && lookupFields[index]) return lookupFields[index];
+      if (indexHint !== undefined && lookupFields[indexHint]) return lookupFields[indexHint];
+      return lookupFields[0] || "";
+    }
+
+    function getRecordIdFromEntityRecord(item, section, entitySet, indexHint) {
+      const idField = getRecordIdFieldForEntity(section, entitySet, indexHint);
+      if (idField && item?.[idField]) return item[idField];
+
+      // Safe fallback for Dataverse entity-set primary key naming.
+      const singular = String(entitySet || "").replace(/s$/, "");
+      const candidates = [
+        `${entitySet}id`,
+        `${singular}id`
+      ];
+
+      for (const key of candidates) {
+        if (item?.[key]) return item[key];
+      }
+
+      return null;
+    }
+
+    // ---------------------------------------------------------------------------
+    // Lookup fetch helpers
+    // ---------------------------------------------------------------------------
+    // Dataverse lookup GUIDs are always read from:
+    //     _<lookup logical name>_value
+    //
+    // Do NOT fall back to item[lookupName] for lookup fields. That property can
+    // represent a navigation/primary-name value and is not the lookup GUID.
+    function getLookupGuidFromRecord(record, lookupLogicalName) {
+      if (!record || !lookupLogicalName) return "";
+
+      const rawValue = record[`_${lookupLogicalName}_value`];
+
+      if (rawValue === undefined || rawValue === null || rawValue === "") {
+        return "";
+      }
+
+      return String(rawValue).replace(/[{}]/g, "").trim();
+    }
+
+    function getFieldOptionLabel(section, formFieldName, guid) {
+      if (!guid) return "";
+
+      const field = (section.fields || []).find(
+        f => f && f.name === formFieldName
+      );
+
+      const normalizedGuid = normalizeDynamicGuid(guid);
+
+      const option = (field?.options || []).find(
+        opt => normalizeDynamicGuid(opt?.value) === normalizedGuid
+      );
+
+      if (option?.label !== undefined && option?.label !== null) {
+        return String(option.label);
+      }
+
+      // Dynamic lookups also populate the global option map.
+      const direct =
+        window.cmdsppOptionMaps?.[guid] ??
+        window.cmdsppOptionMaps?.[normalizedGuid];
+
+      if (direct !== undefined && direct !== null && direct !== "") {
+        return String(direct);
+      }
+
+      // Last generic cache fallback for normal r_VV lookups.
+      const cachedLabel = getLabelFromLookupCache(guid);
+
+      return cachedLabel && String(cachedLabel) !== String(guid)
+        ? String(cachedLabel)
+        : "";
+    }
+
+    function buildSectionFetchSelect(section, entitySet, entityIndex, isStandalone) {
+      const selectFields = new Set();
+
+      const recordIdField = getRecordIdFieldForEntity(
+        section,
+        entitySet,
+        entityIndex
+      );
+
+      if (recordIdField) {
+        selectFields.add(recordIdField);
+      }
+
+      if (isStandalone) {
+        (section.fields || []).forEach(field => {
+          if (!field?.name) return;
+
+          if (
+            field.type === "lookup" ||
+            field.type === "select" ||
+              ((field.type === "checkboxgroup" || field.type === "multiselect") && field.source?.table)
+
+          ) {
+            selectFields.add(`_${field.name}_value`);
+          } else {
+            selectFields.add(field.name);
+          }
+        });
+      } else {
+        (section.fieldMappings || []).forEach(mapping => {
+          if (!mapping?.dataverseField) return;
+
+          if (mapping.type === "lookup") {
+            selectFields.add(`_${mapping.dataverseField}_value`);
+          } else {
+            selectFields.add(mapping.dataverseField);
+          }
+        });
+      }
+
+      return Array.from(selectFields);
+    }
+
+    async function fetchSectionRecords(section) {
+      const parentGuid = getParentRecordGuid();
+      if (!parentGuid || !section.entitySet) return [];
+
+      const isStandalone = !section.tableId || !section.fieldMappings;
+      const formInstance = window.cmdsppForms[section.containerId];
+      const entitySets = getSectionEntitySets(section);
+      const parentLookupFields = getSectionParentLookupFields(section);
+      let rawRecords = [];
+
+      for (let i = 0; i < entitySets.length; i++) {
+        const entitySet = entitySets[i];
+        const parentLookupField =
+          parentLookupFields[i] || parentLookupFields[0] || section.parentLookupField;
+
+        if (!entitySet) continue;
+
+        const inrecordId = parentLookupField
+          ? `_${parentLookupField}_value`
+          : "";
+
+        
+
+        let filterQuery = isStandalone
+          ? (inrecordId
+              ? `${inrecordId} eq ${parentGuid} and statecode eq 0`
+              : `statecode eq 0`)
+          : `_cmdspp_p_sys_id_value eq ${parentGuid} and statecode eq 0`;
+          if (section?.recordFilterField) {
+          filterQuery += ` and ${section.recordFilterField} ne null`;
+        }
+
+        try {
+          const selectFields = buildSectionFetchSelect(
+            section,
+            entitySet,
+            i,
+            isStandalone
+          );
+          let urlTb = `/_api/${entitySet}` +
+            `?$select=${selectFields.join(",")}` +
+            `&$filter=${filterQuery}`;
+           if(section.entitySet.includes(",")){
+            let selctFlds = section.selectQueries[entitySet] ? section.selectQueries[entitySet] + `&$filter=${filterQuery}` :  `?$filter=${filterQuery}`
+            urlTb = `/_api/${entitySet}` + selctFlds ;               
+           }
+          const fetchUrl = urlTb
+            
+
+          console.log("[Section fetch lookup GUIDs]", fetchUrl);
+
+          const response = await safeWebApiClient({
+            type: "GET",
+            url: fetchUrl,
+            headers: {
+              "Prefer":
+                'odata.include-annotations="OData.Community.Display.V1.FormattedValue"'
+            }
+          });
+
+          rawRecords.push(
+            ...(response.value || []).map(record => ({
+              ...record,
+              _entitySet: entitySet,
+              _entityIndex: i,
+              _parentLookupField: parentLookupField,
+              _recordIdField: getRecordIdFieldForEntity(section, entitySet, i)
+            }))
+          );
+        } catch (err) {
+          console.error(`Failed loading records from ${entitySet}`, err);
+        }
+      }
+
+      const checkboxField = section.fields?.find(
+  f => (f.type === "checkboxgroup" || f.type === "multiselect") && f.source?.table
+      );
+
+      if (checkboxField && isStandalone) {
+        section.records = rawRecords;
+        const selectedValues = rawRecords
+          .map(item => String(item[`_${checkboxField.name}_value`] ?? item[checkboxField.name]))
+          .filter(v => v && v !== "undefined" && v !== "null");
+
+        if (formInstance) {
+          formInstance.formValues[checkboxField.name] = selectedValues;
+          formInstance.renderForm();
+        }
+        return rawRecords;
+      }
+
+      if (isStandalone) {
+        if (rawRecords.length > 0) {
+          // For a normal standalone form, use the first matching record.
+          // Keep the exact table/id metadata for safe PATCH later.
+          const item = rawRecords[0];
+          const populatedValues = {
+            __recordId: getRecordIdFromEntityRecord(
+              item,
+              section,
+              item._entitySet,
+              item._entityIndex
+            ),
+            __entitySet: item._entitySet,
+            __recordIdField: item._recordIdField
+          };
+
+          (section.fields || []).forEach(field => {
+            const fieldName = field.name;
+            const fieldType = field.type;
+
+            if (fieldType === "lookup" || fieldType === "select") {
+              var rawVal = getLookupGuidFromRecord(item, fieldName);
+              if(!rawVal){
+                  const fldVal = rawRecords.find(fld => Object.prototype.hasOwnProperty.call(fld, `_${fieldName}_value`));
+                  rawVal = getLookupGuidFromRecord(fldVal, fieldName);
+               }
+              const optionLabel = getFieldOptionLabel(section, fieldName, rawVal);
+              const formatted =
+                item[`_${fieldName}_value@OData.Community.Display.V1.FormattedValue`];
+
+              populatedValues[fieldName] = rawVal;
+
+              if (optionLabel) {
+                populatedValues[`${fieldName}_label`] = optionLabel;
+              } else if (formatted) {
+                populatedValues[`${fieldName}_label`] = formatted;
+              }
+            } else if (fieldType === "optionset") {
+              const rawVal = item[fieldName];
+              const formatted = item[`${fieldName}@OData.Community.Display.V1.FormattedValue`];
+              populatedValues[fieldName] = rawVal;
+              if (formatted) populatedValues[`${fieldName}_label`] = formatted;
+            } else if (fieldType === "choice" || fieldType === "radio") {
+              populatedValues[fieldName] =
+                item[fieldName] === true ? "Yes" :
+                item[fieldName] === false ? "No" : "";
+            } else if (fieldType === "date") {
+              populatedValues[fieldName] = toISODateString(item[fieldName]);
+            } else if (fieldType === "multiselectcheckbox" || fieldType === "checkboxgroup" || fieldType === "multiselect") {
+                const raw = item[fieldName];
+                populatedValues[fieldName] = typeof raw === "string" && raw.length
+                  ? raw.split(",").map(v => v.trim()).filter(Boolean)
+                  : [];
+              }
+            else {
+              populatedValues[fieldName] = item[fieldName];
+               if(!item[fieldName]){
+                  const fldVal = rawRecords.find(fld => Object.prototype.hasOwnProperty.call(fld, fieldName));
+                  if(fldVal && field.key?.includes(".")){
+                    let keyS = field.key.split(".")
+                    let lookupObj = fldVal[keyS[0]]
+                    if(fldVal) populatedValues[fieldName] = lookupObj[keyS[1]];
+                  }else{
+                     if(fldVal) populatedValues[fieldName] = fldVal[fieldName]; 
+                  }
+ 
+              }
+            }
+          });
+
+          if (formInstance) {
+            formInstance.setValues(populatedValues);
+          }
+        }
+        return rawRecords;
+      }
+
+      return rawRecords.map((item, index) => {
+        const entitySet = item._entitySet;
+        const entityIndex = item._entityIndex;
+        const recId = getRecordIdFromEntityRecord(
+          item,
+          section,
+          entitySet,
+          entityIndex
+        ) || `temp_${index}`;
+
+        const mappedRecord = {
+          dbId: recId,
+          recordId: recId,
+          isNew: false,
+          _entitySet: entitySet,
+          _entityIndex: entityIndex,
+          _parentLookupField: item._parentLookupField,
+          _recordIdField: item._recordIdField
+        };
+
+        for (const m of (section.fieldMappings || [])) {
+          if (m.type === "lookup") {
+            /*
+             * Fetch/store the LOOKUP GUID only.
+             *
+             * Dataverse lookup GUID:
+             *   _<lookup logical name>_value
+             *
+             * The grid resolves this GUID against section.fields[].options
+             * at render time, exactly like a newly-added row.
+             */
+            const val =
+              getLookupGuidFromRecord(
+                item,
+                m.dataverseField
+              );
+
+            mappedRecord[
+              m.formField
+            ] = val;
+
+            const mappedField =
+              (section.fields || []).find(
+                field =>
+                  field &&
+                  field.name === m.formField
+              );
+
+            const isDynamicOptionField =
+              mappedField?.source?.type ===
+                "providerSpecialties" ||
+              mappedField?.source?.type ===
+                "dependentTaxonomies";
+
+            /*
+             * Specialty / Taxonomy:
+             * GUID is the record value and field.options is the display map.
+             * Do not inject Dataverse primary-name/formatted-value data.
+             */
+            if (!isDynamicOptionField) {
+
+              const optionLabel =
+                getFieldOptionLabel(
+                  section,
+                  m.formField,
+                  val
+                );
+
+              const formatted =
+                item[
+                  `_${m.dataverseField}_value@OData.Community.Display.V1.FormattedValue`
+                ];
+
+              mappedRecord[
+                `${m.formField}_label`
+              ] =
+                optionLabel ||
+                formatted ||
+                "";
+            }
+
+          } else if (m.type === "choice" || m.type === "optionset") {
+            const rawVal = item[m.dataverseField];
+           mappedRecord[m.formField] = rawVal;
+          // mappedRecord[m.formField] = rawVal === true ? "Yes" : rawVal === false ? "No" : rawVal;
+            mappedRecord[`${m.formField}_label`] =
+              item[`${m.dataverseField}@OData.Community.Display.V1.FormattedValue`] ||
+              getLabelFromLookupCache(rawVal);
+          } else if (m.type === "date") {
+            mappedRecord[m.formField] = toISODateString(item[m.dataverseField]);
+          } else {
+            mappedRecord[m.formField] = item[m.dataverseField];
+          }
+        }
+     
+        return markConditionalGridRecord(section, mappedRecord);
+      });
+    }
+
+    // ---------------------------------------------------------------------------
+    // Schema-driven source -> form mapping
+    // ---------------------------------------------------------------------------
+    //
+    // This is intentionally additive. Existing form rendering, lookup loading,
+    // Melissa address autocomplete, visibility, checkbox handling and grid
+    // behavior remain unchanged.
+    //
+    // A Yes/No field can optionally define:
+    //
+    // "copyFrom": {
+    //   "whenValue": "Yes",
+    //   "sourceType": "serviceLocation",
+    //   "source": {
+    //     "entitySet": "...",
+    //     "parentLookupField": "...",
+    //     "filter": "statecode eq 0"
+    //   },
+    //   "mappings": [
+    //     { "sourceField": "source_street", "targetField": "billing_street", "type": "text" },
+    //     { "sourceField": "source_city", "targetField": "billing_city", "type": "lookup" }
+    //   ]
+    // }
+    //
+    // The source and target column names can be completely different.
+    // ---------------------------------------------------------------------------
+
+    function getParentRecordGuid() {
+      return new URLSearchParams(window.location.search).get("record") ||
+             new URLSearchParams(window.location.search).get("id");
+    }
+
+    function getSourceLookupValue(record, sourceField) {
+      return record?.[`_${sourceField}_value`] ?? record?.[sourceField] ?? "";
+    }
+
+    function getSourceFormattedValue(record, sourceField) {
+      return record?.[`_${sourceField}_value@OData.Community.Display.V1.FormattedValue`] ||
+             record?.[`${sourceField}@OData.Community.Display.V1.FormattedValue`] ||
+             "";
+    }
+    window.refreshAllSections = async function () {
+    for (const section of (window.wizardSchema || [])) {
+        if (!section.tableId) {
+            continue;
+        }
+
+        const records = await fetchSectionRecords(section);
+        section.records = records;
+
+        const grid = window.cmdsppGrids?.[section.tableId];
+
+        if (grid) {
+            grid.render(
+                section.columns,
+                records,
+                section.fields
+            );
+        }
+    }
+};
+
+    function getConfiguredSourceValue(record, mapping) {
+      if (!record || !mapping?.sourceField) return "";
+
+      if (mapping.type === "lookup" || mapping.type === "select") {
+        return getSourceLookupValue(record, mapping.sourceField);
+      }
+
+      if (mapping.type === "date") {
+        return record[mapping.sourceField]
+          ? toISODateString(record[mapping.sourceField])
+          : "";
+      }
+
+      if (mapping.type === "choice" || mapping.type === "optionset" || mapping.type === "radio") {
+        const value = record[mapping.sourceField];
+        if (value === true) return "Yes";
+        if (value === false) return "No";
+        return value ?? "";
+      }
+
+      return record[mapping.sourceField] ?? "";
+    }
+
+    async function fetchConfiguredSourceRecord(copyConfig) {
+      const source = copyConfig?.source;
+      const parentGuid = getParentRecordGuid();
+
+      if (!source?.entitySet) {
+        throw new Error("copyFrom.source.entitySet is required in the section JSON.");
+      }
+
+      if (!parentGuid) {
+        throw new Error("Parent record id was not found in the page URL.");
+      }
+
+      const filters = [];
+
+      if (source.parentLookupField) {
+        filters.push(`_${source.parentLookupField}_value eq ${parentGuid}`);
+      }
+
+      if (source.filter) {
+        filters.push(`(${source.filter})`);
+      }
+
+      // Build $select from copyFrom mapping source fields only.
+      const mappings = Array.isArray(copyConfig?.mappings)
+        ? copyConfig.mappings
+        : [];
+
+      const selectFields = [
+        ...new Set(
+          mappings
+            .filter(mapping => mapping?.sourceField)
+            .map(mapping =>
+              mapping.type === "lookup" || mapping.type === "select"
+                ? `_${mapping.sourceField}_value`
+                : mapping.sourceField
+            )
+        )
+      ];
+
+      const queryParts = [];
+
+      if (selectFields.length) {
+        queryParts.push(`$select=${selectFields.join(",")}`);
+      }
+
+      if (filters.length) {
+        queryParts.push(`$filter=${filters.join(" and ")}`);
+      }
+
+      const queryString = queryParts.length
+        ? `?${queryParts.join("&")}`
+        : "";
+
+      const url = `/_api/${source.entitySet}${queryString}`;
+
+      console.log("[Schema-driven source copy] GET", url);
+
+      const response = await safeWebApiClient({
+        type: "GET",
+        url: url,
+        headers: {
+          "Prefer": 'odata.include-annotations="OData.Community.Display.V1.FormattedValue"'
+        }
+      });
+
+      const records = response?.value || [];
+      return records.length ? records[0] : null;
+    }
+
+    async function populateConfiguredSource(section) {
+      const formInstance = window.cmdsppForms[section.containerId];
+      if (!formInstance) return false;
+
+      // No hard-coded service-location/mailing-address field names.
+      // The JSON decides which Yes/No field activates which source.
+      const selectorField = (section.fields || []).find(field => {
+        if (!field.copyFrom) return false;
+        const currentValue = formInstance.formValues[field.name];
+        return String(currentValue) === String(field.copyFrom.whenValue);
+      });
+
+      if (!selectorField) return false;
+
+      const copyConfig = selectorField.copyFrom;
+      const sourceRecord = await fetchConfiguredSourceRecord(copyConfig);
+
+      if (!sourceRecord) {
+        throw new Error(
+          `No source record found for ${copyConfig.sourceType || "configured source"}.`
+        );
+      }
+
+      const mappings = Array.isArray(copyConfig.mappings)
+        ? copyConfig.mappings
+        : [];
+
+      if (!mappings.length) {
+        throw new Error(
+          `copyFrom.mappings is required for ${selectorField.name}.`
+        );
+      }
+
+      mappings.forEach(mapping => {
+        const targetField = mapping.targetField;
+        if (!targetField) return;
+
+        const value = getConfiguredSourceValue(sourceRecord, mapping);
+
+        // Do not overwrite an existing billing value with empty source data.
+        if (value === undefined || value === null || value === "") return;
+
+        formInstance.formValues[targetField] = value;
+
+        // Preserve lookup label so the UI and payload mapping can use it.
+        if (mapping.type === "lookup" || mapping.type === "select") {
+          const label = getSourceFormattedValue(
+            sourceRecord,
+            mapping.sourceField
+          );
+
+          if (label) {
+            formInstance.formValues[`${targetField}_label`] = label;
+            window.cmdsppOptionMaps = window.cmdsppOptionMaps || {};
+            window.cmdsppOptionMaps[value] = label;
+          }
+        }
+      });
+
+      console.log(
+        `[Schema-driven source copy] ${copyConfig.sourceType || "source"} -> ${section.sectionId}`,
+        formInstance.formValues
+      );
+
+      return true;
+    }
+
+    // Flexible Payload Builder
+    // ---------------------------------------------------------------------------
+    // Payload builder
+    // ---------------------------------------------------------------------------
+    // The payload is still built from fieldMappings/fields, but the destination
+    // table is NOT put into the payload. The destination table is selected by
+    // submitSectionBatch() using the record's _entitySet. This is important when
+    // one grid displays records coming from multiple Dataverse tables.
+    function buildPayload(section, recordValues) {
+      const payload = {};
+      const mappings = section.fieldMappings || [];
+      const fields = section.fields || [];
+
+      if (mappings.length > 0) {
+        mappings.forEach(mapping => {
+          let value = recordValues[mapping.formField];
+          if (value === undefined || value === null || value === "") return;
+
+          if (mapping.type === "lookup") {
+            const targetEntity =
+              mapping.entitySet ||
+              mapping.table ||
+              mapping.source?.table ||
+              "";
+
+            if (!targetEntity) {
+              console.warn(
+                `No entitySet/table configured for lookup mapping ${mapping.formField}`
+              );
+              return;
+            }
+
+            payload[`${mapping.dataverseField}@odata.bind`] =
+              `/${getEntitySet(targetEntity)}(${value})`;
+          } else if (mapping.type === "optionset") {
+            payload[mapping.dataverseField] =
+              isNaN(value)
+                ? (String(value).toLowerCase() === "yes" || value === true)
+                : Number(value);
+          } else if (mapping.type === "choice") {
+            payload[mapping.dataverseField] =
+              isNaN(value)
+                ? String(value).toLowerCase() === "yes"
+                  ? true
+                  : false
+                : Number(value);
+          } else if (mapping.type === "date") {
+            payload[mapping.dataverseField] = toISODateString(value);
+          } 
+          else if(mapping.type === "multiselect" || mapping.type ==="checkboxgroup" || mapping.type === "multiselectcheckbox" ) {
+            payload[mapping.dataverseField] = Array.isArray(value) ? value.join(",") : String(value);
+          }
+          else {
+            payload[mapping.dataverseField] = value;
+          }
+        });
+      } else {
+        Object.keys(recordValues).forEach(fieldName => {
+          // __ keys and _metadata keys are internal and must never be sent.
+          if (
+            fieldName.startsWith("__") ||
+            fieldName.startsWith("_") ||
+            fieldName.endsWith("_label")
+          ) return;
+
+          const value = recordValues[fieldName];
+          if (value === undefined || value === null || value === "") return;
+
+          const fieldDef = fields.find(f => f.name === fieldName);
+          const fieldType = fieldDef ? fieldDef.type : null;
+
+          if (fieldType === "lookup" || fieldType === "select") {
+            const targetEntity =
+              fieldDef?.source?.table ||
+              fieldDef?.source?.entitySet ||
+              fieldDef?.entitySet ||
+              fieldName;
+
+            payload[`${fieldName}@odata.bind`] =
+              `/${getEntitySet(targetEntity)}(${value})`;
+          } else if (fieldType === "optionset") {
+            payload[fieldName] =
+              isNaN(value)
+                ? (String(value).toLowerCase() === "yes" || value === true)
+                : Number(value);
+          } else if (fieldType === "choice" || fieldType === "radio") {
+            payload[fieldName] =
+              isNaN(value)
+                ? String(value).toLowerCase() === "yes"
+                  ? true
+                  : false
+                : Number(value);
+          } else if (fieldType === "date") {
+            payload[fieldName] = toISODateString(value);
+          } else if (fieldType === "checkbox") {
+            payload[fieldName] =
+              value === true || String(value).toLowerCase() === "true";
+          }
+          else if (fieldType === "checkboxgroup" || fieldType === "multiselect" ) {
+            payload[fieldName] = Array.isArray(value) ? value.join(",") : String(value);
+          }
+           else {
+            payload[fieldName] = value;
+          }
+        });
+      }
+
+      return payload;
+    }
+
+    // Updated Batch Submission
+    //
+    // valuesOverride is optional and is used by the Continue handler after
+    // source-table values have been copied into the billing form. This keeps
+    // the existing create/update/grid logic intact while guaranteeing that
+    // the copied values are the values used to build the payload.
+    async function submitSectionBatch(section, valuesOverride = null) {
+      const parentAppGuid = getParentRecordGuid();
+      const formInstance = window.cmdsppForms[section.containerId];
+      const checkboxField = section.fields?.find(
+  f => (f.type === "checkboxgroup" || f.type === "multiselect") && f.source?.table
+      );
+
+      const isStandalone =
+        !section.tableId ||
+        !Array.isArray(section.fieldMappings);
+
+      // ---------------------------------------------------------------
+      // Standalone checkbox / multi-select relation rows
+      // ---------------------------------------------------------------
+      if (checkboxField && isStandalone) {
+        const checkedValues =
+          (formInstance?.formValues[checkboxField.name] || []).map(String);
+        const existingRows = section.records || [];
+        const existingValues = existingRows.map(r =>
+          String(r[`_${checkboxField.name}_value`] ?? r[checkboxField.name])
+        );
+
+        const toAdd = checkedValues.filter(v => !existingValues.includes(v));
+        const toRemove = existingRows.filter(r =>
+          !checkedValues.includes(
+            String(r[`_${checkboxField.name}_value`] ?? r[checkboxField.name])
+          )
+        );
+
+        const requests = [];
+
+        for (const val of toAdd) {
+          const entitySet =
+            getEntitySetForRecord(section, {}) ||
+            getSectionEntitySets(section)[0];
+          const payload = {
+            [`${checkboxField.name}@odata.bind`]:
+              `/${getEntitySet(checkboxField.source.table)}(${val})`
+          };
+
+          const parentLookupField =
+            getParentLookupFieldForEntity(section, entitySet, 0);
+
+          if (parentAppGuid && parentLookupField) {
+            payload[`${parentLookupField}@odata.bind`] =
+              `/cmdspp_p_dtl_tbs(${parentAppGuid})`;
+          }
+
+          requests.push(
+            safeWebApiClient({
+              type: "POST",
+              url: `/_api/${entitySet}`,
+              data: JSON.stringify(payload)
+            })
+          );
+        }
+
+        for (const row of toRemove) {
+          const entitySet = getEntitySetForRecord(section, row);
+          const rowId =
+            row.dbId ||
+            row.recordId ||
+            (row._recordIdField ? row[row._recordIdField] : null) ||
+            getRecordIdFromEntityRecord(row, section, entitySet, row._entityIndex);
+
+          if (!entitySet || !rowId) {
+            console.warn("Unable to delete multi-table checkbox row", row);
+            continue;
+          }
+
+          requests.push(
+            safeWebApiClient({
+              type: "PATCH",
+              url: `/_api/${entitySet}(${rowId})`,
+              data: JSON.stringify({ statecode: 1 })
+            })
+          );
+        }
+
+        await Promise.all(requests);
+        section.records = await fetchSectionRecords(section);
+        
+        return;
+      }
+
+      // ---------------------------------------------------------------
+      // Standalone / one-record section
+      // ---------------------------------------------------------------
+      if (isStandalone) {
+        const formValues =
+          valuesOverride ||
+          (formInstance ? formInstance.formValues : {});
+
+        if (formInstance && !formInstance.validateForm()) {
+          formInstance.renderForm();
+          throw new Error("Validation failed");
+        }
+
+        const payload = buildPayload(section, formValues);
+
+        const entitySet =
+          formValues.__entitySet ||
+          getSectionEntitySets(section)[0];
+
+        const parentLookupField =
+          formValues.__parentLookupField ||
+          getParentLookupFieldForEntity(section, entitySet, 0);
+
+        if (parentAppGuid && parentLookupField) {
+          payload[`${parentLookupField}@odata.bind`] =
+            `/cmdspp_p_dtl_tbs(${parentAppGuid})`;
+        }
+
+        let existingRecordId =
+          formValues.__recordId ||
+          formValues.__editingId ||
+          null;
+
+        // If the form was not populated with an existing id, find the record
+        // in the selected table by its parent lookup before deciding to POST.
+        if (
+          !existingRecordId &&
+          parentAppGuid &&
+          entitySet &&
+          parentLookupField
+        ) {
+          const idField =
+            formValues.__recordIdField ||
+            getRecordIdFieldForEntity(section, entitySet, 0);
+
+          if (idField) {
+            const filter =
+              `_${parentLookupField}_value eq ${parentAppGuid} and statecode eq 0`;
+            const lookupUrl =
+              `/_api/${entitySet}?$select=${idField}&$filter=${filter}`;
+
+            try {
+              const existingResponse = await safeWebApiClient({
+                type: "GET",
+                url: lookupUrl,
+                headers: {
+                  "Prefer":
+                    'odata.include-annotations="OData.Community.Display.V1.FormattedValue"'
+                }
+              });
+
+              const existingRecords = existingResponse?.value || [];
+              if (existingRecords.length > 0) {
+                existingRecordId = existingRecords[0][idField];
+                formValues.__recordId = existingRecordId;
+                formValues.__entitySet = entitySet;
+                formValues.__recordIdField = idField;
+              }
+            } catch (lookupErr) {
+              console.warn("Existing-record lookup failed; continuing with POST.", lookupErr);
+            }
+          }
+        }
+
+        console.log("[FINAL payload]", JSON.stringify(payload, null, 2));
+        console.log("[operation]", existingRecordId ? "PATCH" : "POST");
+        console.log("[entitySet]", entitySet);
+         let isMultiTb = section.entitySet.includes(",")
+        if(isMultiTb) return
+        if (!entitySet) {
+          throw new Error(`No entitySet configured for section ${section.sectionId}`);
+        }
+   /// commenting below code for updating section record id in provider table lookup
+        // if (existingRecordId) {
+        //   return safeWebApiClient({
+        //     type: "PATCH",
+        //     url: `/_api/${entitySet}(${existingRecordId})`,
+        //     data: JSON.stringify(payload)
+        //   });
+        // }
+
+        // return safeWebApiClient({
+        //   type: "POST",
+        //   url: `/_api/${entitySet}`,
+        //   data: JSON.stringify(payload)
+        // });
+                let savedRecordId = existingRecordId;
+
+                if (existingRecordId) {
+                           // Update existing section record
+                   await safeWebApiClient({
+                     type: "PATCH",
+                     url: `/_api/${entitySet
+                             }(${existingRecordId
+                             })`,
+                     data: JSON.stringify(payload)
+                           });
+                         } else {
+                           // Create new section record
+                   await safeWebApiClient({
+                     type: "POST",
+                     url: `/_api/${entitySet
+                             }`,
+                     data: JSON.stringify(payload)
+                           });
+                 
+                   // Fetch the created record and get its ID
+                   const savedRecords = await fetchSectionRecords(section);
+                 
+                   if (savedRecords && savedRecords.length > 0) {
+                     const savedRecord = savedRecords[
+                               0
+                             ];
+                 
+                     savedRecordId = getRecordIdFromEntityRecord(
+                       savedRecord,
+                       section,
+                       savedRecord._entitySet || entitySet,
+                       savedRecord._entityIndex || 0
+                     );
+                           }
+                 
+                   if (!savedRecordId) {
+                     throw new Error(
+                       `Unable to find the created record ID for ${section.sectionId
+                             }.`
+                     );
+                           }
+                         }
+                         // Update Provider Detail lookup for new and existing records
+                 if (section.updateProviderDtlLookup === true) {
+                   await updateProviderDetailSectionLookup(
+                     section,
+                     savedRecordId,
+                     entitySet
+                   );
+                         }
+                 
+                 return savedRecordId;
+
+
+      }
+
+      // ---------------------------------------------------------------
+      // JSON-driven conditional sub-grid save.
+      // If the controlling answer is configured as a no-detail value, save
+      // the form on Continue without requiring/creating a visible grid row.
+      // ---------------cmdsppShowToast("success","Record deleted successfully.");------------------------------------------------
+      const conditionalGrid = getConditionalGridConfig(section);
+      const conditionalValues =
+        valuesOverride ||
+        (formInstance ? formInstance.formValues : {});
+
+      if (
+        !isStandalone &&
+        conditionalGrid &&!section.dataLossDelete &&
+        conditionalGrid.saveOnContinue !== false &&
+        isConditionalGridNoDetail(section, conditionalValues)
+      ) {
+        if (formInstance && !formInstance.validateForm()) {
+          formInstance.renderForm();
+          throw new Error("Validation failed");
+        }
+
+        const entitySet = getSectionEntitySets(section)[0];
+        if (!entitySet) {
+          throw new Error(
+            `No entitySet configured for conditional section ${section.sectionId}`
+          );
+        }
+
+        const payload = buildPayload(section, conditionalValues);
+
+        const parentLookupField =
+          getParentLookupFieldForEntity(section, entitySet, 0) ||
+          section.parentLookupField ||
+          "cmdspp_p_sys_id";
+
+        if (parentAppGuid && parentLookupField) {
+          payload[`${parentLookupField}@odata.bind`] =
+            `/cmdspp_p_dtl_tbs(${parentAppGuid})`;
+        }
+
+        // Reuse an existing persisted No row if present.
+        const existingNoRow = (section.records || []).find(record =>
+          record &&
+          !record.isNew &&
+          !record.isDeleted &&
+          isConditionalGridNoDetail(section, record)
+        );
+
+        const existingId =
+          existingNoRow?.dbId ||
+          existingNoRow?.recordId ||
+          null;
+
+        if (existingId) {
+          await safeWebApiClient({
+            type: "PATCH",
+            url: `/_api/${entitySet}(${existingId})`,
+            data: JSON.stringify(payload)
+          });
+        } else {
+          await safeWebApiClient({
+            type: "POST",
+            url: `/_api/${entitySet}`,
+            data: JSON.stringify(payload)
+          });
+        }
+
+        // Reload from Dataverse. The fetched No row is retained internally but
+        // marked __hideFromGrid, so no blank record appears to the user.
+        section.records = await fetchSectionRecords(section);
+
+        const grid = window.cmdsppGrids?.[section.tableId];
+        if (grid) {
+          grid.render(section.columns, section.records, section.fields);
+        }
+
+        return;
+      }
+
+      // ---------------------------------------------------------------
+      // Sub-grid mode — each record carries its own destination table.
+      // This is the important edit/delete fix for multi-table sections.
+      // ---------------------------------------------------------------
+      const toCreate = (section.records || [])
+        .filter(r => r.isNew && !r.isDeleted);
+
+      const toUpdate = (section.records || [])
+        .filter(r => !r.isNew && !r.isDeleted && r.isEdited);
+
+      const toDelete = (section.records || [])
+        .filter(r => !r.isNew && r.isDeleted);
+
+      const requests = [];
+
+      for (const rec of toCreate) {
+        const entitySet = getEntitySetForRecord(section, rec);
+        if (!entitySet) {
+          throw new Error("No destination entitySet found for new record.");
+        }
+
+        const payload = buildPayload(section, rec);
+        const parentLookupField =
+          rec._parentLookupField ||
+          getParentLookupFieldForEntity(section, entitySet, rec._entityIndex);
+
+        if (parentAppGuid) {
+          const parentBindField =
+            section.parentBindField ||
+            (parentLookupField || "cmdspp_p_sys_id");
+          payload[`${parentBindField}@odata.bind`] =
+            `/cmdspp_p_dtl_tbs(${parentAppGuid})`;
+        }
+
+        requests.push(
+          safeWebApiClient({
+            type: "POST",
+            url: `/_api/${entitySet}`,
+            data: JSON.stringify(payload)
+          })
+        );
+      }
+
+      for (const rec of toUpdate) {
+        const entitySet = getEntitySetForRecord(section, rec);
+        const recordId = rec.dbId || rec.recordId;
+
+        if (!entitySet || !recordId) {
+          console.warn("Unable to update multi-table record", rec);
+           cmdsppShowToast("Unable to update multi-table record", rec);
+          continue;
+        }
+
+        const payload = buildPayload(section, rec);
+
+        requests.push(
+          safeWebApiClient({
+            type: "PATCH",
+            url: `/_api/${entitySet}(${recordId})`,
+            data: JSON.stringify(payload)
+          })
+        );
+      }
+
+      for (const rec of toDelete) {
+        const entitySet = getEntitySetForRecord(section, rec);
+        const recordId = rec.dbId || rec.recordId;
+
+        if (!entitySet || !recordId) {
+          console.warn("Unable to delete multi-table record", rec);
+          continue;
+        }
+
+        requests.push(
+          safeWebApiClient({
+            type: "PATCH",
+            url: `/_api/${entitySet}(${recordId})`,
+            data: JSON.stringify({ statecode: 1 })
+          })
+        );
+      }
+
+      return Promise.all(requests);
+    }
+
+    // Updated Section Loader
+    async function loadSectionData(sec) {
+      //if (window.loadedSections.has(sec.sectionId)) return;
+
+      const formInstance = new cmdsppFormRenderer(sec);
+
+      /*
+       * Restore the earlier working sequence:
+       * load dynamic Specialty / Taxonomy options BEFORE fetching the
+       * existing grid records. The fetched records still store GUIDs only;
+       * the grid resolves those GUIDs against field.options, exactly like Add.
+       */
+      await formInstance.renderMe();
+
+      window.cmdsppForms[sec.containerId] = formInstance;
+
+      const savedRecords = await fetchSectionRecords(sec);
+      sec.records = savedRecords;
+      if(sec.records?.length===1){
+        let rec = sec.records[0]
+        let currFld = sec.fields[0]
+
+        /*
+         * fetchSectionRecords() has already called formInstance.setValues()
+         * with the correctly mapped standalone values, including lookup GUIDs.
+         *
+         * Do NOT call setValues(rec) here with the raw Dataverse response:
+         * lookup values in the raw response live under
+         * _<lookupField>_value and would wipe City / State / County.
+         */
+        if(currFld?.type==="radio" && rec[currFld.name]===false){
+          formInstance.formValues[currFld.name] = "No";
+        }
+      }
+      
+
+      // If Taxonomy was prefetched before Specialty records were available,
+      // refresh it now from all active Specialty grid rows.
+      for (const sourceField of (sec.fields || [])) {
+        await refreshTaxonomyDependencies(sec.sectionId, sourceField.name);
+      }
+
+      // If this section itself contains a dependent Taxonomy field, reload its
+      // options after all currently available section records are established.
+      for (const field of formInstance.formDefinition) {
+        if (field.source?.type === "dependentTaxonomies") {
+          await loadDependentTaxonomyOptions(field);
+        }
+      }
+      /*
+       * Dynamic options were loaded before fetch. Dependent Taxonomy options
+       * may have been recalculated above once Specialty records existed.
+       * Re-render with the current options without restarting lookup loading.
+       */
+      formInstance.renderForm();
+      formInstance.updateVisibility();
+
+      // Render Sub-grid ONLY if tableId is present in schema
+      if (sec.tableId) {
+        const gridInstance = new CommonTableTemplate(sec.tableId, {
+          section: sec,
+          actions: {
+            onEdit: (rec) => {
+              /*
+               * Explicit user action: allow Update / Cancel Edit UI.
+               */
+              formInstance._gridEditClicked = true;
+
+              formInstance.setValues(
+                rec,
+                rec.recordId || rec.dbId
+              );
+            },
+            //commented for delected record to show the confirmation
+            // onDelete: async (rec) => {
+            //   if (confirm("Are you sure you want to remove this record?")) {
+            //     rec.isDeleted = true;
+            //     gridInstance.render(sec.columns, sec.records, sec.fields);
+
+            //     // Recalculate Taxonomy options immediately after a Specialty
+            //     // row is removed from the in-memory grid.
+            //     for (const field of (sec.fields || [])) {
+            //       await refreshTaxonomyDependencies(sec.sectionId, field.name);
+            //     }
+            //   }
+            // }
+            onDelete: async (rec) => {
+
+  showConfirmationPopup({
+    title: "Delete Record",
+    message: "Are you sure you want to remove this record?",
+
+    onConfirm: async () => {
+      rec.isDeleted = true;
+
+      gridInstance.render(
+        sec.columns,
+        sec.records,
+        sec.fields
+      );
+      cmdsppShowToast("success","Record deleted successfully.")
+      for (const field of (sec.fields || [])) {
+        await refreshTaxonomyDependencies(
+          sec.sectionId,
+          field.name
+        );
+      }
+    },
+
+    onCancel: () => {
+      // Do nothing
+    }
+  });
+
+}
+          }
+        });
+
+        window.cmdsppGrids[sec.tableId] = gridInstance;
+
+        gridInstance.render(sec.columns, sec.records, sec.fields);
+      }
+
+      window.loadedSections.add(sec.sectionId);
+    }
+
+    function bindAccordion() {
+      $(document).off("click", ".accordion-container fieldset legend").on("click", ".accordion-container fieldset legend", async function () {
+        const fieldset = $(this).closest("fieldset");
+        const secContainer = $(this).closest(".accordion-container");
+        const secId = secContainer.attr("id");
+        const section = window.wizardSchema.find(s => s.sectionId === secId);
+
+        // Lazy load section data if not loaded yet
+        if (section && !window.loadedSections.has(secId)) {
+          await loadSectionData(section);
+        }
+
+        fieldset.find(".accordion-content").slideToggle(200);
+        fieldset.toggleClass("active");
+      });
+    }
+
+    async function initializePage() {
+      const container = document.getElementById("wizardContainer");
+      // container.innerHTML = `<div id="cmdspp-page-loader" class="cmdspp-loader-overlay">
+      //   <div class="cmdspp-loader-content">
+      //     <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+      //       <span class="visually-hidden">Loading...</span>
+      //     </div>
+      //     <div class="mt-3 fw-bold text-secondary">Loading Application Form...</div>
+      //   </div>
+      // </div>`;
+      const startTime = performance.now();
+      const startDate = new Date();
+      console.log(`%c[Initialization Started] %c${startDate.toLocaleTimeString()}.${startDate.getMilliseconds()}`, "color: #0d6efd; font-weight: bold;", "color: #333;");
+
+      const loaderEl = document.getElementById("cmdspp-page-loader");
+
+      container.innerHTML = window.wizardSchema.map((sec, index) => {
+
+        const hasTable = !!sec.tableId && Array.isArray(sec.fieldMappings);
+        return `<div class="accordion-container" id="${sec.sectionId}">
+        <fieldset class="${index === 0 ? 'active' : ''}">
+          <legend>
+            <div class="accordion-header">
+              <div class="accordion-title">
+                <span class="step-circle">${sec.headerPrefix}</span>
+                <span>${sec.header} ${sec.headermandatory?'<span class="text-danger">*</span>':""}</span>
+              </div>
+              <span class="accordion-arrow ${index === 0 ? 'active' : ''}"></span>
+            </div>
+          </legend>
+          <div class="accordion-content" style="display:${index === 0 ? 'block' : 'none'};">
+           ${sec.instructions ? `
+         <div class="cmdspp-instruction-box mb-4">
+           ${sec.instructions.title ? `
+           <div class="cmdspp-instruction-title">
+             ${sec.instructions.title}
+           </div>
+           ` : ""}
+           ${(sec.instructions.paragraphs || [])
+           .map(p => `<p class="mb-2">${p}</p>`)
+           .join("")}
+           ${sec.instructions.subTitle ? `
+           <div class="cmdspp-instruction-title mt-3">
+             ${sec.instructions.subTitle}
+           </div>
+           ` : ""}
+           ${(sec.instructions.subParagraphs || [])
+           .map(p => `<p class="mb-2">${p}</p>`)
+           .join("")}
+         </div>
+         ` : ""}
+            <div class="p-3 mb-4 border rounded bg-light">
+              <div id="${sec.containerId}"></div>
+            </div>
+            ${hasTable ? `
+            <div class="mb-2">
+              <div id="${sec.tableId}">
+                <div class="cmdspp-table-wrapper">
+                  <table class="cmdspp-common-table cmdspp-header-table"><thead id="cmdspp-table-header"></thead></table>
+                  <div class="cmdspp-table-container">
+                    <table class="cmdspp-common-table cmdspp-body-table"><tbody id="cmdspp-table-body"></tbody></table>
+                  </div>
+                  <div class="cmdspp-table-pagination">
+                    <div class="cmdspp-pagination-info" id="cmdspp-pagination-info">Showing 0 entries</div>
+                    <div class="cmdspp-pagination-controls">
+                      <button id="cmdspp-prev-page" class="cmdspp-page-btn" disabled>&larr;</button>
+                      <div id="cmdspp-page-numbers" class="cmdspp-page-numbers">
+                        <button type="button" class="cmdspp-page-number active" data-page="1" disabled>1</button>
+                      </div>
+                      <button id="cmdspp-next-page" class="cmdspp-page-btn" disabled>&rarr;</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ` : ''}
+            <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+              <button type="button" id="${sec.resetBtnId}" class="btn-reset-custom">Reset</button>
+                <div class="d-flex gap-2">
+            ${sec.noBackButton !== true ? `
+    <button
+        type="button"
+        id="${sec.submitBtnId}_back"
+        class="btn-back-custom"
+        data-current="${sec.sectionId}"
+        data-previous="${sec.prevSectionId}">
+        Back
+    </button>
+` : ''}
+             <button type="button" id="${sec.submitBtnId}" class="btn-continue-custom" data-current="${sec.sectionId}">Continue</button>
+             </div>
+           </div>
+          </div>
+        </fieldset>
+      </div>`}).join("");
+
+      window.cmdsppForms = window.cmdsppForms || {};
+      window.cmdsppGrids = window.cmdsppGrids || {};
+
+      bindAccordion();
+
+      // 1. Immediately load Section 1 for instant initial page render
+      if (window.wizardSchema.length > 0) {
+        await loadSectionData(window.wizardSchema[0]);
+      }
+
+      /*
+       * Optional cross-page accordion target.
+       *
+       * Example destination URL:
+       *   /Enrollment-PP/Some-Page/?record=...&openSection=section-f
+       *
+       * The destination page must contain the requested sectionId in its
+       * wizardSchema. Existing initial-load behavior is unchanged when the
+       * parameter is not present.
+       */
+      const requestedSectionId =
+        new URLSearchParams(
+          window.location.search
+        ).get("openSection");
+
+      if (requestedSectionId) {
+
+        const requestedSection =
+          window.wizardSchema.find(
+            sec =>
+              String(sec.sectionId) ===
+              String(requestedSectionId)
+          );
+
+        if (requestedSection) {
+
+          if (
+            !window.loadedSections.has(
+              requestedSection.sectionId
+            )
+          ) {
+            await loadSectionData(
+              requestedSection
+            );
+          }
+
+          onOpenAccordion(
+            requestedSection.sectionId
+          );
+
+          /*
+           * Bring the opened section into view after its accordion is shown.
+           */
+          requestAnimationFrame(() => {
+            const targetEl =
+              document.getElementById(
+                requestedSection.sectionId
+              );
+
+            if (targetEl) {
+              targetEl.scrollIntoView({
+                behavior: "smooth",
+                block: "start"
+              });
+            }
+          });
+
+          console.log(
+            "[Navigation] Opened requested section:",
+            requestedSection.sectionId
+          );
+
+        } else {
+
+          console.warn(
+            "[Navigation] Requested section was not found on this page:",
+            requestedSectionId
+          );
+        }
+
+        /*
+         * Remove the temporary target parameter after it has been consumed.
+         * This prevents it from being copied into later navigation.
+         */
+        const cleanUrl =
+          new URL(
+            window.location.href
+          );
+
+        cleanUrl.searchParams.delete(
+          "openSection"
+        );
+
+        window.history.replaceState(
+          {},
+          document.title,
+          cleanUrl.pathname +
+            cleanUrl.search +
+            cleanUrl.hash
+        );
+      }
+
+      const endTime = performance.now();
+      const totalDurationSec = ((endTime - startTime) / 1000).toFixed(2);
+      console.log(`%c[Section 1 Initialized] %c${totalDurationSec}s)`, "color: #198754; font-weight: bold;", "color: #333;");
+
+      // 2. Pre-fetch remaining sections in background WITHOUT blocking initialization!
+      if (window.wizardSchema.length > 1) {
+        const remainingSections =
+          window.wizardSchema
+            .slice(1)
+            .filter(
+              sec =>
+                !window.loadedSections.has(
+                  sec.sectionId
+                )
+            );
+
+        Promise.allSettled(remainingSections.map(sec => loadSectionData(sec))).then(() => {
+          const endTime_rest = performance.now();
+          const totalDurationSec_rest = ((endTime_rest - startTime) / 1000).toFixed(2);
+          console.log(`%c[All Sections Loaded] ${totalDurationSec_rest}s)`, "color: #0dcaf0; font-weight: bold;");
+        });
+      }
+
+       window.addEventListener("dynamicFormSubmit", async (e) => {
+        const detail = e.detail;
+        const section = window.wizardSchema.find(s => s.containerId === detail.containerId);
+        if (!section) return;
+
+        // Defensive guard: even if another caller dispatches dynamicFormSubmit
+        // directly, a configured No answer must never become a visible grid row.
+        if (
+          !detail.isEditing &&
+          isConditionalGridNoDetail(section, detail.values)
+        ) {
+          console.log("[Conditional grid] dynamicFormSubmit ignored for No.");
+          return;
+        }
+
+        // Additional safeguard for conditional-grid sections:
+        // if every visible table column is empty, never insert a blank row.
+        if (
+          !detail.isEditing &&
+          (
+            getConditionalGridConfig(section) ||
+            section.hideEmptyGridRows === true
+          )
+        ) {
+          if (!hasAnyGridDisplayValue(section, detail.values)) {
+            console.log(
+              "[Grid] Blank visible row ignored.",
+              detail.values
+            );
+            return;
+          }
+        }
+
+        if (detail.isEditing) {
+          const existing = section.records.find(r => String(r.recordId || r.dbId) === String(detail.editingId));
+          if (existing) {
+            if (section.createMode === "multiSelect" && section.multiSelectField) {
+              const raw = detail.values[section.multiSelectField];
+              detail.values[section.multiSelectField] = Array.isArray(raw) ? raw[0] : raw;
+            }
+            Object.assign(existing, detail.values);
+            existing.isEdited = true;
+            cmdsppShowToast("success", "Record updated successfully.");
+          }
+        } else if (section.createMode === "multiSelect" && section.multiSelectField) {
+          const raw = detail.values[section.multiSelectField] || [];
+          const selectedValues = (Array.isArray(raw) ? raw : [raw]).filter(Boolean);
+
+          selectedValues.forEach(guid => {
+            const newId = "new-" + Date.now() + "-" + Math.floor(Math.random() * 100000);
+            section.records.push(Object.assign(
+              { recordId: newId, dbId: newId, isNew: true },
+              detail.values,
+              { [section.multiSelectField]: guid }
+            ));
+          });
+        } else {
+          const newId = "new-" + Date.now();
+          section.records.push(Object.assign({ recordId: newId, dbId: newId, isNew: true }, detail.values));
+          cmdsppShowToast("success", "Record added successfully.");
+        }
+
+        const grid = window.cmdsppGrids[section.tableId];
+        if (grid) {
+          grid.render(section.columns, section.records, section.fields);
+        }
+
+        // Add and Edit both update section.records first. Taxonomy therefore
+        // always reflects the complete set of Specialty rows, not the current
+        // Specialty input control.
+        for (const field of (section.fields || [])) {
+          await refreshTaxonomyDependencies(section.sectionId, field.name);
+        }
+      });
+
+
+      $(document).off("click", ".btn-reset-custom").on("click", ".btn-reset-custom", async function (e) {
+        e.preventDefault();
+        const sectionId = $(this).closest(".accordion-container").attr("id");
+        console.log(sectionId);
+        const section = window.wizardSchema.find(s => s.sectionId === sectionId);
+        if (section && window.cmdsppForms[section.containerId]) {
+          window.cmdsppForms[section.containerId].reset();
+          // reset the table wit when click on reset
+          if (section.tableId) {
+    section.records = (section.records || [])
+        .filter(r => !r.isNew);
+
+    const grid = window.cmdsppGrids?.[section.tableId];
+
+    if (grid) {
+        grid.render(
+            section.columns,
+            section.records,
+            section.fields
+        );
+    }
+}
+
+        }
+      })
+
+      $(document).off("click", ".btn-back-custom").on("click", ".btn-back-custom", async function (e) {
+        e.preventDefault();
+        const secId = this.getAttribute("data-current");
+        const section = window.wizardSchema.find(s => s.sectionId === secId);
+        if (!section) return;
+
+
+        try {
+          if (section.prevSectionId) {
+            const prevSec = window.wizardSchema.find(s => s.sectionId === section.prevSectionId);
+            if (prevSec) {
+              await loadSectionData(prevSec);
+            }
+            // Close all accordions
+            $(".accordion-container fieldset").removeClass("active");
+            $(".accordion-container .accordion-content").slideUp();
+            $(".accordion-container .accordion-arrow").removeClass("active");
+            $(`#${section.prevSectionId} fieldset`).addClass("active").find(".accordion-content").slideDown();
+          }
+        } catch (err) {
+          console.error("Save failed:", err);
+        }
+        finally {
+
+        }
+      });
+
+      /*
+       * Build a destination URL while preserving the current application
+       * query parameters (record, id, etc.).
+       *
+       * "openSection" is a temporary navigation parameter consumed by the
+       * destination page to open a specific accordion section.
+       */
+      function buildPageSectionNavigationUrl(
+        pageUrl,
+        targetSectionId
+      ) {
+        if (!pageUrl) return "";
+
+        const destination =
+          new URL(
+            pageUrl,
+            window.location.origin
+          );
+
+        const currentParams =
+          new URLSearchParams(
+            window.location.search
+          );
+
+        currentParams.forEach(
+          (value, key) => {
+            /*
+             * Never carry an old section target forward.
+             */
+            if (key === "openSection") {
+              return;
+            }
+
+            /*
+             * Preserve parameters already explicitly supplied by pageUrl.
+             */
+            if (
+              !destination.searchParams.has(
+                key
+              )
+            ) {
+              destination.searchParams.set(
+                key,
+                value
+              );
+            }
+          }
+        );
+
+        if (targetSectionId) {
+          destination.searchParams.set(
+            "openSection",
+            targetSectionId
+          );
+        } else {
+          destination.searchParams.delete(
+            "openSection"
+          );
+        }
+
+        return destination.href;
+      }
+
+      /*
+       * Navigate to another Power Pages page and optionally request a
+       * particular accordion section on that destination page.
+       */
+      function navigateToPageSection(
+        pageUrl,
+        targetSectionId
+      ) {
+        const url =
+          buildPageSectionNavigationUrl(
+            pageUrl,
+            targetSectionId
+          );
+
+        if (!url) {
+          console.warn(
+            "[Navigation] Destination page URL is missing."
+          );
+          return;
+        }
+
+        console.log(
+          "[Navigation] Page + section",
+          {
+            pageUrl,
+            targetSectionId:
+              targetSectionId || "",
+            resolvedUrl: url
+          }
+        );
+
+        window.location.href = url;
+      }
+
+      function onOpenAccordion(nextSectionId) {
+        $(".accordion-container fieldset").removeClass("active");
+        $(".accordion-container .accordion-content").slideUp();
+        $(".accordion-container .accordion-arrow").removeClass("active");
+        $(`#${nextSectionId} fieldset`).addClass("active").find(".accordion-content").slideDown();
+      }
+
+      $(document).off("click", ".btn-continue-custom").on("click", ".btn-continue-custom", async function (e) {
+        e.preventDefault();
+        const secId = this.getAttribute("data-current");
+        const section = window.wizardSchema.find(s => s.sectionId === secId);
+        if (!section) return;
+
+        this.disabled = true;
+        this.textContent = "Saving...";
+
+        try {
+                    if (window.cmdsppIsReadOnly) {
+            this.disabled = false;
+            this.textContent = "Continue";
+            if (
+              section.nextPageUrl &&
+              section.nextPageSectionId
+            ) {
+              navigateToPageSection(
+                section.nextPageUrl,
+                section.nextPageSectionId
+              );
+              return;
+            }
+
+            if (section.nextSectionId) {
+              onOpenAccordion(section.nextSectionId);
+            } 
+            // else if (!section.isDynamicNav) {
+            //   navigateToPageSection(section.nextPageUrl,section.nextPageSectionId);
+            // }
+             else if (section.isDynamicNav) {
+              const formInstance = window.cmdsppForms[section.containerId];
+              const checkboxField = section.fields?.find(f => f.type === "checkboxgroup" || f.type === "multiselect");
+          
+              section.dependency?.forEach(dep => {
+                if (dep.type !== "navigation") return;
+          
+                let found = false;
+          
+                if (checkboxField && dep.depId.includes(checkboxField.name)) {
+                  // Multi-select: check ALL currently selected values by label
+                  const selectedValues = formInstance?.formValues[checkboxField.name] || [];
+                  found = selectedValues.some(v => String(getLabelFromLookupCache(v)) === String(dep.value));
+          
+                  if (found) {
+                    navigateToPageSection(
+                      dep.urltoNavigate,
+                      dep.nextPageSectionId
+                    );
+                  } else {
+                    // Last section for this checkbox flow — go straight to the section's nextPageUrl
+                    navigateToPageSection(
+                      section.nextPageUrl,
+                      section.nextPageSectionId
+                    );
+                  }
+                } else {
+                  // Original single-record behavior (e.g. section-o's EFT radio) — unchanged
+                  found = dep.depId.some(key => section.records?.[0]?.[key] === dep.value);
+                  if (found) {
+                    navigateToPageSection(
+                      dep.urltoNavigate,
+                      dep.nextPageSectionId
+                    );
+                  } else {
+                    onOpenAccordion(dep.nextSectionId);
+                  }
+                }
+              });
+            }
+            else window.location.href = `${section.nextPageUrl}${window.location.search}`
+          
+            return;
+          }
+          // If this section contains a JSON copyFrom configuration and the
+          // configured Yes/No value is selected, fetch the source record
+          // first. The source/target column names are resolved entirely from
+          // JSON mappings.
+          await populateConfiguredSource(section);
+
+          // Snapshot AFTER source population. This prevents any later UI
+          // rendering from changing what is sent to Dataverse.
+          const formInstance = window.cmdsppForms[section.containerId];
+          const activeRecords = section?.records.filter(r=>!r.isDeleted)
+          const valuesForSave = formInstance
+            ? { ...formInstance.formValues }
+            : {};
+           const isStandalone = !section.tableId || !section.fieldMappings;
+           const requireValidRecordOnContinue = section.requireRecordOnContinue !== false;
+
+          if (formInstance && !formInstance.validateForm() && isStandalone) {
+            formInstance.renderForm();
+            throw new Error("Validation failed");
+          }else if(formInstance && !formInstance.validateForm() && activeRecords?.length===0 && requireValidRecordOnContinue){
+            formInstance.renderForm();
+            throw new Error("Validation failed");
+          }
+
+          await submitSectionBatch(section, valuesForSave);
+          await loadSectionData(section)
+          const pathParts = window.location.pathname
+.split("/")
+.filter(Boolean);
+const pageTitle =
+pathParts[pathParts.indexOf("Enrollment-PP") + 1];
+const recordId =
+new URLSearchParams(window.location.search)
+.get("record");
+if (typeof cmdsppUpdateApplicationProgress === "function") {
+cmdsppUpdateApplicationProgress({
+recordId: recordId,
+pageTitle: pageTitle
+});
+}
+          this.disabled = false;
+          this.textContent = "Continue";
+          if (
+            section.nextPageUrl &&
+            section.nextPageSectionId
+          ) {
+            navigateToPageSection(
+              section.nextPageUrl,
+              section.nextPageSectionId
+            );
+            return;
+          }
+
+          if (section.nextSectionId) {
+            const nextSec = window.wizardSchema.find(s => s.sectionId === section.nextSectionId);
+            if (nextSec && !window.loadedSections.has(nextSec.sectionId)) {
+              await loadSectionData(nextSec);
+            }
+            onOpenAccordion(section.nextSectionId)
+          } else {
+           if (section.isDynamicNav) {
+              const formInstance = window.cmdsppForms[section.containerId];
+              const checkboxField = section.fields?.find(f => f.type === "checkboxgroup" || f.type === "multiselect");
+          
+              section.dependency?.forEach(dep => {
+                if (dep.type !== "navigation") return;
+          
+                let found = false;
+          
+                if (checkboxField && dep.depId.includes(checkboxField.name)) {
+                  // Multi-select: check ALL currently selected values by label
+                  const selectedValues = formInstance?.formValues[checkboxField.name] || [];
+                  found = selectedValues.some(v => String(getLabelFromLookupCache(v)) === String(dep.value));
+          
+                  if (found) {
+                    navigateToPageSection(
+                      dep.urltoNavigate,
+                      dep.nextPageSectionId
+                    );
+                  } else {
+                    // Last section for this checkbox flow — go straight to the section's nextPageUrl
+                    navigateToPageSection(
+                      section.nextPageUrl,
+                      section.nextPageSectionId
+                    );
+                  }
+                } else {
+                  // Original single-record behavior (e.g. section-o's EFT radio) — unchanged
+                  found = dep.depId.some(key => section.records?.[0]?.[key] === dep.value);
+                  if (found) {
+                    navigateToPageSection(
+                      dep.urltoNavigate,
+                      dep.nextPageSectionId
+                    );
+                  } else {
+                    onOpenAccordion(dep.nextSectionId);
+                  }
+                }
+              });
+            }
+            else window.location.href = `${section.nextPageUrl}${window.location.search}`
+          }
+        } catch (err) {
+          this.disabled = false;
+          this.textContent = "Continue";
+          console.error("Save failed:", err);
+        }
+        finally {
+          // 4. Guaranteed Execution: Hide Loader Overlay & Print Timings
+          // if (loaderEl) {
+          //   loaderEl.classList.add("hidden");
+          // }
+
+          const endTime = performance.now();
+          const endDate = new Date();
+          const totalDurationSec = ((endTime - startTime) / 1000).toFixed(2);
+
+          console.log(`%c[Finally Block Initialization Completed] %c${endDate.toLocaleTimeString()}.${endDate.getMilliseconds()}`, "color: #198754; font-weight: bold;", "color: #333;");
+          console.log(`%c[Finally Block Total Load Time] %c${totalDurationSec}s (${(endTime - startTime).toFixed(0)} ms)`, "color: #0dcaf0; font-weight: bold;", "color: #333;");
+        }
+      });
+    }
+
+    // $(document).ready(function () {
+    //   // Defer execution slightly if webapi is still loading
+    //   if (typeof window.webapi === "undefined") {
+    //     console.warn("webapi object not ready yet, falling back to standard AJAX.");
+    //   }
+
+    //   initializePage();
+    // });
+      $(document).ready(async function () {
+      // Defer execution slightly if webapi is still loading
+      if (typeof window.webapi === "undefined") {
+        console.warn("webapi object not ready yet, falling back to standard AJAX.");
+      }
+
+      await checkApplicationReadOnlyStatus();   // sets window.cmdsppIsReadOnly
+      await initializePage();
+
+      applyReadOnlyMode(document.getElementById("wizardContainer"));
+      observeAndLockNewFields();
+    });
+  })();
+
+  
+</script>
+
+<script>
+(function () {
+  "use strict";
+
+  function hideCmdsppLoader() {
+    const loader = document.getElementById("cmdspp-page-loader");
+    if (loader) loader.classList.add("hidden");
+  }
+
+  function waitForWizardLoad() {
+    const loader = document.getElementById("cmdspp-page-loader");
+    if (!loader) return;
+
+    if (
+      window.wizardSchema &&
+      window.wizardSchema.length > 0 &&
+      window.loadedSections &&
+      window.loadedSections.has(window.wizardSchema[0].sectionId)
+    ) {
+      hideCmdsppLoader();
+      return;
+    }
+
+    if (window.wizardSchema && window.wizardSchema.length === 0) {
+      hideCmdsppLoader();
+      return;
+    }
+
+    setTimeout(waitForWizardLoad, 50);
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", waitForWizardLoad);
+  } else {
+    waitForWizardLoad();
+  }
+})();
+</script>

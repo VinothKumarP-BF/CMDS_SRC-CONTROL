@@ -1,0 +1,183 @@
+<script>
+
+function cmdsppExecutePowerPageFlow (flowId,payload) {
+    
+    return new Promise(function (resolve, reject) {
+
+        (function (webapi, $) {
+    webapi.safeAjax = function (ajaxOptions) {
+        var deferredAjax = $.Deferred();
+
+        shell.getTokenDeferred().done(function (token) {
+            ajaxOptions.headers = ajaxOptions.headers || {};
+            ajaxOptions.headers["__RequestVerificationToken"] = token;
+
+            $.ajax(ajaxOptions)
+                .done(function (data) {
+                    deferredAjax.resolve(data);
+                })
+                .fail(function (xhr) {
+                    deferredAjax.reject(xhr);
+                });
+        });
+
+        return deferredAjax.promise();
+    };
+})(window.webapi = window.webapi || {}, jQuery);
+
+        console.log("Payload Sent:",payload,typeof payload);
+        webapi.safeAjax({
+            type: "POST",
+            url:flowId,
+            contentType: "application/json",
+            data: JSON.stringify(payload),
+            success: function (response) {
+
+                resolve(response);
+
+            },
+            error: function (xhr) {
+
+                console.error(
+                    "Flow execution failed",
+                    xhr
+                );
+
+                reject(xhr);
+            }
+
+        });
+
+    });
+
+};
+
+
+// webapi.safeAjax({
+//     type: "POST",
+//     url: "/_api/cloudflow/v1.0/trigger/588bae0f-8990-f111-8076-70a8a5b028cc",
+//     contentType: "application/json",
+//     data: JSON.stringify({
+//         Name: "Vijay"
+//     }),
+//     success: function (response) {
+//         console.log(response);
+//     },
+//     error: function (xhr) {
+//         console.log(xhr);
+//     }
+// }); 
+
+   async function cmdsppExecuteInboxAction(
+    payload = {}
+   ) {
+
+    try {
+
+        const response = await fetch(
+            window.flowConfig2.cmdspp_inboxActionGateway,
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(payload)
+            }
+        );
+
+        if (!response.ok) {
+            throw new Error(
+                `HTTP Error ${response.status}`
+            );
+        }
+
+        return await response.json();
+
+    } catch (error) {
+
+        console.error(
+            `${transType} failed`,
+            error
+        );
+
+        throw error;
+    }
+
+   }
+// enrollment common code for saving application details
+function cmdsppUpdateApplicationProgress(payload) {
+
+    if (!payload || !payload.recordId) {
+        return Promise.reject("recordId is required");
+    }
+
+    const updatePayload = {
+        cmdspp_p_page_nam: payload.pageTitle,
+        // cmdspp_p_pg_num: payload.pageNumber,
+        // cmdspp_p_section_num: payload.sectionNumber
+    };
+
+    return webapi.safeAjax({
+        type: "PATCH",
+        url: "/_api/cmdspp_p_dtl_tbs(" + payload.recordId + ")",
+        contentType: "application/json",
+        data: JSON.stringify(updatePayload)
+    });
+}
+
+function cmdsppFormatInboxDate(dateString, isForMessage) {
+
+    const date = new Date(dateString); // UTC -> Local
+
+    const today = new Date();
+
+    const messageDay = new Date(
+        date.getFullYear(),
+        date.getMonth(),
+        date.getDate()
+    );
+
+    const todayDay = new Date(
+        today.getFullYear(),
+        today.getMonth(),
+        today.getDate()
+    );
+
+    const diffDays =
+        (todayDay - messageDay) /
+        (1000 * 60 * 60 * 24);
+
+    if (diffDays === 0) {
+
+        return `${isForMessage ? 'Today at ' :''}${date.toLocaleTimeString(
+            [],
+            {
+                hour: "numeric",
+                minute: "2-digit"
+            }
+        )}`;
+
+    }
+
+    if (diffDays === 1) {
+
+        return `Yesterday ${isForMessage ? 'at '+ date.toLocaleTimeString(
+            [],
+            {
+                hour: "numeric",
+                minute: "2-digit"
+            }
+        ) :''}`;
+
+    }
+
+    return date.toLocaleDateString(
+        "en-US",
+        {
+            month: "numeric",
+            day: "numeric",
+            year: "numeric"
+        }
+    );
+}   
+</script>

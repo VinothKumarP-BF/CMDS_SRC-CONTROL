@@ -1,0 +1,383 @@
+{% assign appId = request.params['record'] | default: request.params['id'] %}
+{% fetchxml sectionJsonSchema %}
+<fetch>
+  <entity name="cmdspp_pc_enrol_page_json_tb">
+    <attribute name="cmdspp_p_jsontxt" />
+    <attribute name="cmdspp_p_table_nam" />
+    <attribute name="cmdspp_p_page_nam" />
+    <filter>
+      <condition attribute="cmdspp_p_page_nam" operator="eq" value="ownership" />
+    </filter>
+  </entity>
+</fetch>
+{% endfetchxml %}
+
+{% include 'cmdspp_Enrollment-PP-commonPopUP' %}
+
+<script id="wizardSchemaData" type="application/json">
+[
+{% assign firstRecord = true %}
+{% for rec in sectionJsonSchema.results.entities %}
+
+  {% if rec.cmdspp_p_table_nam == 'cmdspp_p_ownership_dtl_tbs'or rec.cmdspp_p_table_nam == 'cmdspp_p_ownership_dtl_tbs_1'or rec.cmdspp_p_table_nam == 'cmdspp_p_subcontractor_dtl_tbs'or rec.cmdspp_p_table_nam == 'cmdspp_p_relative_dtl_tbs' %}
+
+    {% unless firstRecord %},{% endunless %}
+    {{ rec.cmdspp_p_jsontxt }}
+    {% assign firstRecord = false %}
+
+  {% endif %}
+
+{% endfor %}
+]
+</script>
+
+<script>
+  (function () {
+
+    var schemaElement = document.getElementById("wizardSchemaData");
+
+    if (!schemaElement) {
+      console.error("wizardSchemaData element not found.");
+      return;
+    }
+
+    var wizardSchema = JSON.parse(
+      schemaElement.textContent || "[]"
+    );
+
+    wizardSchema.sort(function (a, b) {
+
+      var prefixA = String(
+        a.headerPrefix || ""
+      ).trim();
+
+      var prefixB = String(
+        b.headerPrefix || ""
+      ).trim();
+
+      return prefixA.localeCompare(
+        prefixB,
+        undefined,
+        {
+          numeric: true,
+          sensitivity: "base"
+        }
+      );
+    });
+
+    window.wizardSchema = wizardSchema;
+
+    console.log(
+      "Ownership Common Template Schema:",
+      wizardSchema
+    );
+
+  })();
+</script>
+<div class="alert alert-light border mb-3">
+  <label class="form-check-label">
+    <input type="checkbox"
+           id="ownershipCertification"
+           class="form-check-input me-2">
+
+    By continuing with this application, I, the submitter, confirm that the Ownership and Controlling Interest information entered is complete and accurate at the time of submission. Completion of this section is a condition of participation in the Medicaid program and is mandated by
+    <a href="https://www.ecfr.gov/current/title-42/chapter-IV/subchapter-C/part-455/subpart-B?toc=1"
+       target="_blank"
+       rel="noopener noreferrer"
+       class="ownership-link">
+       42 CFR 455.100-106
+    </a>.
+    Click to view the full regulation.
+  </label>
+</div>
+
+
+{% include 'common_page_template' %}
+
+
+
+<script>
+async function loadOwnershipCertification() {
+    const checkbox =
+        document.getElementById("ownershipCertification");
+
+    if (!checkbox) return;
+
+    const pDtlId =
+        new URLSearchParams(window.location.search).get("record") ||
+        new URLSearchParams(window.location.search).get("id");
+
+    if (!pDtlId) return;
+
+    try {
+
+        const result = await window.webapi.safeAjax({
+            type: "GET",
+            url:
+                "/_api/cmdspp_p_dtl_tbs(" +
+                pDtlId +
+                ")?$select=cmdspp_p_ownershipcertification"
+        });
+
+        checkbox.checked =
+            result.cmdspp_p_ownershipcertification === true;
+
+        toggleSections(
+            !result.cmdspp_p_ownershipcertification
+        );
+
+         if (window.cmdsppIsReadOnly) {
+            checkbox.disabled = true;
+        }
+
+    } catch (error) {
+
+        console.error(
+            "Failed to load ownership certification",
+            error
+        );
+
+    }
+}
+
+async function updateOwnershipCertification() {
+
+    const checkbox =
+        document.getElementById("ownershipCertification");
+
+    if (!checkbox) return;
+
+    const pDtlId =
+        new URLSearchParams(window.location.search).get("record") ||
+        new URLSearchParams(window.location.search).get("id");
+
+    if (!pDtlId) return;
+
+    try {
+
+        await window.webapi.safeAjax({
+            type: "PATCH",
+            url:
+                "/_api/cmdspp_p_dtl_tbs(" +
+                pDtlId +
+                ")",
+            contentType: "application/json",
+            data: JSON.stringify({
+                cmdspp_p_ownershipcertification:
+                    checkbox.checked
+            })
+        });
+
+    } catch (error) {
+
+        console.error(
+            "Failed to update ownership certification",
+            error
+        );
+
+    }
+}
+$(document).ready(async function () {
+    // ready only logic 
+     const recordId =
+        new URLSearchParams(window.location.search).get("record") ||
+        new URLSearchParams(window.location.search).get("id");
+
+    if (recordId) {
+        try {
+            const res = await window.webapi.safeAjax({
+                type: "GET",
+                url:
+                    "/_api/cmdspp_p_dtl_tbs" +
+                    "?$select=cmdspp_p_appln_status" +
+                    "&$filter=cmdspp_p_dtl_tbid eq " + recordId
+            });
+
+            if (res?.value?.length) {
+                const status = Number(res.value[0].cmdspp_p_appln_status);
+                window.cmdsppIsReadOnly = (status === 2); // Awaiting Signature
+            }
+        } catch (err) {
+            console.error("Unable to fetch application status", err);
+        }
+    }
+
+    // Fetch value when user opens page
+    loadOwnershipCertification();
+
+    // Update value whenever checkbox changes
+  $(document).on(
+    "change",
+    "#ownershipCertification",
+    async function () {
+        if (window.cmdsppIsReadOnly) {
+                this.checked = !this.checked; // revert, block the change
+                return;
+            }
+        const checkbox = this;
+
+        if (!checkbox.checked) {
+
+            showConfirmationPopup({
+
+                title: "Data Loss Warning",
+
+                message:
+                    "Unchecking this certification will remove all Ownership, Managing Information, Subcontractor, and Relative records. Do you want to continue?",
+
+                confirmText: "Yes",
+
+                cancelText: "No",
+
+                onConfirm: async function () {
+
+    try {
+
+        showLoader();
+
+        await deactivateOwnershipRecords();
+        await updateOwnershipCertification();
+       await window.refreshAllSections();
+
+        // Reload ownership data
+        await loadOwnershipCertification();
+
+
+        hideLoader();
+
+    } catch (e) {
+
+        hideLoader();
+
+        console.error(e);
+
+        checkbox.checked = true;
+    }
+},
+
+
+                onCancel: function () {
+
+                    checkbox.checked = true;
+
+                }
+            });
+
+        } else {
+
+            try {
+
+                await updateOwnershipCertification();
+
+                toggleSections(false);
+
+            } catch (e) {
+
+                console.error(e);
+
+                checkbox.checked = false;
+
+            }
+        }
+    }
+);
+
+  });
+ async function deactivateOwnershipRecords() {
+
+    const sections = window.wizardSchema || [];
+
+    for (const section of sections) {
+
+        const tableName = section.entitySet;
+
+        if (!tableName) {
+            continue;
+        }
+
+        const activeRecords = (section.records || [])
+            .filter(r => !r.isDeleted);
+
+        if (!activeRecords.length) {
+            continue; // No records, no DB calls
+        }
+        for (const row of activeRecords) {
+            const recordId = row?.dbId;
+            if (!recordId) {
+                continue;
+            }
+            await window.webapi.safeAjax({
+                type: "PATCH",
+                url: `/_api/${tableName}(${recordId})`,
+                contentType: "application/json",
+                data: JSON.stringify({
+                    statecode: 1
+                })
+            });
+        }
+    }
+}
+
+function toggleSections(disabled) {
+
+    document
+        .querySelectorAll(".accordion-container")
+        .forEach(function (section) {
+
+            section.style.pointerEvents =
+                disabled ? "none" : "";
+
+            section.style.opacity =
+                disabled ? "0.6" : "1";
+
+            section
+                .querySelectorAll(
+                    "input,select,textarea,button"
+                )
+                .forEach(function (el) {
+
+                    if (
+                        el.id !==
+                        "ownershipCertification"
+                    ) {
+                        el.disabled = disabled;
+                    }
+
+                });
+        });
+         const certCheckbox = document.getElementById("ownershipCertification");
+    if (certCheckbox && window.cmdsppIsReadOnly) {
+        certCheckbox.disabled = true;
+    }
+}
+document.addEventListener("click", function(e) {
+    if (e.target.closest(".ownership-link")) {
+        e.stopPropagation();
+    }
+});
+</script>
+
+<style>
+/* #ownershipContainer .col-md-12,
+#manageInfoContainer .col-md-12,
+#subcontractorContainer .col-md-12,
+#relativeContainer .col-md-12 {
+    width: 100% !important;
+} */
+
+.ownership-link {
+    color: #0d6efd;
+    text-decoration: underline;
+    cursor: pointer;
+}
+#ownershipCertification{
+    margin: 0;
+    width: 14px;
+    height: 14px;
+    accent-color: #0B3A6F;
+}
+
+.ownership-link:hover {
+    color: #0196F3;
+}
+  </style>

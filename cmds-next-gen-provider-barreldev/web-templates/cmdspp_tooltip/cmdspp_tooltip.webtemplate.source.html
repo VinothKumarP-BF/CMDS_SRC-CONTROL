@@ -1,0 +1,52 @@
+<div id="cmdspp-tooltip" class="cmdspp-tooltip"></div>
+
+<style>
+.cmdspp-tooltip {
+    display: none;
+    border-radius: 5px;
+    padding: 10px;
+    gap: 10px;
+    opacity: 1;
+    background: rgb(255, 255, 255);
+    border: 1px solid rgb(194, 194, 194);
+    box-shadow: rgba(0, 0, 0, 0.12) 0px 4px 4px 0px;
+    font-family: FontAwesome;
+    font-weight: 400;
+    font-size: 12px;
+    line-height: 17px;
+    letter-spacing: 0px;
+    color: rgb(39, 68, 99);
+    top: 404px;
+    left: 974px;
+}
+</style>
+
+<script>
+$(document).on("mouseenter", "[data-tooltip]", function (e) {
+
+    const tooltipText = $(this).data("tooltip");
+
+    if (!tooltipText) return;
+
+    $("#cmdspp-tooltip")
+        .text(tooltipText)
+        .css({
+            display: "block",
+            left: e.pageX + 12,
+            top: e.pageY + 12
+        });
+});
+
+$(document).on("mousemove", "[data-tooltip]", function (e) {
+
+    $("#cmdspp-tooltip").css({
+        left: e.pageX + 12,
+        top: e.pageY + 12
+    });
+});
+
+$(document).on("mouseleave", "[data-tooltip]", function () {
+
+    $("#cmdspp-tooltip").hide();
+});
+</script>

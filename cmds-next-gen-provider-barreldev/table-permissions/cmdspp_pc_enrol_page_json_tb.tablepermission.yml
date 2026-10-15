@@ -1,0 +1,12 @@
+adx_append: false
+adx_appendto: false
+adx_create: false
+adx_delete: false
+adx_entitylogicalname: cmdspp_pc_enrol_page_json_tb
+adx_entityname: cmdspp_pc_enrol_page_json_tb
+adx_entitypermission_webrole:
+- 3e0eed5c-e2e0-46fa-a82c-1f6c985badca
+adx_entitypermissionid: 9ba29431-cb9a-f111-b8db-70a8a5b02d34
+adx_read: true
+adx_scope: 756150000
+adx_write: false

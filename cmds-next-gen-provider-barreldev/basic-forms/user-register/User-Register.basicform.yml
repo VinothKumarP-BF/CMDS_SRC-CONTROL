@@ -1,0 +1,35 @@
+adx_attachfilelabel: >-
+  [
+    {
+      "LCID": 1033,
+      "Value": ""
+    }
+  ]
+adx_attachfilemaxsize: 
+adx_attachfilestoragelocation: 756150000
+adx_captcharequired: false
+adx_containername: ''
+adx_entityformid: b478420f-1c3e-4bb5-bbcb-0d055549c5ce
+adx_entityname: cmdspp_g_usr_dtls_tb
+adx_entitypermissionsenabled: true
+adx_formname: User registration
+adx_geolocation_maptype: 756150000
+adx_hideformonsuccess: false
+adx_maximumnooffiles: 5
+adx_mode: 100000000
+adx_name: User Register
+adx_onsuccess: 756150001
+adx_recordidquerystringparametername: 
+adx_redirecturl: 
+adx_redirecturlappendentityidquerystring: true
+adx_redirecturlquerystringname: id
+adx_redirectwebpage: 5c8e49a7-1f09-713c-d804-3ac43710b320
+adx_showcaptchaforauthenticatedusers: false
+adx_storageaccountname: ''
+adx_successmessage: >-
+  [
+    {
+      "LCID": 1033,
+      "Value": ""
+    }
+  ]

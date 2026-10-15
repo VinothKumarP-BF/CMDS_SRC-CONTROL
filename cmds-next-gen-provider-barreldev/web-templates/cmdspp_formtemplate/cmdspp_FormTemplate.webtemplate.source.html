@@ -1,0 +1,282 @@
+<div class="dynamic-form-host"></div>
+<script>
+window.FormTemplate = window.FormTemplate ||  async function (formData,hostElement) {
+    window.cmdsppLookupOptions = window.cmdsppLookupOptions || {};
+
+    let formDefinition = formData?.fields || [];
+    const containerId = formData.containerId;
+    const submitBtnId = formData.addBtnId;
+
+    hostElement.id = formData.containerId;
+
+    let formValues = {};
+    let errors = {};
+    let openMultiselects = new Set();
+
+    document.addEventListener("click", function (e) {
+        if (openMultiselects.size === 0) return;
+        if (e.target.closest(`#${containerId} .cmdspp-multiselect`)) return;
+
+        openMultiselects.clear();
+        renderForm();
+    });
+
+    formDefinition.forEach(field => {
+
+        const initial = field.value;
+
+        if (field.type === "checkbox") {
+            formValues[field.name] = !!initial;
+        }
+        else if (
+            field.type === "checkboxgroup" ||
+            field.type === "multiselect"
+        ) {
+            formValues[field.name] = Array.isArray(initial)
+                ? initial
+                : [];
+        }
+        else if (
+            initial !== undefined &&
+            initial !== null &&
+            initial !== ""
+        ) {
+            formValues[field.name] = initial;
+        }
+
+    });
+
+    async function loadLookup(field) {
+
+        if (!field?.source?.table) return;
+
+        return $.ajax({
+            url:
+                "/_api/" + field.source.table +
+                "?$filter=" +
+                field.source.domainName +
+                " eq '" +
+                field.source.domainVal +
+                "'" +
+                "&$select=" +
+                field.source.valueField +
+                "," +
+                field.source.labelField,
+            type: "GET"
+        })
+            .then(function (response) {
+
+                field.options =
+                    (response.value || []).map(item => ({
+                        label: item[field.source.labelField],
+                        value: item[field.source.valueField]
+                    }));
+
+            })
+            .catch(function () {
+                field.options = [];
+            });
+
+    }
+
+    await Promise.all(
+        formDefinition
+            .filter(
+                f =>
+                    (f.type === "lookup" ||
+                        f.type === "checkboxgroup" ||
+                        f.type === "multiselect")
+                    && f?.source?.table
+            )
+            .map(loadLookup)
+    );
+
+    function isVisible(field) {
+
+        if (!field.dependency?.length)
+            return true;
+
+        return field.dependency.every(dep => {
+
+            if (dep.type !== "visibility")
+                return true;
+
+            return dep.depId.every(
+                parent =>
+                    formValues[parent] == dep.value
+            );
+
+        });
+
+    }
+
+    function renderField(field) {
+
+        const value =
+            formValues[field.name] ?? "";
+
+        switch (field.type) {
+
+            case "input":
+
+                return `
+                    <label>${field.label}</label>
+                    <input
+                        class="form-control"
+                        data-field="${field.name}"
+                        value="${value}"
+                        maxlength="${field.maxLength || ""}"
+                    />
+                `;
+
+            case "date":
+
+                return `
+                    <label>${field.label}</label>
+                    <input
+                        type="date"
+                        class="form-control"
+                        data-field="${field.name}"
+                        value="${value}"
+                    />
+                `;
+
+            case "lookup":
+
+                return `
+                    <label>${field.label}</label>
+
+                    <select
+                        class="form-select"
+                        data-field="${field.name}">
+
+                        <option value="">
+                            Select
+                        </option>
+
+                        ${(field.options || [])
+                            .map(
+                                option => `
+                                    <option
+                                        value="${option.value}"
+                                        ${value === option.value ? "selected" : ""}
+                                    >
+                                        ${option.label}
+                                    </option>
+                                `
+                            )
+                            .join("")}
+
+                    </select>
+                `;
+
+            case "radio":
+
+                return `
+                    <label>${field.label}</label>
+
+                    ${(field.options || [])
+                        .map(
+                            option => `
+                            <label>
+                                <input
+                                    type="radio"
+                                    data-field="${field.name}"
+                                    value="${option.value}"
+                                    ${value === option.value ? "checked" : ""}
+                                />
+                                ${option.label}
+                            </label>
+                        `
+                        )
+                        .join("")}
+                `;
+        }
+
+        return "";
+    }
+
+    function bindEvents() {
+
+        hostElement
+            .querySelectorAll("[data-field]")
+            .forEach(element => {
+
+                element.addEventListener(
+                    "change",
+                    function () {
+
+                        let value =
+                            this.type === "checkbox"
+                                ? this.checked
+                                : this.value;
+
+                        formValues[
+                            this.dataset.field
+                        ] = value;
+
+                        renderForm();
+
+                    }
+                );
+
+            });
+
+    }
+
+    function renderForm() {
+
+        let html = `
+            <div class="row">
+        `;
+
+        formDefinition.forEach(field => {
+
+            if (!isVisible(field))
+                return;
+
+            html += `
+                <div class="col-md-${field.column || 6}">
+                    ${renderField(field)}
+                </div>
+            `;
+
+        });
+
+        html += `
+            </div>
+
+            <button
+                id="${submitBtnId}"
+                class="btn btn-primary">
+
+                ${formData.primaryBtnLabel || "Submit"}
+
+            </button>
+        `;
+
+        hostElement.innerHTML = html;
+
+        bindEvents();
+
+    }
+
+    renderForm();
+
+    return {
+        getValues() {
+            return { ...formValues };
+        },
+        setValues(values) {
+            formValues = { ...values };
+            renderForm();
+        },
+        reset() {
+            formValues = {};
+            renderForm();
+        }
+    };
+
+};
+
+</script>

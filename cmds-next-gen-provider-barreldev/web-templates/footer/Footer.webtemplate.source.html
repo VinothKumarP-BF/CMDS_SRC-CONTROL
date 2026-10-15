@@ -1,0 +1,97 @@
+{% unless user %}
+    <footer class="cmdspp-footer">
+        <div class="cmdspp-footer-container">
+
+            <div class="cmdspp-footer-left">
+                <span class="cmdspp-footer-icon">+</span>
+                <span class="cmdspp-footer-text">
+                <script>document.write(new Date().getFullYear())</script>
+                    U.S. Department of Health & Human Services (HHS)
+                </span>
+            </div>
+
+            <div class="cmdspp-footer-right">
+            <a href="/Privacy-Policy" class="cmdspp-footer-link">
+                Privacy Policy
+            </a>
+            <a href="/Privacy-Policy" class="cmdspp-footer-link">
+            Terms of Use
+            </a>
+            <a href="mailto:support@providerportal.hhs.gov" class="cmdspp-footer-link">
+                ✉ support@providerportal.hhs.gov
+            </a>
+            </div>
+
+        </div>
+    </footer>
+{% endunless %}
+
+<style>
+.cmdspp-footer {
+    background: #55585A;
+    color: #ffffff;
+    padding: 14px 36px;
+    font-size: 12px;
+    height: 60px;
+}
+
+.cmdspp-footer-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 100%;
+}
+
+.cmdspp-footer-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.cmdspp-footer-icon {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #7d7d7d;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.cmdspp-footer-text {
+    color: #ffffff;
+}
+
+.cmdspp-footer-right {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+}
+
+.cmdspp-footer-link {
+    color: #ffffff !important;
+    text-decoration: none !important;
+    font-size: 13px;
+}
+
+.cmdspp-footer-link:hover {
+    text-decoration: underline !important;
+}
+
+@media (max-width: 768px) {
+    .cmdspp-footer-container {
+        flex-direction: column;
+        gap: 12px;
+        text-align: center;
+    }
+
+    .cmdspp-footer-right {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 12px;
+    }
+}
+</style>

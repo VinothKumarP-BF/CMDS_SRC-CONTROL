@@ -1,0 +1,445 @@
+{% include 'cmdspp_ToastModal' %}
+<style>   
+/* #Username, */
+.nav-tabs,
+.portal-form,
+.login-heading-section,
+.cmdspp-login-btn
+{
+    display: none !important;
+}
+
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear
+{
+    display: none !important;
+}
+
+/* body {
+    background: #f7f8fa;
+    font-family: Segoe UI, sans-serif;
+} */
+
+.login-page {
+    display: flex;
+   min-height: calc(100vh - 124px);
+    align-items: center;
+    justify-content: space-between;
+    padding: clamp(40px, 11vh, 105px) clamp(24px, 5.5vw, 80px);
+}
+
+#content-container{
+    margin: 0px;
+    width: 100%;
+    max-width: 100%;
+    padding: 0px;
+}
+.login-left {
+    width: 45%;
+}
+
+.gov-badge {
+    display:inline-block;
+    background:#0B3A6F1A;
+    border:1px solid #0B3A6F26;
+    padding:7px 17px;
+    border-radius:20px;
+    color:#0B3A6FE5;
+    margin-bottom:30px;
+    font-weight: 400;
+    font-size: 12px;
+    line-height: 16px;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+    span{
+        color: #00D492 !important;
+        margin-right: 8px;
+    }
+}
+
+.login-left h1 {
+    color: #0B3A6F;
+    font-size: 54px;
+    font-weight: 400 !important;
+    line-height: 62px;
+    margin-bottom: 33px;
+}
+
+.description {
+    max-width: 425px;
+    color: #0B3A6F;
+    font-weight: 400 !important;
+    font-size: 16px;
+    line-height: 26px;
+    letter-spacing: 0px;
+    margin-bottom: 61px;
+}
+
+.cmdspp-benefits{
+    display: flex;
+    gap: 25px;
+
+}
+.cmdspp-benefits div{
+    margin-bottom: 10px;
+    color: #0B3A6F;
+    line-height: 20px;
+    font-weight: 400 !important;
+    font-size: 10px;
+    line-height: 20px;
+    letter-spacing: 0px;
+}
+.cmdspp-benefits div img{
+    margin-right:10px;
+}
+
+.login-card {
+    position: relative;
+    width: 498px;
+    background: #ffffff;
+    border-radius: 14px;
+    padding: 32px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+}
+
+.login-card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+
+    width: 100%;
+    height: 4px;
+
+    background: linear-gradient(
+        90deg,
+        #1A3A6B 0%,
+        #00A6F4 50%,
+        #1A3A6B 100%
+    );
+}
+
+.login-card h2 {
+    font-weight: 400 !important;
+    font-size: 22.4px;
+    line-height: 33.6px;
+    letter-spacing: 0px;
+    text-align: center;
+    text-transform: capitalize;
+    margin: 0 0 5.7px;
+    color: #0F1F3D;
+}
+
+.subtitle {
+    font-weight: 400 !important;
+    font-size: 12px;
+    line-height: 16px;
+    letter-spacing: 0px;
+    text-align: center;
+    color: #5A7099;
+    margin-bottom: 32px;
+}
+
+.form-group label {
+    /* display: block;
+    margin-bottom: 6px;
+    font-size: 12px;
+    color: #30496f; */
+    color: #0B3A6F;
+    display:block;
+    font-weight: 400 !important;
+    font-size: 12px;
+    line-height: 16px;
+    letter-spacing: 0px;
+    margin-bottom:4px;
+}
+
+.form-group input {
+    width:100%;
+    height:36px;
+    padding:8px;
+    border:1px solid #E3E8EE;
+    border-radius:4px;
+    margin-bottom:16px;
+    box-shadow: 0px 1px 2px rgba(55, 65, 81, 0.08);
+    font-weight: 400 !important;
+    font-size: 14px;
+    line-height: 24px;
+    color: #0B3A6F;
+    outline: none !important;
+
+}
+
+#customPassword {
+    margin-bottom: 0px !important;
+}
+
+input[type="email"]::placeholder,
+input[type="password"]::placeholder {
+    text-decoration: none !important;
+    font-size: 14px;
+    font-weight: 400 !important;
+    line-height: 20px;
+    color: #0B3A6F; 
+    opacity: 0.4;
+}
+
+input[type="email"]:focus,
+input[type="password"]:focus {
+    box-shadow: 0px 0px 0px 1px #6C8EEF inset, 0px 0px 0px 2px #D6ECFF !important;
+}
+
+.forgot-container {
+    text-align: right;
+}
+
+.forgot-container a {
+    color: #274463;
+    text-decoration: none;
+    font-weight: 400;
+    font-size: 12px;
+    line-height: 16px;
+    letter-spacing: 0px;
+}
+
+#customLoginBtn {
+    width:100%;
+    height:40px;
+    background:#274463;
+    box-shadow: 0px 1px 2px -1px #0000001A;
+    border:none;
+    color:white;
+    border-radius:8px;
+    cursor:pointer;
+    margin-top: 18px;
+    font-weight: 400 !important;
+    font-size: 14px;
+    line-height: 20px;
+    letter-spacing: 0px;
+    text-align: center;
+}
+
+.register-link {
+    text-align: center;
+    margin-top: 14px;
+    font-size: 12px;
+    color: #5b6b84;
+}
+
+.register-link a {
+    color: #1C70DE;
+    text-decoration: none;
+    font-size: 12px;
+}
+
+.cmdspp-field-error {
+    box-shadow: inset 0 0 0 1px #CD3D64, 0 0 0 2px #FDE2DD !important;
+}
+
+.eye-open,
+.eye-close {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+}
+.password-input-wrapper {
+    position: relative;
+}
+</style>
+
+
+<div class="login-page cmdspp-registration-pages-bg">
+
+    <div class="login-left">
+
+        <div class="gov-badge">
+            <span>●</span>OFFICIAL GOVERNMENT PORTAL · SECURE CONNECTION
+        </div>
+
+        <h1>
+            Connecting Healthcare<br>
+            Professionals 
+        </h1>
+
+        <p class="description">
+            The National Medical Enrollment Portal serves as the official registry for licensed physicians, specialists, and allied health professionals within the national healthcare system.
+        </p>
+
+        <div class="cmdspp-benefits">
+      <div><img src="/cmdspp_greenTickCircle"/>  HIPAA Compliant Infrastructure</div>
+      <div><img src="/cmdspp_greenTickCircle"/>  256-bit TLS Encryption</div>
+      <div><img src="/cmdspp_greenTickCircle"/>  ISO 27001:2022 Certified</div>
+    </div>
+
+    </div>
+
+    <div class="login-right">
+
+        <div class="login-card">
+
+            <h2>Welcome!</h2>
+
+            <p class="subtitle">
+                Authorised personnel only. All sessions are monitored.
+            </p>
+
+            <div class="form-group">
+                <label>Email Address</label>
+
+                <input
+                    id="customEmail"
+                    type="email"
+                    maxlength="100"
+                    placeholder="Enter email address" />
+            </div>
+
+            <div class="form-group">
+                <label>Password</label>
+                <div class="password-input-wrapper">
+                <input
+                    id="customPassword"
+                    type="password"
+                    maxlength="50"
+                    placeholder="Enter password" />
+
+                <img
+        class="eye-open"
+        data-target="customPassword"
+        src="/cmdspp_showPasswordEye"
+        alt="Hide Password">
+    <img
+        class="eye-close"
+        data-target="customPassword"
+        src="/cmdspp_hidePasswordEye"
+        alt="Show Password"
+        style="display:none;">       
+                </div>    
+       
+            </div>
+
+            <div class="forgot-container">
+                <a id="forgotPassword" href="/forgot-Password">
+                    Forgot password
+                </a>
+            </div>
+
+            <button id="customLoginBtn" type="button">
+                Login
+            </button>
+
+            <div class="register-link">
+                Not registered yet?
+                <a href="/user-registration">Register</a>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+    $(".eye-open, .eye-close").on("click", function () {
+
+    const wrapper = $(this).closest(".password-input-wrapper");
+
+    const input = wrapper.find("input");
+
+    const eyeOpen = wrapper.find(".eye-open");
+    const eyeClose = wrapper.find(".eye-close");
+
+    if (input.attr("type") === "password") {
+
+        input.attr("type", "text");
+
+        eyeOpen.hide();
+        eyeClose.show();
+
+    } else {
+
+        input.attr("type", "password");
+
+        eyeClose.hide();
+        eyeOpen.show();
+
+    }
+
+});
+
+$(document).on(
+    "input",
+    "input, textarea",
+    function () {
+
+        $(this).removeClass("cmdspp-field-error");
+
+    }
+);
+    $(document).on("click",
+        "#customLoginBtn",
+        function(){
+
+        const email = $("#customEmail");
+        const pass = $("#customPassword");    
+
+        if (!email.val().trim()) {
+           $("#customEmail").addClass("cmdspp-field-error");
+           cmdsppShowToast("error","Email address is required");
+           return;
+        }
+        if (!pass.val().trim()) {
+           $("#customPassword").addClass("cmdspp-field-error");
+           cmdsppShowToast("error","Password is required");
+           return;
+        }
+
+        $("#Username")
+        .val($("#customEmail").val());
+
+        $("#PasswordValue")
+        .val($("#customPassword").val());
+
+
+        $("#submit-signin-local").click();
+
+    });
+
+    const observer = new MutationObserver(function () {
+
+    if ($(".validation-summary-errors a").length) {
+
+        const firstError =$(".validation-summary-errors a").first();
+
+    if (firstError.length) {
+
+    //    const errorMessage =firstError.text().trim();
+       cmdsppShowToast("error","Invalid Credentials");
+       $("#customPassword").addClass("cmdspp-field-error");
+       $("#customEmail").addClass("cmdspp-field-error");
+   }
+
+        observer.disconnect();
+    }
+
+});
+
+observer.observe(document.body, {
+    childList: true,
+    subtree: true
+});
+
+$(document).ready(function () {
+
+    $("#customEmail")
+        .val($("#Username").val());
+
+        $("#customPassword")
+        .val($("#PasswordValue").val());    
+
+});
+</script>

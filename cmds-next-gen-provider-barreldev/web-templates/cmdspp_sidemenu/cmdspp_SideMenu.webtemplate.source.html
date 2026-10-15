@@ -1,0 +1,237 @@
+{% assign safeContactId = user.contactid | default: "00000000-0000-0000-0000-000000000000" %}
+
+{% fetchxml userRoleQuery %}
+<fetch top="1">
+  <entity name="cmdspp_g_usr_dtls_tb">
+    <attribute name="cmdspp_g_usr_role" />
+    <attribute name="cmdspp_g_usr_dtls_tbid" />
+        <attribute name="cmdspp_g_email" />
+
+    <filter>
+            <condition attribute="cmdspp_g_usrtocontact_lkpid" operator="eq" value="{{ safeContactId }}" />
+
+    </filter>
+  </entity>
+</fetch>
+{% endfetchxml %}
+
+{% assign currentRole = "" %}
+{% if userRoleQuery.results.entities.size > 0 %}
+  {% assign currentRole = userRoleQuery.results.entities[0].cmdspp_g_usr_role.label %}
+  {% assign userMainid = userRoleQuery.results.entities[0].cmdspp_g_usr_dtls_tbid %}
+  {% assign userEmailid = userRoleQuery.results.entities[0].cmdspp_g_email %}
+{% endif %}
+<script>
+  window.cmdsppCurrentRole = "{{ currentRole | escape }}";
+  window.cmdsppUserId = "{{ userMainid | escape }}";
+  window.cmdsppEmailId = "{{ userEmailid | escape }}";
+</script>
+
+{% fetchxml unreadCountQuery %}
+<fetch aggregate="true">
+  <entity name="cmdspp_g_usr_inbox_thread">
+
+    <attribute
+      name="cmdspp_g_usr_inbox_threadid"
+      alias="unreadcount"
+      aggregate="count" />
+
+    <filter>
+      <condition
+        attribute="cmdspp_g_web_user"
+        operator="eq"
+        value="{{ userMainid }}" />
+
+      <condition
+        attribute="cmdspp_g_read_ind"
+        operator="eq"
+        value= "false" />
+    </filter>  
+  </entity>
+</fetch>
+{% endfetchxml %}
+{% if unreadCountQuery.results.entities.size > 0 %}
+  {% assign unreadcount = unreadCountQuery.results.entities[0].unreadcount %}
+{% endif %}
+<script>
+console.log("count:",
+{{ unreadcount }}
+);
+window.cmdsppUnreadInboxCount = {{ unreadcount | 0 }};
+document.addEventListener("DOMContentLoaded",async function () {
+  if(!window.cmdsppUserId){
+    return
+  }
+    const result =
+            await cmdsppExecuteInboxAction(
+                {
+                    userId: window.cmdsppUserId,
+                    transType: "fetchThreads",
+                    rowcount: 5
+                }
+            );
+
+        cmdsppThreadData = []
+        let res =  result.data || [];
+
+        res.forEach((data)=>{
+            data.senderName = data.senderName ? data.senderName : "System Admin"
+            data.modifiedTime = cmdsppFormatInboxDate(data.modifiedTime)
+            cmdsppThreadData.push(data)
+        })
+
+        window.cmdsppInboxNotificationData = res;
+});        
+</script>
+
+{% assign primary_nav = weblinks["Default"] %}
+{% if primary_nav %}
+<nav class="cmdspp-sidemenu">
+  <ul class="cmdspp-sidemenu-list">
+    {% for link in primary_nav.weblinks %}
+      {% assign linkUrlClean = link.url | downcase %}
+      {% assign isExcluded = false %}
+      {% assign showMenu = false %}
+
+      {% if link.url == "/" %}{% assign isExcluded = true %}{% endif %}
+      {% if linkUrlClean contains "user-registration" %}{% assign isExcluded = true %}{% endif %}
+      {% if linkUrlClean contains "provider-configuration-editor" %}{% assign isExcluded = true %}{% endif %}
+      {% if linkUrlClean contains "validate-pin" %}{% assign isExcluded = true %}{% endif %}
+      {% if linkUrlClean contains "forgot-password" %}{% assign isExcluded = true %}{% endif %}
+
+      {% if currentRole contains "Organization Administrator" %}
+        {% if link.name == "Dashboard" or link.name == "Inbox" or link.name == "Enrollment" or link.name == "Enrollment-PP" or link.name == "Enrollment-PP(1)" or link.name == "Manage User" or link.name == "Settings" %}
+          {% assign showMenu = true %}
+        {% endif %}
+      {% endif %}
+
+      {% if currentRole contains "Configuration Administrator" %}
+        {% if link.name == "Form Config" or link.name == "Specialty Maintenance" or link.name == "Audit Log" %}
+          {% assign showMenu = true %}
+        {% endif %}
+      {% endif %}
+
+      {% unless isExcluded %}
+        {% if showMenu %}
+        <li class="cmdspp-sidemenu-item">
+          <a href="{% if link.name == 'Settings' or link.name == 'Manage User' %}javascript:void(0){% else %}{{ link.url }}{% endif %}" title="{{ link.name | escape }}" class="cmdspp-sidemenu-link">
+            <div class="cmdspp-sidemenu-iconwrap">
+              <img src="/{{ link.name | replace: ' ', '-' }}.svg" alt="{{ link.name | escape }} icon" class="cmdspp-sidemenu-icon">
+            </div>
+            <span class="cmdspp-sidemenu-label">{{ link.name }}</span>
+            {% if link.name == "Inbox" and unreadCount > 0 %}
+              <span class="cmdspp-sidemenu-badge">{{ unreadcount }}</span>
+            {% endif %}
+          </a>
+        </li>
+        {% endif %}
+      {% endunless %}
+    {% endfor %}
+  </ul>
+</nav>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  var currentPath = window.location.pathname.toLowerCase();
+  if (currentPath.length > 1 && currentPath.endsWith("/")) {
+    currentPath = currentPath.slice(0, -1);
+  }
+  var items = document.querySelectorAll(".cmdspp-sidemenu-item");
+  items.forEach(function (item) {
+    var link = item.querySelector("a.cmdspp-sidemenu-link");
+    if (!link) return;
+    var navUrl = link.pathname.toLowerCase();
+    if (navUrl.length > 1 && navUrl.endsWith("/")) {
+      navUrl = navUrl.slice(0, -1);
+    }
+    if (currentPath === navUrl || currentPath.indexOf(navUrl + "/") === 0) {
+      item.classList.add("cmdspp-sidemenu-active");
+    }
+  });
+});
+</script>
+{% endif %}
+
+<style>
+.cmdspp-sidemenu {
+  position: fixed;
+  top: 64px;
+  left: 0;
+  width: 221px;
+  height: 100vh;
+  background: #EDEDEE;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid #D2D2D2;
+}
+.cmdspp-sidemenu-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  margin-top: 16px;
+}
+.cmdspp-sidemenu-item {
+  list-style: none;
+  padding: 4px 12px;
+}
+.cmdspp-sidemenu-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+  color: #8F8F8F;
+  font-size: 14px;
+  position: relative;
+  height: 40px;
+  margin-left: 0px;
+  padding-left: 12px;
+  padding-right: 12px;
+}
+.cmdspp-sidemenu-link:hover {
+  background: #e6e6e6;
+  border-radius: 5px;
+}
+.cmdspp-sidemenu-active .cmdspp-sidemenu-link {
+  background: #223E63;
+  color: #fff;
+  border-radius: 5px;
+}
+.cmdspp-sidemenu-active .cmdspp-sidemenu-icon {
+  filter: brightness(0) saturate(100%) invert(100%);
+}
+.cmdspp-sidemenu-active .cmdspp-sidemenu-link::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: #ff6600;
+  margin-top: 4px;
+  margin-bottom: 4px;
+  border-bottom-right-radius: 5px;
+  border-top-right-radius: 5px;
+}
+.cmdspp-sidemenu-icon {
+  height: 20px;
+}
+.cmdspp-sidemenu-label {
+  flex-grow: 1;
+}
+.cmdspp-sidemenu-badge {
+  background: #DC2626;
+  color: #ffffff;
+  font-size: 10px;
+  width: 18px;
+    height: 19px;
+    opacity: 1;
+    padding-top: 2px;
+    padding-right: 6px;
+    padding-bottom: 2px;
+    padding-left: 6px;
+    border-radius: 33554400px;
+}
+a:not(.btn):hover {
+  text-decoration: none !important;
+}
+</style>

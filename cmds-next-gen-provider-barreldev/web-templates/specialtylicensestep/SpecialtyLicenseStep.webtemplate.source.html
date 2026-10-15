@@ -1,0 +1,1851 @@
+{% assign appId = request.params['record'] | default: request.params['id'] %}
+{% assign pageName =  'license_certification' %}
+
+{% fetchxml sectionJsonSchema %}
+<fetch>
+  <entity name="cmdspp_pc_enrol_page_json_tb">
+    <attribute name="cmdspp_p_jsontxt" />
+    <attribute name="cmdspp_p_table_nam" />
+     <attribute name="cmdspp_p_page_nam" />
+      <filter>
+      <condition attribute="cmdspp_p_page_nam"
+                 operator="eq"
+                 value="{{pageName}}" />
+    </filter>
+  </entity>
+</fetch>
+{% endfetchxml %}
+
+
+{% for rec in sectionJsonSchema.results.entities %}
+
+  {% if rec.cmdspp_p_table_nam == 'cmdspp_p_lic_cert_tbs' %}
+    {% assign sectionASchemaJson = rec.cmdspp_p_jsontxt%}
+  {% endif %}
+    {% if rec.cmdspp_p_table_nam == 'cmdspp_p_specl_tbs' %}
+    {% assign sectionBSchemaJson = rec.cmdspp_p_jsontxt%}
+  {% endif %}
+    {% if rec.cmdspp_p_table_nam == 'cmdspp_p_txnmy_tbs' %}
+    {% assign sectionCSchemaJson = rec.cmdspp_p_jsontxt%}
+  {% endif %}
+
+{% endfor %}
+
+
+{% assign licertFormData = sectionASchemaJson | parse_json %}
+
+{% assign SpecialtyFormData = sectionBSchemaJson | parse_json %}
+
+{% assign taxonomyFormData = sectionCSchemaJson | parse_json %}
+
+
+<div class="cmdspp-form-body d-flex flex-column">
+
+  <div class="accordion-container" id="section-licert">
+    <fieldset class="active">
+      <legend>
+        <div class="accordion-header">
+          <div class="accordion-title">
+            <span class="step-circle">a</span>
+            <span>Licensure and Certification</span>
+          </div>
+          <span class="accordion-arrow active"></span>
+        </div>
+      </legend>
+
+      <div class="accordion-content">
+        <div class="p-3 mb-4 border rounded bg-light">
+          {% include 'cmdspp_RenderFormFields', formData: licertFormData %}
+        </div>
+
+        <div class="mb-2" id="deaTableWrapper">
+          {% include 'cmdspp_Enrollment-PP-commonTable', tableId: 'licertTable' %}
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+          <button type="button" id="btnResetRelativeA" class="btn-reset-custom">Reset</button>
+          <div class="d-flex gap-2">
+            <button type="button" id="relativeAContinueBtn" class="btn-continue-custom" data-current="section-licert"
+              data-next="section-specialty">Continue</button>
+          </div>
+        </div>
+      </div>
+    </fieldset>
+  </div>
+
+  <div class="accordion-container" id="section-specialty">
+    <fieldset>
+      <legend>
+        <div class="accordion-header">
+          <div class="accordion-title">
+            <span class="step-circle">b</span>
+            <span>Specialty</span>
+          </div>
+          <span class="accordion-arrow"></span>
+        </div>
+      </legend>
+
+      <div class="accordion-content" style="display: none;">
+        <div class="p-3 mb-4 border rounded bg-light">
+          {% include 'cmdspp_RenderFormFields', formData: SpecialtyFormData %}
+        </div>
+
+        <div class="mb-2" id="mcpTableWrapper">
+          {% include 'cmdspp_Enrollment-PP-commonTable', tableId: 'specialty' %}
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+          <button type="button" id="btnResetSpecialty" class="btn-reset-custom">Reset</button>
+          <div class="d-flex gap-2">
+            <button type="button" id="btnBack" data-previous="section-licert" class="btn-back-custom">Back</button>
+            <button type="button" id="specialtyContinueBtn" class="btn-continue-custom" data-current="section-specialty"
+              data-next="section-taxonomy">Continue</button>
+          </div>
+        </div>
+      </div>
+    </fieldset>
+  </div>
+  <div class="accordion-container" id="section-taxonomy">
+    <fieldset>
+      <legend>
+
+        <div class="accordion-header">
+          <div class="accordion-title">
+            <span class="step-circle">c</span>
+            <span>Taxonomy</span>
+          </div>
+          <span class="accordion-arrow"></span>
+        </div>
+      </legend>
+
+      <div class="accordion-content" style="display: none;">
+        <div class="p-3 mb-4 border rounded bg-light">
+          {% include 'cmdspp_RenderFormFields', formData: taxonomyFormData %}
+        </div>
+
+        <div class="mb-2" id="mcpTableWrapper">
+          {% include 'cmdspp_Enrollment-PP-commonTable', tableId: 'taxonomy' %}
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+          <button type="button" id="btnResetTaxonomy" class="btn-reset-custom">Reset</button>
+          <div class="d-flex gap-2">
+            <button type="button" id="btnBack" data-previous="section-specialty" class="btn-back-custom">Back</button>
+            <button type="button" id="taxonomyContinueBtn" class="btn-continue-custom" data-current="section-taxonomy"
+              data-next="section-taxonomy">Continue</button>
+          </div>
+        </div>
+      </div>
+    </fieldset>
+  </div>
+
+</div>
+
+<style>
+  .cmdspp-form-body {
+    padding: 24px;
+    padding-top: 10px !important;
+    width: 100%;
+    gap: 16px
+  }
+
+  .accordion-container {
+    width: 100%
+  }
+
+  .accordion-container fieldset {
+    border: 1px solid #d9dde4;
+    border-radius: 12px;
+    background: #fff;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, .08)
+  }
+
+  .accordion-container fieldset.active {
+    border: 2px solid #23476d
+  }
+
+  .accordion-container fieldset.completed:not(.active) {
+    border: 2px solid #28a745
+  }
+
+  .accordion-container fieldset.completed .step-circle {
+    background: #28a745
+  }
+
+  .accordion-container legend {
+    width: 100%;
+    margin: 0;
+    padding: 18px 20px;
+    cursor: pointer;
+    background: #fff;
+    border-bottom: 1px solid #eee
+  }
+
+  .accordion-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center
+  }
+
+  .accordion-title {
+    display: flex;
+    align-items: center;
+    gap: 12px
+  }
+
+  .accordion-title .step-circle+span {
+    color: #23476d;
+    font-weight: 500;
+    font-size: 16px
+  }
+
+  .step-circle {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: #23476d;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 600
+  }
+
+  .accordion-arrow {
+    display: inline-block;
+    transition: transform .3s ease;
+    background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%233f4d67' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E") !important;
+    background-repeat: no-repeat !important;
+    background-position: center !important;
+    width: 24px;
+    height: 24px
+  }
+
+  fieldset.active .accordion-arrow {
+    transform: rotate(180deg)
+  }
+
+  .accordion-content {
+    padding: 20px
+  }
+
+  .btn-reset-custom {
+    background-color: #fff0f0;
+    color: #e63946;
+    border: 1px solid #f8d7da;
+    border-radius: 6px;
+    padding: 6px 20px;
+    font-weight: 500
+  }
+
+  .btn-back-custom {
+    border: 1px solid #6c757d;
+    color: #333;
+    border-radius: 6px;
+    padding: 6px 20px;
+    text-decoration: none;
+    font-weight: 500;
+    background-color: transparent
+  }
+
+  .btn-continue-custom {
+    background-color: #23476d;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 6px 20px;
+    font-weight: 500
+  }
+
+  .btn-continue-custom:disabled {
+    opacity: .65;
+    cursor: not-allowed
+  }
+</style>
+{% include 'cmdspp_Enrollment-PP-commonPopUP' %}
+<script>
+  (function () {
+    "use strict";
+
+    var parentAppGuid = getUrlParameter("record") || getUrlParameter("id");
+    var CREATED_BY_USER_ENTITY_SET = "cmdspp_g_usr_dtls_tbs";
+
+    /*
+     * ============================================================
+     * DYNAMIC PAGE CONFIGURATION
+     *
+     * This is the important part.
+     *
+     * Tomorrow, when pageJson comes from Dataverse, replace this
+     * variable with the Dataverse response. The common methods
+     * below do not need to change.
+     * ============================================================
+     */
+    var pageJson = [
+      {{ sectionASchemaJson }},
+      {{ sectionBSchemaJson }},
+      {{ sectionCSchemaJson }}
+  ];
+    window.providerDynamicOptions = {
+        specialties: [],
+        taxonomies: []
+    };
+
+
+ 
+  /*
+   * ============================================================
+   * INTERNAL SECTION INDEX
+   * ============================================================
+   */
+  var sections = {};
+
+  pageJson.forEach(function (section) {
+    sections[section.sectionId] = section;
+  });
+
+  function getUrlParameter(name) {
+    var regex = new RegExp("[\\?&]" + name + "=([^&#]*)");
+    var results = regex.exec(location.search);
+    return results === null
+      ? ""
+      : decodeURIComponent(results[1].replace(/\+/g, " "));
+  }
+
+  function getPortalContactId() {
+    try {
+      return window.cmdsppUserId || null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  var currentContactId = getPortalContactId();
+
+  function withCreatedByUser(payload) {
+    if (currentContactId) {
+      payload["cmdspp_created_by_user@odata.bind"] =
+        "/" + CREATED_BY_USER_ENTITY_SET + "(" + currentContactId + ")";
+    }
+    return payload;
+  }
+
+  /*
+   * ============================================================
+   * POWER PAGES WEB API
+   * ============================================================
+   */
+  (function (webapi, $) {
+
+    function getTokenAsync() {
+      var deferred = $.Deferred();
+
+      if (
+        typeof shell !== "undefined" &&
+        typeof shell.getTokenDeferred === "function"
+      ) {
+        shell.getTokenDeferred()
+          .done(function (token) {
+            deferred.resolve(token);
+          })
+          .fail(function () {
+            fetchServerToken(deferred);
+          });
+      } else {
+        fetchServerToken(deferred);
+      }
+
+      return deferred.promise();
+    }
+
+    function fetchServerToken(deferred) {
+      var domToken =
+        $('input[name="__RequestVerificationToken"]').val();
+
+      $.ajax({
+        type: "GET",
+        url: "/_services/auth/token",
+        cache: false
+      })
+        .done(function (token) {
+          deferred.resolve(token || domToken || "");
+        })
+        .fail(function () {
+          deferred.resolve(domToken || "");
+        });
+    }
+
+    function safeAjax(ajaxOptions) {
+      var deferred = $.Deferred();
+
+      getTokenAsync().done(function (token) {
+
+        ajaxOptions.headers = ajaxOptions.headers || {};
+
+        if (token) {
+          ajaxOptions.headers["__RequestVerificationToken"] = token;
+          ajaxOptions.headers["RequestVerificationToken"] = token;
+        }
+
+        $.ajax(ajaxOptions)
+          .done(function (data, textStatus, jqXHR) {
+            deferred.resolve(data, textStatus, jqXHR);
+          })
+          .fail(function (jqXHR, textStatus, errorThrown) {
+            deferred.reject(jqXHR, textStatus, errorThrown);
+          });
+      });
+
+      return deferred.promise();
+    }
+
+    webapi.safeAjax = safeAjax;
+
+  })(window.webapi = window.webapi || {}, jQuery);
+  
+  function getProviderTypeAndSpecialties() {
+      var applicationId =
+        getUrlParameter("record") ||
+        getUrlParameter("id");
+
+    if (!applicationId) {
+        console.error("Application ID not found.");
+        return;
+    }
+
+    applicationId = applicationId.replace(/[{}]/g, "");
+      // 1. Get Provider Type GUID
+      var providerTypeUrl =
+        "/_api/cmdspp_p_idt_inf_dtls" +
+        "?$select=_cmdspp_p_pvd_typ_lkp_value" +
+        "&$filter=_cmdspp_p_app_id_lkp_value eq " + applicationId;
+
+      $.ajax({
+        type: "GET",
+        url: providerTypeUrl,
+        contentType: "application/json",
+        headers: {
+          "__RequestVerificationToken":
+            document.querySelector(
+              'input[name="__RequestVerificationToken"]'
+            )?.value
+        },
+        success: function (providerResponse) {
+
+          if (!providerResponse.value ||
+            providerResponse.value.length === 0) {
+
+            console.log("Provider Type not found");
+            return;
+          }
+
+          var providerTypeGuid =
+            providerResponse.value[0]["_cmdspp_p_pvd_typ_lkp_value"];
+
+          console.log("Provider Type GUID:", providerTypeGuid);
+
+          // 2. Get Specialties + Taxonomies
+          var specialtyUrl =
+            `/_api/cmdspp_pc_pvdty_specl_txnmy_map_tbs?$filter=_cmdspp_p_pvd_type_fkid_value eq '${providerTypeGuid}' and statecode eq 0&$select=_cmdspp_p_specl_pvdty_fkid_value,_cmdspp_p_txnmy_fkid_value&$expand=cmdspp_p_specl_pvdty_fkid($select=cmdspp_pc_specl_desc,cmdspp_pc_specl_pvdty_mapid),cmdspp_p_txnmy_fkid($select=cmdspp_p_txnmy_desc,cmdspp_pc_txnmy_codes_tbid)`;
+
+          $.ajax({
+            type: "GET",
+            url: specialtyUrl,
+            contentType: "application/json",
+            headers: {
+              "__RequestVerificationToken":
+                document.querySelector(
+                  'input[name="__RequestVerificationToken"]'
+                )?.value
+            },
+            success: function (specialtyResponse) {
+
+              console.log("Specialties:", specialtyResponse.value);
+
+              // Your data
+              var specialtyOptions = [];
+              var taxonomyOptions = [];
+
+              specialtyResponse.value.forEach(function (item) {
+                let specialty = item["cmdspp_p_specl_pvdty_fkid"];
+                let taxonomy = item["cmdspp_p_txnmy_fkid"];
+
+                var specialtyId = specialty['cmdspp_pc_specl_pvdty_mapid'];
+                var specialtyName = specialty['cmdspp_pc_specl_desc'];
+
+                var taxonomyId = taxonomy['cmdspp_pc_txnmy_codes_tbid'];
+                var taxonomyName = taxonomy['cmdspp_p_txnmy_desc'];
+
+                // Unique Specialty
+                if (!specialtyOptions.some(function (x) {
+                  return x.value === specialtyId;
+                })) {
+                  var specialtySelect = $("#cmdspp_p_specl_cdid");
+                  specialtySelect.append(
+                    $("<option>", {
+                      value: specialtyId,
+                      text: specialtyName
+                    })
+                  );
+                  specialtyOptions.push({
+                    value: specialtyId,
+                    label: specialtyName
+                  });
+                }
+
+                // Unique Taxonomy
+                if (!taxonomyOptions.some(function (x) {
+                  return x.value === taxonomyId;
+                })) {
+                  var taxonomySelect = $("#cmdspp_p_txnmy_cd");
+                  taxonomySelect.append(
+                    $("<option>", {
+                      value: taxonomyId,
+                      text: taxonomyName
+                    })
+                  );
+                  taxonomyOptions.push({
+                    value: taxonomyId,
+                    label: taxonomyName
+                  });
+                }
+              });
+              window.providerDynamicOptions.specialties = specialtyOptions;
+
+              window.providerDynamicOptions.taxonomies = taxonomyOptions;
+              console.log("Specialties:", specialtyOptions);
+              console.log("Taxonomies:", taxonomyOptions);
+
+            },
+            error: function (xhr) {
+              console.error(
+                "Specialty API Error:",
+                xhr.responseText
+              );
+            }
+          });
+        },
+        error: function (xhr) {
+          console.error(
+            "Provider Type API Error:",
+            xhr.responseText
+          );
+        }
+      });
+    }
+
+    
+  function extractIdFromResponse(jqXHR) {
+    try {
+      var header =
+        jqXHR &&
+        (
+          jqXHR.getResponseHeader("OData-EntityId") ||
+          jqXHR.getResponseHeader("odata-entityid")
+        );
+
+      if (header) {
+        var match = header.match(/\(([^)]+)\)/);
+
+        if (match) {
+          return match[1];
+        }
+      }
+    } catch (e) {
+      console.warn("Could not extract record ID", e);
+    }
+
+    return null;
+  }
+
+  function newRecordId() {
+    return "new-" + Date.now() + "-" +
+      Math.floor(Math.random() * 100000);
+  }
+
+  /*
+   * ============================================================
+   * SECTION HELPERS
+   * ============================================================
+   */
+
+  function getSectionByContainerId(containerId) {
+    return pageJson.find(function (section) {
+      return section.containerId === containerId;
+    });
+  }
+
+  function getSectionByElementId(sectionId) {
+    return pageJson.find(function (section) {
+      return section.sectionId === sectionId;
+    });
+  }
+
+  function getGridInstance(section) {
+    return CommonTableTemplate.getInstance(
+      section.tableId,
+      {
+        actions: {
+          onEdit: function (record) {
+            editRecord(section, record);
+          },
+
+          onDelete: function (record) {
+            deleteRecord(section, record);
+          }
+        }
+      }
+    );
+  }
+
+  function refreshGrid(section) {
+    if(!section.fldsWithOpt) section.fldsWithOpt = section.fields
+    getGridInstance(section)
+      .render(section.columns, section.records || [],"",section.fldsWithOpt);
+  }
+
+  /*
+   * ============================================================
+   * EDIT
+   *
+   * Default behaviour maps form field names to record fields.
+   * No section-specific if/else is required.
+   * ============================================================
+   */
+
+  function getEditValues(section, record) {
+
+    var values = {};
+
+    (section.fields || []).forEach(function (field) {
+
+      var name = field.name;
+
+      if (record[name] !== undefined) {
+        values[name] = record[name];
+      }
+    });
+
+    /*
+     * Medicare special case is declared in JSON through
+     * multiSelectField instead of hard-coding section ID.
+     */
+    if (section.multiSelectField) {
+
+      var selected =
+        record[section.multiSelectField] ||
+        record.partsGuid;
+
+      values[section.multiSelectField] =
+        selected ? [selected] : [];
+    }
+
+    return values;
+  }
+
+  function editRecord(section, record) {
+
+    var form =
+      window.cmdsppForms &&
+      window.cmdsppForms[section.containerId];
+
+    if (!form) {
+      console.warn(
+        "Form not found:",
+        section.containerId
+      );
+      return;
+    }
+
+    var values =
+      getEditValues(section, record);
+
+    form.setValues(
+      values,
+      record.recordId
+    );
+  }
+
+  /*
+   * ============================================================
+   * DELETE
+   *
+   * Delete is staged locally. Dataverse is changed only when
+   * the section Continue/Save button is clicked.
+   * ============================================================
+   */
+
+  function deleteRecord(section, record) {
+
+    showConfirmationPopup({
+
+        title: "Delete Record",
+
+        message: "Are you sure you want to remove this record?",
+
+        confirmText: "Yes",
+
+        cancelText: "No",
+
+        onConfirm: function () {
+
+            if (record.isNew) {
+
+                section.records =
+                    section.records.filter(function (r) {
+                        return r.recordId !== record.recordId;
+                    });
+
+            } else {
+
+                record.isDeleted = true;
+                record.isEdited = false;
+
+            }
+
+            refreshGrid(section);
+
+        },
+
+        onCancel: function () {
+            // popup closes automatically
+        }
+
+    });
+}
+
+  /*
+   * ============================================================
+   * FORM SUBMIT
+   * ============================================================
+   */
+
+  window.addEventListener(
+    "dynamicFormSubmit",
+    function (e) {
+
+      var detail = e.detail || {};
+
+      var section =
+        getSectionByContainerId(detail.containerId);
+
+      if (!section) {
+        console.warn("No section found for:", detail.containerId);
+        return;
+      }
+
+      var values = detail.values || {};
+      var isEditing = !!detail.isEditing;
+      var editingId = detail.editingId;
+
+      /*
+       * UPDATE
+       */
+      if (isEditing) {
+
+        var existing =
+          section.records.find(function (r) {
+            return r.recordId === editingId && !r.isDeleted;
+          });
+
+        if (!existing) {
+          return;
+        }
+
+        if (section.multiSelectField) {
+
+          var selected =
+            values[section.multiSelectField] || [];
+
+          existing.partsGuid = selected[0] || "";
+          existing.partsLabel =
+            mcarePartsMap[selected[0]] || "";
+
+          existing[section.multiSelectField] =
+            selected[0] || "";
+
+        } else {
+
+          Object.assign(existing, values);
+
+        }
+
+        existing.isEdited = true;
+      }
+
+      /*
+       * CREATE
+       */
+      else {
+
+        if (section.createMode === "multiSelect") {
+
+          var selectedValues =
+            values[section.multiSelectField] || [];
+
+          selectedValues.forEach(function (guid) {
+
+            section.records.push({
+              recordId: newRecordId(),
+              dbId: null,
+              isNew: true,
+              isEdited: false,
+              isDeleted: false,
+              cmdspp_p_medicare_n:
+                values.cmdspp_p_medicare_n,
+              partsGuid: guid,
+              partsLabel:
+                mcarePartsMap[guid] || "",
+              cmdspp_p_mcare_part_cd: guid
+            });
+
+          });
+
+        } else {
+
+          section.records.push(
+            Object.assign(
+              {
+                recordId: newRecordId(),
+                dbId: null,
+                isNew: true,
+                isEdited: false,
+                isDeleted: false
+              },
+              values
+            )
+          );
+
+        }
+      }
+
+      refreshGrid(section);
+
+    }
+  );
+
+    window.addEventListener("onLoadOptionMapping", function (e) {
+
+    var section = getSectionByContainerId(e.detail.containerId);
+    if (!section) return;
+    section.fldsWithOpt = e.detail.formFlds;
+    refreshGrid(section);
+
+});
+
+  /*
+   * ============================================================
+   * RESET
+   * ============================================================
+   */
+
+  function resetSection(section) {
+
+    section.records =
+      section.records.filter(function (record) {
+        return !record.isNew && !record.isDeleted;
+      });
+
+    section.records.forEach(function (record) {
+      record.isEdited = false;
+    });
+
+    var form =
+      window.cmdsppForms &&
+      window.cmdsppForms[section.containerId];
+
+    if (form) {
+      form.reset();
+    }
+
+    refreshGrid(section);
+  }
+
+  /*
+   * ============================================================
+   * RESET
+   * ============================================================
+   */
+
+  function resetSection(section) {
+
+    section.records =
+      section.records.filter(
+        function (record) {
+          return !record.isNew;
+        }
+      );
+
+    var form =
+      window.cmdsppForms &&
+      window.cmdsppForms[
+      section.containerId
+      ];
+
+    if (form) {
+      form.reset();
+    }
+
+    refreshGrid(section);
+  }
+
+  function bindResetButtons() {
+
+    pageJson.forEach(function (section) {
+
+      var button =
+        document.getElementById(
+          section.resetBtnId
+        );
+
+      if (!button) {
+        return;
+      }
+
+      button.addEventListener(
+        "click",
+        function () {
+          resetSection(section);
+        }
+      );
+
+    });
+
+  }
+
+  /*
+   * ============================================================
+   * ACCORDION
+   * ============================================================
+   */
+
+  function openAccordionSection(sectionId) {
+
+    document
+      .querySelectorAll(
+        ".accordion-container fieldset"
+      )
+      .forEach(function (fs) {
+
+        fs.classList.remove("active");
+
+      });
+
+    document
+      .querySelectorAll(
+        ".accordion-container .accordion-arrow"
+      )
+      .forEach(function (arrow) {
+
+        arrow.classList.remove("active");
+
+      });
+
+    document
+      .querySelectorAll(
+        ".accordion-container .accordion-content"
+      )
+      .forEach(function (content) {
+
+        content.style.display =
+          "none";
+
+      });
+
+    var target =
+      document.getElementById(
+        sectionId
+      );
+
+    if (!target) {
+      return;
+    }
+
+    var fieldset =
+      target.querySelector(
+        "fieldset"
+      );
+
+    var arrow =
+      target.querySelector(
+        ".accordion-arrow"
+      );
+
+    var content =
+      target.querySelector(
+        ".accordion-content"
+      );
+
+    fieldset.classList.add(
+      "active"
+    );
+
+    arrow.classList.add(
+      "active"
+    );
+
+    content.style.display =
+      "block";
+  }
+
+  function markSectionCompleted(
+    sectionId
+  ) {
+
+    var target =
+      document.getElementById(
+        sectionId
+      );
+
+    if (target) {
+      target
+        .querySelector("fieldset")
+        .classList.add("completed");
+    }
+  }
+
+  function bindAccordion() {
+
+    document
+      .querySelectorAll(
+        ".accordion-container fieldset legend"
+      )
+      .forEach(function (legend) {
+
+        legend.addEventListener(
+          "click",
+          function () {
+
+            var fieldset =
+              legend.closest(
+                "fieldset"
+              );
+
+            var content =
+              fieldset.querySelector(
+                ".accordion-content"
+              );
+
+            var section =
+              fieldset.closest(
+                ".accordion-container"
+              );
+
+            if (
+              content.style.display ===
+              "none" ||
+              content.style.display === ""
+            ) {
+
+              openAccordionSection(
+                section.id
+              );
+
+            } else {
+
+              content.style.display =
+                "none";
+
+              fieldset.classList.remove(
+                "active"
+              );
+
+              fieldset
+                .querySelector(
+                  ".accordion-arrow"
+                )
+                .classList.remove(
+                  "active"
+                );
+            }
+
+          }
+        );
+
+      });
+
+  }
+
+  /*
+   * ============================================================
+   * LOADING
+   * ============================================================
+   */
+
+  function setSectionLoading(
+    buttonId,
+    isLoading
+  ) {
+
+    var button =
+      document.getElementById(
+        buttonId
+      );
+
+    if (!button) {
+      return;
+    }
+
+    if (isLoading) {
+
+      button.dataset.originalText =
+        button.textContent;
+
+      button.disabled = true;
+
+      button.textContent =
+        "Saving...";
+
+    } else {
+
+      button.disabled = false;
+
+      button.textContent =
+        button.dataset.originalText ||
+        "Continue";
+    }
+  }
+
+  /*
+   * ============================================================
+   * GENERIC DATAVERSE PAYLOAD
+   * ============================================================
+   */
+
+  function buildPayload(
+    section,
+    record
+  ) {
+
+    var payload = {};
+
+    (section.fieldMappings || [])
+      .forEach(function (mapping) {
+
+        var value =
+          record[
+          mapping.formField
+          ];
+
+        /*
+         * Medicare stores the lookup in partsGuid.
+         */
+        if (
+          mapping.formField ===
+          "partsGuid"
+        ) {
+
+          value =
+            record.partsGuid;
+
+        }
+
+        if (
+          value === undefined ||
+          value === null ||
+          value === ""
+        ) {
+          return;
+        }
+
+        if (
+          mapping.type ===
+          "lookup"
+        ) {
+
+          payload[
+            mapping.dataverseField +
+            "@odata.bind"
+          ] =
+            "/" +
+            mapping.entitySet +
+            "(" +
+            value +
+            ")";
+
+        }
+
+        else if (
+          mapping.type ===
+          "boolean"
+        ) {
+
+          payload[
+            mapping.dataverseField
+          ] =
+            value === true ||
+            value === "true";
+
+        }
+
+        else {
+
+          payload[
+            mapping.dataverseField
+          ] = value;
+
+        }
+
+      });
+
+    return payload;
+  }
+
+  /*
+   * ============================================================
+   * DATAVERSE READ / REFRESH
+   *
+   * The browser grid is only a working copy. After every section
+   * save, the section is re-read from Dataverse so the UI reflects
+   * the live server state.
+   * ============================================================
+   */
+
+  function getDataverseSelectFields(section) {
+
+    var fields = [section.recordIdField];
+
+    (section.fieldMappings || []).forEach(function (mapping) {
+
+      var fieldName =
+        mapping.type === "lookup"
+          ? "_" + mapping.dataverseField + "_value"
+          : mapping.dataverseField;
+
+      if (fields.indexOf(fieldName) === -1) {
+        fields.push(fieldName);
+      }
+    });
+
+    return fields.join(",");
+  }
+
+  function getDataverseLookupValue(raw, fieldName) {
+
+    return raw["_" + fieldName + "_value"] || "";
+  }
+
+  function getDataverseLookupLabel(raw, fieldName) {
+
+    return (
+      raw["_" + fieldName + "_value@OData.Community.Display.V1.FormattedValue"] ||
+      ""
+    );
+  }
+  
+
+  function mapDataverseRecord(section, raw) {
+
+    var record = {
+      recordId: raw[section.recordIdField],
+      dbId: raw[section.recordIdField],
+      isNew: false,
+      isEdited: false,
+      isDeleted: false
+    };
+
+    (section.fieldMappings || []).forEach(function (mapping) {
+
+      if (mapping.type === "lookup") {
+
+        var guid =
+          getDataverseLookupValue(
+            raw,
+            mapping.dataverseField
+          );
+
+        record[mapping.formField] = guid;
+
+        /*
+         * Keep the generic lookup value available, and also expose
+         * Medicare's existing grid fields.
+         */
+        if (mapping.formField === "partsGuid") {
+          record.partsGuid = guid;
+          record.partsLabel =
+            getDataverseLookupLabel(
+              raw,
+              mapping.dataverseField
+            );
+        }
+
+      } else {
+
+        record[mapping.formField] =
+          raw[mapping.dataverseField] == null
+            ? ""
+            : raw[mapping.dataverseField];
+
+      }
+
+    });
+
+    return record;
+  }
+
+  function fetchSectionRecords(section) {
+
+    var deferred = $.Deferred();
+
+    if (!parentAppGuid || parentAppGuid.length <= 20) {
+      deferred.reject({
+        message: "Parent application ID is missing."
+      });
+      return deferred.promise();
+    }
+
+    var selectFields =
+      getDataverseSelectFields(section);
+
+    /*
+     * Lookup relationship columns are returned as
+     * _<lookup logical name>_value by the Dataverse Web API.
+     */
+    var filter =
+      "_cmdspp_p_sys_id_value eq " +
+      parentAppGuid +
+      " and statecode eq 0";
+
+    var url =
+      "/_api/" +
+      section.entitySet +
+      "?$select=" +
+      encodeURIComponent(selectFields) +
+      "&$filter=" +
+      encodeURIComponent(filter);
+
+    webapi.safeAjax({
+      type: "GET",
+      url: url,
+      contentType: "application/json",
+      headers: {
+        "Accept": "application/json",
+        "OData-MaxVersion": "4.0",
+        "OData-Version": "4.0",
+        "Prefer":
+          'odata.include-annotations="OData.Community.Display.V1.FormattedValue"'
+      }
+    })
+      .done(function (data) {
+
+        var rows =
+          (data && data.value) || [];
+        if(rows.length>0){
+         section.records =
+          rows.map(function (raw) {
+            return mapDataverseRecord(section, raw);
+          });
+        }else section.records = []
+        
+
+        refreshGrid(section);
+        deferred.resolve(section.records);
+
+      })
+      .fail(function (xhr) {
+        section.records = []
+        refreshGrid(section);
+        deferred.resolve(section.records);
+        console.error(
+          "Failed to refresh section from Dataverse:",
+          xhr
+        );
+
+        deferred.reject(xhr);
+
+      });
+
+    return deferred.promise();
+  }
+
+  /*
+   * ============================================================
+   * GENERIC DATAVERSE PAYLOAD
+   * ============================================================
+   */
+
+  function buildPayload(section, record) {
+
+    var payload = {};
+
+    (section.fieldMappings || [])
+      .forEach(function (mapping) {
+
+        var value =
+          record[mapping.formField];
+
+        if (mapping.formField === "partsGuid") {
+          value = record.partsGuid;
+        }
+
+        if (
+          value === undefined ||
+          value === null ||
+          value === ""
+        ) {
+          return;
+        }
+
+        if (mapping.type === "lookup") {
+
+          payload[
+            mapping.dataverseField + "@odata.bind"
+          ] =
+            "/" +
+            mapping.entitySet +
+            "(" +
+            value +
+            ")";
+
+        } else if (mapping.type === "boolean") {
+
+          payload[mapping.dataverseField] =
+            value === true ||
+            value === "true";
+
+        } else {
+
+          payload[mapping.dataverseField] = value;
+
+        }
+
+      });
+
+    return payload;
+  }
+
+  /*
+   * ============================================================
+   * CREATE / UPDATE / DELETE
+   *
+   * All three operations are executed as one section-save
+   * operation. Deletes are no longer sent immediately from the
+   * row action.
+   * ============================================================
+   */
+
+  function createDataverseRecord(section, record) {
+
+    var payload =
+      buildPayload(section, record);
+
+    if (parentAppGuid && parentAppGuid.length > 20) {
+
+      payload[
+        "cmdspp_p_sys_id@odata.bind"
+      ] =
+        "/cmdspp_p_dtl_tbs(" +
+        parentAppGuid +
+        ")";
+
+    }
+
+    payload =
+      withCreatedByUser(payload);
+
+    return webapi.safeAjax({
+
+      type: "POST",
+
+      url:
+        "/_api/" +
+        section.entitySet,
+
+      contentType:
+        "application/json",
+
+      data:
+        JSON.stringify(payload)
+
+    })
+      .done(function (data, textStatus, jqXHR) {
+
+        var newId =
+          extractIdFromResponse(jqXHR);
+
+        if (newId) {
+          record.dbId = newId;
+          record.recordId = newId;
+        }
+
+      });
+  }
+
+  function updateDataverseRecord(section, record) {
+
+    if (!record.dbId) {
+      return $.Deferred().resolve().promise();
+    }
+
+    var payload =
+      buildPayload(section, record);
+
+    return webapi.safeAjax({
+
+      type: "PATCH",
+
+      url:
+        "/_api/" +
+        section.entitySet +
+        "(" +
+        record.dbId +
+        ")",
+
+      contentType:
+        "application/json",
+
+      data:
+        JSON.stringify(payload)
+
+    });
+  }
+
+  function deleteDataverseRecord(section, record) {
+
+    if (!record.dbId) {
+      return $.Deferred().resolve().promise();
+    }
+
+    return webapi.safeAjax({
+
+      type: "PATCH",
+
+      url:
+        "/_api/" +
+        section.entitySet +
+        "(" +
+        record.dbId +
+        ")",
+
+      contentType:
+        "application/json",
+
+      data:
+        JSON.stringify({
+          statecode: 1
+        })
+
+    });
+  }
+
+  function submitSectionRecords(section) {
+
+    var deferred = $.Deferred();
+
+    var toCreate =
+      section.records.filter(function (record) {
+        return record.isNew && !record.isDeleted;
+      });
+
+    var toUpdate =
+      section.records.filter(function (record) {
+        return (
+          !record.isNew &&
+          !record.isDeleted &&
+          record.isEdited
+        );
+      });
+
+    var toDelete =
+      section.records.filter(function (record) {
+        return (
+          !record.isNew &&
+          record.isDeleted
+        );
+      });
+
+    var requests = [];
+
+    toCreate.forEach(function (record) {
+      requests.push(
+        createDataverseRecord(section, record)
+      );
+    });
+
+    toUpdate.forEach(function (record) {
+      requests.push(
+        updateDataverseRecord(section, record)
+      );
+    });
+
+    toDelete.forEach(function (record) {
+      requests.push(
+        deleteDataverseRecord(section, record)
+      );
+    });
+
+    if (requests.length === 0) {
+      deferred.resolve();
+      return deferred.promise();
+    }
+
+    Promise.all(requests)
+      .then(
+        function () {
+
+          /*
+           * Do not trust the local staged array after save.
+           * The next state always comes from Dataverse.
+           */
+          fetchSectionRecords(section)
+            .done(function () {
+              deferred.resolve();
+            })
+            .fail(function (error) {
+              deferred.reject(error);
+            });
+
+        },
+        function (error) {
+          deferred.reject(error);
+        }
+      );
+
+    return deferred.promise();
+  }
+
+  /*
+   * ============================================================
+   * CONTINUE
+   * ============================================================
+   */
+
+  function continueSection(section) {
+
+    var visibleRecords =
+      (section.records || []).filter(function (record) {
+        return record.isDeleted || record.isEdited || record.isNew;
+      });
+    cmdsppUpdateApplicationProgress({
+      recordId: parentAppGuid,
+      pageTitle: "Speciality-Licenses",
+    });
+
+    if (
+      section.requireRecord &&
+      section.records.length === 0
+    ) {
+
+      alert(
+        "Please add at least one record before continuing."
+      );
+
+      return;
+    }
+
+    setSectionLoading(
+      section.submitBtnId,
+      true
+    );
+
+    submitSectionRecords(section)
+      .done(function () {
+
+        setSectionLoading(
+          section.submitBtnId,
+          false
+        );
+
+        markSectionCompleted(
+          section.sectionId
+        );
+
+        /*
+         * submitSectionRecords already re-fetches the current
+         * section from Dataverse. Do not use the staged local
+         * records after this point.
+         */
+
+        if (section.nextSectionId) {
+
+          openAccordionSection(
+            section.nextSectionId
+          );
+
+        } else {
+          window.location.href = `${section.nextPageUrl}${window.location.search}`
+          
+
+          /*
+           * No full page reload is required. The current section
+           * and every saved record are already synchronized with
+           * Dataverse.
+           */
+        }
+
+      })
+      .fail(function (error) {
+
+        console.error(
+          "Section save failed:",
+          error
+        );
+
+        setSectionLoading(
+          section.submitBtnId,
+          false
+        );
+
+        alert(
+          "Some records could not be saved. Please try again."
+        );
+
+      });
+
+  }
+
+  /*
+   * ============================================================
+   * CONTINUE BUTTONS
+   * ============================================================
+   */
+
+  function bindContinueButtons() {
+
+      console.log("Installing delegated Continue handler");
+
+      $(document)
+        .off("click.cmdsppContinue", ".btn-continue-custom")
+        .on("click.cmdsppContinue", ".btn-continue-custom", function (e) {
+
+          e.preventDefault();
+          e.stopPropagation();
+
+          var button = this;
+
+          var sectionId =
+            button.getAttribute("data-current");
+
+          console.log(
+            "CONTINUE CLICKED:",
+            sectionId
+          );
+
+          var section =
+            getSectionByElementId(sectionId);
+
+          if (!section) {
+
+            console.error(
+              "Section not found:",
+              sectionId
+            );
+
+            return;
+          }
+
+          console.log(
+            "Continue section:",
+            section
+          );
+
+          continueSection(section);
+
+        });
+    }
+
+  /*
+   * ============================================================
+   * BACK BUTTONS
+   * ============================================================
+   *
+   * The Back button is not a business action, so it only uses
+   * data-current/data-next from the existing HTML.
+   */
+  document
+    .querySelectorAll(
+      ".btn-back-custom"
+    )
+    .forEach(function (button) {
+
+      button.addEventListener(
+        "click",
+        function (e) {
+
+          var current =
+            button.dataset.current;
+
+          var target =
+            e.currentTarget.dataset.previous ||
+            "section-licert";
+
+          openAccordionSection(
+            target
+          );
+
+        }
+      );
+
+    });
+
+  /*
+   * ============================================================
+   * INITIALIZE
+   * ============================================================
+   */
+
+  function initializePage() {
+
+    
+
+
+    pageJson.forEach(
+        function (section) {
+
+            refreshGrid(section);
+
+        }
+    );
+
+
+    bindResetButtons();
+
+    bindContinueButtons();
+
+    bindAccordion();
+
+        getProviderTypeAndSpecialties();
+    /*
+      * Load existing records.
+      */
+
+    pageJson.forEach(
+        function (section) {
+
+            fetchSectionRecords(section)
+
+                .done(function () {
+
+                    console.log(
+                        "Initial records loaded:",
+                        section.sectionId,
+                        section.records
+                    );
+
+                    refreshGrid(section);
+
+                })
+
+                .fail(function (error) {
+
+                    console.error(
+                        "Initial Dataverse fetch failed:",
+                        section.sectionId,
+                        error
+                    );
+
+                });
+
+        }
+    );
+
+        
+
+}
+
+  initializePage();
+
+}) ();
+</script>

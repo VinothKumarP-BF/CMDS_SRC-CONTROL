@@ -1,0 +1,117 @@
+<div id="cmdspp-toast-container"></div>
+
+<style>
+/* Toast CSS */
+#cmdspp-toast-container {
+    position: fixed;
+    top: 74px;
+    right: 40px;
+    z-index: 999999;
+}
+
+.cmdspp-toast {
+    /* min-width: 300px; */
+    /* max-width: 500px; */
+    padding: 6px 10px 6px 10px;
+    border-radius: 5px;
+    color: #fff;
+    margin-bottom: 10px;
+    height: 28px;
+    font-size: 12px;
+    font-weight: 400 !important;
+    line-height: 16px;
+    display: flex;
+    align-items: center;
+
+}
+
+.cmdspp-toast-success {
+    background: #007A55;
+}
+
+.cmdspp-toast-error {
+    background: #C50F12;
+}
+</style>
+
+<script>
+
+let cmdsppActiveToast = null;
+let cmdsppToastTimer = null;
+
+console.log("ToastModal Loaded");
+console.trace();
+
+
+function cmdsppShowToast(type, message) {
+
+    if (cmdsppActiveToast) {
+
+        cmdsppActiveToast.remove();
+
+        clearTimeout(cmdsppToastTimer);
+    }
+
+    const container =
+        document.getElementById(
+            "cmdspp-toast-container"
+        );
+
+    const toast =
+        document.createElement("div");
+
+    toast.className =
+        `cmdspp-toast cmdspp-toast-${type}`;
+
+    toast.textContent =
+        message;
+
+    container.appendChild(toast);
+
+    cmdsppActiveToast = toast;
+
+    cmdsppToastTimer =
+        setTimeout(function () {
+
+            toast.remove();
+
+            cmdsppActiveToast = null;
+            cmdsppToastTimer = null;
+
+        }, 5000);
+}
+
+function cmdsppNavigateWithToast(type, message, url) {
+
+    sessionStorage.setItem(
+        "cmdspp-toast",
+        JSON.stringify({
+            type: type,
+            message: message
+        })
+    );
+
+    window.location.href = url;
+}
+
+(function () {
+
+    const savedToast =
+        sessionStorage.getItem("cmdspp-toast");
+
+    if (!savedToast) {
+        return;
+    }
+
+    const toast =
+        JSON.parse(savedToast);
+
+    cmdsppShowToast(
+        toast.type,
+        toast.message
+    );
+
+    sessionStorage.removeItem("cmdspp-toast");
+
+})();
+</script>

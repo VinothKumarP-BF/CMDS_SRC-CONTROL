@@ -1,0 +1,499 @@
+{% include 'cmdspp_Enrollment_Form_Header' %}
+
+<div class="cmdspp-form-body">
+
+    <div id="identity-form-container">
+        {% include 'cmdspp_identityInformation_template' , page_name: 'identity_Information' %}
+    </div>
+
+    {% include 'cmdspp_Enrollment_Form_SidePanel' %}
+
+</div>
+
+<style>
+
+#identity-form-container fieldset {
+    border: 1px solid #d9dde4;
+    border-radius: 12px;
+    margin-bottom: 16px;
+    background: #fff;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,.08);
+}
+
+#identity-form-container fieldset.active {
+    border: 2px solid #23476d;
+}
+
+#identity-form-container legend {
+    width: 100%;
+    margin: 0;
+    padding: 18px 20px;
+    cursor: pointer;
+    background: #fff;
+    border-bottom: 1px solid #eee;
+}
+
+#identity-form-container legend h3 {
+    margin: 0;
+}
+
+.accordion-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.accordion-title {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.step-circle {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: #23476d;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 600;
+    flex-shrink: 0;
+}
+
+
+.accordion-arrow {
+    display: inline-block;
+    transition: transform 0.3s ease;
+    width: 40px;
+    height: 24px;
+    background-repeat: no-repeat !important;
+    background-position: center !important;
+    background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%233f4d67' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E") !important;
+
+}
+
+fieldset.active .accordion-arrow {
+    transform: rotate(180deg);
+}
+
+.accordion-content {
+    padding: 20px;
+}
+
+#identity-form-container table.section {
+    margin-bottom: 0;
+}
+
+#identity-form-container fieldset:not(:has(legend)) {
+    display: none !important;
+}
+
+.tab-column {
+    border: unset !important;
+}
+
+.crmEntityFormView {
+    border: unset !important;
+}
+
+.crmEntityFormView td.cell {
+    padding-left: 0px;
+}
+
+label {
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 16px;
+    color: #274463 !important;
+    margin-bottom: 8px;
+}
+
+input,
+select {
+    border: 1px solid #E3E8EE !important;
+    height: 40px;
+    max-width: 400px;
+}
+
+.cmdspp-form-body {
+    padding: 24px;
+    padding-top: 10px !important;
+    width: 100%;
+    gap: 24px;
+}
+
+#identity-form-container {
+    width: 100%;
+}
+
+.accordion-title .step-circle + span {
+    color: #23476d;
+    font-weight: 400;
+    font-size: 16px;
+}
+
+.cmdspp-accordion-heading-title {
+    font-size: 12px !important;
+    color: #8F8F8F !important;
+    margin-top: 4px;
+    font-weight: 400;
+}
+
+.cmdspp-custom-info-message {
+    font-size: 12px !important;
+    color: #274463 !important;
+    text-align: left;
+    margin-top: 4px !important;
+    margin-bottom: 16px !important;
+}
+
+/* ACTION BUTTONS */
+
+.accordion-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid #E3E8EE;
+}
+
+.btn-reset-custom {
+    border: 1px solid #E58A8A;
+    background: #fff;
+    color: #D9534F;
+    border-radius: 8px;
+    min-width: 90px;
+    height: 40px;
+    cursor: pointer;
+}
+
+.btn-continue-custom {
+    background: #23476d;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    min-width: 110px;
+    height: 40px;
+    cursor: pointer;
+}
+
+.btn-continue-custom:hover {
+    background: #1c3a5a;
+}
+
+.accordion-actions .actions {
+    position: static !important;
+    margin: 0;
+}
+
+.accordion-actions .submit-btn {
+    background: #23476d !important;
+    min-width: 110px;
+    border-radius: 8px;
+}
+
+.accordion-actions{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-top:24px;
+    padding-top:20px;
+    border-top:1px solid #E3E8EE;
+    position: relative;
+}
+
+.accordion-actions-right{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    display: flex;
+}
+
+.btn-back-custom-button{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    display: flex;
+    position: absolute;
+    right: 124px;
+    top: 20px;
+}
+
+.btn-back-custom{
+    min-width:96px;
+    height:40px;
+    border:1px solid #23476d;
+    background:#fff;
+    color:#23476d;
+    border-radius:8px;
+    cursor:pointer;
+}
+
+.btn-back-custom:hover{
+    background:#f5f8fb;
+}
+
+</style>
+
+
+
+<script>
+
+$(document).ready(function () {
+
+    let accordionIndex = 0;
+
+    $("#identity-form-container fieldset").each(function () {
+
+        const fieldset = $(this);
+        const legend = fieldset.find("legend:first");
+
+        if (!legend.length) {
+            fieldset.remove();
+            return;
+        }
+
+        const title = legend.find("h3").text().trim();
+        const label = String.fromCharCode(97 + accordionIndex);
+
+        accordionIndex++;
+
+        fieldset.find("table.section").wrapAll(
+            '<div class="accordion-content"></div>'
+        );
+
+       fieldset.find(".accordion-content").append(`
+            <div class="accordion-actions">
+
+                <div class="accordion-actions-left">
+                    <button type="button" class="btn-reset-custom">
+                        Reset
+                    </button>
+                </div>
+
+               <div class="accordion-actions-right ${accordionIndex > 1 ? 'btn-back-custom-button' : ''}">
+                    ${accordionIndex > 1 ? `
+                        <button type="button" class="btn-back-custom">
+                            Back
+                        </button>
+                    ` : ""}
+
+                    <button type="button" class="btn-continue-custom">
+                        Continue
+                    </button>
+
+                </div>
+
+            </div>
+        `);
+
+        legend.html(
+            '<div class="accordion-header">' +
+                '<div class="accordion-title">' +
+                    '<span class="step-circle">' + label + '</span>' +
+                    '<span>' +
+                        title +
+                        (accordionIndex === 1
+                            ? '<div class="cmdspp-accordion-heading-title">If this application is for a hospital, independent laboratory, or physicians office that performs non-waivered laboratory services, current CLIA</div>'
+                            : '') +
+                    '</span>' +
+                '</div>' +
+                '<span class="accordion-arrow"></span>' +
+            '</div>'
+        );
+
+        if (accordionIndex > 1) {
+            fieldset.find(".accordion-content").hide();
+        } else {
+            fieldset.addClass("active");
+        }
+    });
+
+    // ==================================
+// BACK BUTTON
+// ==================================
+
+$("#identity-form-container").on(
+    "click",
+    ".btn-back-custom",
+    function () {
+
+        const currentFieldset =
+            $(this).closest("fieldset");
+
+        const previousFieldset =
+            currentFieldset.prevAll("fieldset:first");
+
+        if (!previousFieldset.length) {
+            return;
+        }
+
+        currentFieldset.removeClass("active");
+        currentFieldset.find(".accordion-content").slideUp();
+
+        previousFieldset.addClass("active");
+        previousFieldset.find(".accordion-content").slideDown();
+
+        $("html, body").animate({
+            scrollTop: previousFieldset.offset().top - 20
+        }, 300);
+    }
+);
+
+    // ==================================
+    // MOVE REAL POWER PAGES BUTTON
+    // ==================================
+
+    function moveSubmitButton() {
+
+        const $insertButton = $("#InsertButton");
+
+        if (!$insertButton.length) {
+            return;
+        }
+
+        const $lastAccordionActions =
+            $("#identity-form-container fieldset:last .accordion-actions");
+
+        if (!$lastAccordionActions.length) {
+            return;
+        }
+
+        // Remove static continue button from last accordion
+        $lastAccordionActions.find(".btn-continue-custom").remove();
+
+        // Move actual Power Pages button
+        $insertButton.appendTo($lastAccordionActions);
+
+        // Hide original footer area
+        $(".crmEntityFormView > .actions").hide();
+
+        // Style actual button
+        $insertButton.css({
+            "margin-left": "auto",
+            "min-width": "110px",
+            "height": "40px",
+            "border-radius": "8px",
+            "background": "#23476d",
+            "color": "#fff"
+        });
+    }
+
+    setTimeout(moveSubmitButton, 500);
+    setTimeout(moveSubmitButton, 1000);
+    setTimeout(moveSubmitButton, 2000);
+
+    // ==================================
+    // ACCORDION CLICK
+    // ==================================
+
+    $("#identity-form-container").on(
+        "click",
+        "fieldset legend",
+        function () {
+
+            const currentFieldset = $(this).closest("fieldset");
+            const currentContent = currentFieldset.find(".accordion-content");
+
+            $("#identity-form-container fieldset")
+                .not(currentFieldset)
+                .removeClass("active")
+                .find(".accordion-content")
+                .slideUp();
+
+            if (currentContent.is(":visible")) {
+
+                currentContent.slideUp();
+                currentFieldset.removeClass("active");
+
+            } else {
+
+                currentContent.slideDown();
+                currentFieldset.addClass("active");
+
+            }
+        }
+    );
+
+    // ==================================
+    // CONTINUE BUTTON
+    // ==================================
+
+    $("#identity-form-container").on(
+        "click",
+        ".btn-continue-custom",
+        function () {
+
+            const currentFieldset =
+                $(this).closest("fieldset");
+
+            const nextFieldset =
+                currentFieldset.nextAll("fieldset:first");
+
+            if (!nextFieldset.length) {
+                return;
+            }
+
+            currentFieldset.removeClass("active");
+            currentFieldset.find(".accordion-content").slideUp();
+
+            nextFieldset.addClass("active");
+            nextFieldset.find(".accordion-content").slideDown();
+
+            $("html, body").animate({
+                scrollTop: nextFieldset.offset().top - 20
+            }, 300);
+        }
+    );
+
+    // ==================================
+    // RESET BUTTON
+    // ==================================
+
+    $("#identity-form-container").on(
+        "click",
+        ".btn-reset-custom",
+        function () {
+
+            const fieldset = $(this).closest("fieldset");
+
+            fieldset.find(
+                "input[type='text'],input[type='email'],input[type='number'],textarea"
+            ).val("");
+
+            fieldset.find("select").prop("selectedIndex", 0);
+
+            fieldset.find(
+                "input[type='checkbox'],input[type='radio']"
+            ).prop("checked", false);
+        }
+    );
+
+    // ==================================
+    // INFO MESSAGE
+    // ==================================
+
+    const $section =
+        $('table.section[data-name="null_section_3"]').first();
+
+    if (
+        $section.length &&
+        !$section.prev('.cmdspp-custom-info-message').length
+    ) {
+
+        const $message = $('<div>', {
+            class: 'cmdspp-custom-info-message',
+            text: 'If this application is for a hospital, independent laboratory, or physicians office that performs non-waivered laboratory services, current CLIA Certificate is required?'
+        });
+
+        $section.before($message);
+    }
+
+});
+
+</script>

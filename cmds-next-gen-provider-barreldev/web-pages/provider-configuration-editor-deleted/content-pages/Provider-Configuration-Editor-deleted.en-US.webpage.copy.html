@@ -1,0 +1,284 @@
+<div class="container-fluid form-builder">
+
+    <!-- Header -->
+    <div class="builder-header d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="mb-0">Form Configuration Builder</h3>
+            <small class="text-muted">
+                Configure pages, sections, and fields per enrollment type and provider type
+            </small>
+        </div>
+
+        <div class="d-flex align-items-center gap-3">
+            <span class="badge bg-light text-dark p-2">
+                20 / 33 Fields Active
+            </span>
+            <button class="btn btn-primary">
+                Save Configuration
+            </button>
+        </div>
+    </div>
+
+    <!-- Enrollment Types -->
+    <div class="mb-4">
+        <label class="text-uppercase small text-muted fw-bold">
+            Enrollment Type
+        </label>
+
+        <div class="d-flex flex-wrap gap-3 mt-2">
+            <div class="config-card active">
+                <div class="card-title">New Provider Enrollment</div>
+                <small>Active</small>
+            </div>
+
+            <div class="config-card">
+                <div class="card-title">Provider Re-enrollment</div>
+            </div>
+
+            <div class="config-card">
+                <div class="card-title">Bulk Group Intake</div>
+            </div>
+
+            <div class="config-card add-card">
+                + Add Type
+            </div>
+        </div>
+    </div>
+
+    <!-- Provider Tabs -->
+    <div class="mb-3">
+        <label class="text-uppercase small text-muted fw-bold">
+            Provider
+        </label>
+
+        <div class="provider-tabs mt-2">
+            <button class="btn btn-sm btn-dark rounded-pill">Clinical</button>
+            <button class="btn btn-sm btn-light rounded-pill">Ambulance / EMS</button>
+            <button class="btn btn-sm btn-light rounded-pill">Social Workers</button>
+            <button class="btn btn-sm btn-light rounded-pill">Pharmacy</button>
+            <button class="btn btn-sm btn-light rounded-pill">Specialist / Surgical</button>
+            <button class="btn btn-sm btn-light rounded-pill">Preventive Care</button>
+            <button class="btn btn-sm btn-outline-secondary rounded-pill">
+                + Add Provider
+            </button>
+        </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="nav-border mb-3">
+        <ul class="nav nav-tabs">
+            <li class="nav-item">
+                #Form Fields</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link>
+        </ul>
+    </div>
+
+    <!-- Builder Body -->
+    <div class="row gx-3">
+
+        <!-- Pages -->
+        <div class="col-md-3">
+            <div class="panel">
+                <div class="panel-header">
+                    <strong>Pages</strong>
+                </div>
+
+                <ul class="list-group list-group-flush">
+
+                    <li class="list-group-item active-item">
+                        <input type="checkbox" checked>
+                        Identifying Information
+                    </li>
+
+                    <li class="list-group-item">
+                        <input type="checkbox" checked>
+                        Practice Location
+                    </li>
+
+                    <li class="list-group-item">
+                        <input type="checkbox">
+                        Credentialing
+                    </li>
+
+                    <li class="list-group-item">
+                        <input type="checkbox">
+                        Service Location Billing
+                    </li>
+
+                    <li class="list-group-item">
+                        <input type="checkbox" checked>
+                        Signature Page
+                    </li>
+
+                </ul>
+            </div>
+        </div>
+
+        <!-- Sections -->
+        <div class="col-md-3">
+            <div class="panel">
+                <div class="panel-header">
+                    <strong>Sections</strong>
+                </div>
+
+                <ul class="list-group list-group-flush">
+
+                    <li class="list-group-item active-item">
+                        <input type="checkbox" checked>
+                        Provider Type
+                    </li>
+
+                    <li class="list-group-item">
+                        <input type="checkbox" checked>
+                        NPI &amp; Identifiers
+                    </li>
+
+                    <li class="list-group-item">
+                        <input type="checkbox" checked>
+                        Previous Medicaid Information
+                    </li>
+
+                </ul>
+            </div>
+        </div>
+
+        <!-- Fields -->
+        <div class="col-md-6">
+            <div class="panel">
+
+                <div class="panel-header d-flex justify-content-between">
+                    <strong>Fields</strong>
+
+                    <div class="d-flex gap-5 text-muted small">
+                        <span>Required</span>
+                        <span>Validate</span>
+                    </div>
+                </div>
+
+                <div class="field-list">
+
+                    <!-- Field -->
+                    <div class="field-row">
+                        <div class="field-name">
+                            <input type="checkbox" checked>
+                            National Provider Identifier (NPI)
+                        </div>
+
+                        <div>
+                            <span class="badge bg-secondary">Text</span>
+                        </div>
+
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox">
+                        </div>
+
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox">
+                        </div>
+                    </div>
+
+                    <div class="field-row">
+                        <div class="field-name">
+                            <input type="checkbox" checked>
+                            Other ID 1
+                        </div>
+
+                        <div>
+                            <span class="badge bg-secondary">Text</span>
+                        </div>
+
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox">
+                        </div>
+
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox">
+                        </div>
+                    </div>
+
+                    <div class="field-row">
+                        <div class="field-name">
+                            <input type="checkbox" checked>
+                            Social Security Number (SSN)
+                        </div>
+
+                        <div>
+                            <span class="badge bg-danger">Masked</span>
+                        </div>
+
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox">
+                        </div>
+
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox">
+                        </div>
+                    </div>
+
+                    <div class="field-row">
+                        <div class="field-name">
+                            <input type="checkbox">
+                            Federal Tax ID (EIN)
+                        </div>
+
+                        <div>
+                            <span class="badge bg-secondary">Text</span>
+                        </div>
+
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox">
+                        </div>
+
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox">
+                        </div>
+                    </div>
+
+                    <div class="field-row">
+                        <div class="field-name">
+                            <input type="checkbox" checked>
+                            Date of Birth
+                        </div>
+
+                        <div>
+                            <span class="badge bg-success">Date</span>
+                        </div>
+
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox">
+                        </div>
+
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox">
+                        </div>
+                    </div>
+
+                    <div class="field-row">
+                        <div class="field-name">
+                            <input type="checkbox" checked>
+                            Gender
+                        </div>
+
+                        <div>
+                            <span class="badge bg-info">Select</span>
+                        </div>
+
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox">
+                        </div>
+
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox">
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+</div>

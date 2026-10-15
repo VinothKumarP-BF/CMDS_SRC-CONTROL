@@ -1,0 +1,318 @@
+<div class="row sectionBlockLayout text-start" style="display: none; min-height: auto; padding: 8px;">
+  <div class="container" style="display: flex; flex-wrap: wrap;">
+    <div class="col-lg-12 columnBlockLayout" style="padding: 16px; margin: 60px 0px; min-height: 200px;"></div>
+  </div>
+</div>
+
+{% include 'cmdspp_Enrollment_Form_Header' %}
+
+<div class="cmdspp-form-body">
+  <div id="identity-form-container">
+    {% include 'cmdspp_ecs_template' %}
+  </div>
+
+  <div class="cmdspp-side-panel-container">
+    {% include 'cmdspp_Enrollment_Form_SidePanel' %}
+  </div>
+</div>
+
+<style>
+  .col-md-12.mb-3{
+    width: 100% !important;
+  }
+  .cmdspp-note-text {
+font-weight: 400;
+font-size: 14px;
+line-height: 16.5px;
+letter-spacing: 0px;
+color: #274463;
+
+}
+#ecsFormContainer .col-md-6.checkboxgroup.mb-3:nth-child(3) {
+  max-width: 100%;
+  width: 100%;
+}
+  form-check {
+    border: 1px solid #E3E8EE;
+    border-radius: 4px;
+    background: #fff;
+}
+
+/* Checkbox item */
+.form-check {
+    position: relative;
+    display: flex;
+    align-items: center;
+    height: 40px;
+    min-width: 80px;
+    margin: 0;
+    padding: 0 12px;
+    border: 1px solid #E6E8EA;
+    border-radius: 4px;
+    background: #FFFFFF;
+}
+
+/* Actual checkbox */
+.form-check-input {
+    margin: 0px !important;
+    width: 14px;
+    height: 14px;
+    accent-color: #0B3A6F;
+}
+.checkbox label{
+  padding-left: 10px !important;
+  min-height: unset;
+}
+.checkbox input[type=checkbox] {
+      cursor: pointer;
+}
+.cmdspp-form-card .checkboxgroup .form-check-label{
+      margin-bottom: 0px !important;
+}
+.cmdspp-form-card .col-12.checkbox.mb-3{
+       width: 432px !important;
+}
+.checkbox input[type=checkbox]{
+  margin: 0px !important;
+}
+.field-card-container .row{
+    padding: 16px !important;
+    padding-bottom: 0px !important;
+    margin-bottom: 20px !important;
+    border: 1px solid #E3E8EE;
+    border-radius: 4px;
+}
+}
+
+/* Checkbox label */
+ .form-check-label {
+    margin-left: 8px;
+    font-size: 14px;
+    font-weight: 400;
+    color: #274463;
+    cursor: pointer;
+}
+
+/* Selected checkbox card */
+ .form-check:has(.form-check-input:checked) {
+    background: #F3F4F5;
+    border-color: #CDD1D6;
+}
+
+.form-check-input[type=checkbox] {
+    border-radius:0px !important;
+}
+
+.form-check-input:checked {
+    background-color: #274463 !important;
+    border-color: #274463 !important;
+}
+
+  #ecsFormContainer .col-md-6.checkboxgroup.mb-3{
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    justify-content: flex-start;
+    border: none;
+    padding: 0px !important;
+  }
+  .cmdspp-form-card .checkboxgroup .cmdspp-checkboxgroup{
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    flex-direction: column;
+    width: 100% !important;
+  }
+  .cmdspp-form-card .checkboxgroup{
+
+  }
+  /* MAIN PAGE LAYOUT */
+  .cmdspp-form-body {
+    display: flex;
+    flex-direction: row;
+    gap: 24px;
+    padding: 24px;
+    padding-top: 10px !important;
+    width: 100%;
+    box-sizing: border-box;
+    align-items: flex-start;
+  }
+
+  #identity-form-container {
+    flex: 1;
+    min-width: 0; /* Prevents flex items from overflowing */
+  }
+
+  .cmdspp-side-panel-container {
+    flex-shrink: 0;
+  }
+
+  /* FORM CONTROLS & FIELDSET STYLES */
+  #identity-form-container fieldset {
+    border: 1px solid #d9dde4;
+    border-radius: 12px;
+    margin-bottom: 16px;
+    background: #fff;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,.08);
+  }
+
+  #identity-form-container fieldset.active {
+    border: 2px solid #23476d;
+  }
+
+  #identity-form-container legend {
+    width: 100%;
+    margin: 0;
+    padding: 20px 24x;
+    cursor: pointer;
+    background: #fff;
+    border-bottom: 1px solid #eee;
+  }
+
+  .mb-2 {
+    margin-bottom: .5rem !important;
+    font-weight: 400;
+    font-size: 12px;
+    line-height: 16.5px;
+    letter-spacing: 0px;
+    color: #274463;
+}
+
+.mb-0 , .mb-3{
+    font-weight: 400;
+    font-size: 12px;
+    line-height: 16.5px;
+    letter-spacing: 0px;
+    color: #274463;
+}
+
+
+  label {
+    font-weight: 500;
+    font-size: 13px;
+    line-height: 16px;
+    color: #274463 !important;
+    margin-bottom: 6px;
+    display: block;
+  }
+
+  input.form-control,
+  select.form-control {
+    border: 1px solid #E3E8EE !important;
+    height: 40px;
+    border-radius: 6px;
+    font-size: 14px;
+    padding: 6px 12px;
+  }
+
+  input.form-control:focus,
+  select.form-control:focus {
+    border-color: #23476d !important;
+    box-shadow: 0 0 0 2px rgba(35, 71, 109, 0.1);
+  }
+
+  /* ACCORDION & STEP CIRCLE */
+  .step-circle {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: #1d3557;
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+
+  /* INSTRUCTION BLOCK */
+  .cmdspp-instruction-box {
+    font-size: 0.875rem;
+    color: #374151;
+    line-height: 1.5;
+  }
+
+  /* ACTION BUTTONS */
+  .btn-navy {
+    background-color: #1d3557;
+    color: #ffffff;
+    border-radius: 6px;
+    font-weight: 500;
+  }
+
+  .btn-navy:hover {
+    background-color: #152741;
+    color: #ffffff;
+  }
+
+  .btn-reset-custom {
+    border: 1px solid #E58A8A;
+    background: #fff;
+    color: #D9534F;
+    border-radius: 6px;
+    min-width: 90px;
+    height: 38px;
+    font-weight: 500;
+    cursor: pointer;
+  }
+
+  .btn-reset-custom:hover {
+    background: #fdf2f2;
+  }
+
+  .btn-back-custom {
+    min-width: 90px;
+    height: 38px;
+    border: 1px solid #23476d;
+    background: #fff;
+    color: #23476d;
+    border-radius: 6px;
+    font-weight: 500;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .btn-back-custom:hover {
+    background: #f5f8fb;
+    color: #23476d;
+  }
+
+  .btn-continue-custom {
+    background: #1d3557;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    min-width: 110px;
+    height: 38px;
+    font-weight: 500;
+    cursor: pointer;
+  }
+
+  .btn-continue-custom:hover {
+    background: #152741;
+  }
+
+  /* Responsive layout fallback */
+  @media (max-width: 991px) {
+    .cmdspp-form-body {
+      flex-direction: column;
+    }
+    .cmdspp-side-panel-container {
+      width: 100%;
+    }
+  }
+  .checkbox-header-box{
+    width: unset !important;
+    display: block !important;
+  }
+  .cmdspp-group-label {
+    font-weight: 700;
+    font-size: 0.875rem;
+    color: #274463;
+}
+</style>

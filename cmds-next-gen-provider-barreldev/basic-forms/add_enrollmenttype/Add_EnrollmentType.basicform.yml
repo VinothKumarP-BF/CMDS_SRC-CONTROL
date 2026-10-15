@@ -1,0 +1,17 @@
+adx_attachfilemaxsize: 
+adx_attachfilestoragelocation: 756150000
+adx_captcharequired: false
+adx_entityformid: 1120d7f5-52d8-4e9a-b6fb-b82d3b5f0fc6
+adx_entityname: cmdspp_pc_enrol_typ_tb
+adx_entitypermissionsenabled: false
+adx_formname: Add_EnrollmentType
+adx_geolocation_maptype: 756150000
+adx_hideformonsuccess: true
+adx_maximumnooffiles: 5
+adx_mode: 100000000
+adx_name: Add_EnrollmentType
+adx_onsuccess: 756150001
+adx_recordidquerystringparametername: 
+adx_redirecturl: 
+adx_redirectwebpage: 1e19c83e-3af6-5243-8176-83b668e918e1
+adx_showcaptchaforauthenticatedusers: false

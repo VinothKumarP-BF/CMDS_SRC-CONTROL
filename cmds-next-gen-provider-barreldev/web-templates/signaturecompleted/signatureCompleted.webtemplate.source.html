@@ -1,0 +1,1686 @@
+<div id="applicationReviewPage" class="application-review-page">
+
+  <!-- =========================================================
+       APPLICATION SUMMARY
+       ========================================================= -->
+  <section class="application-card">
+
+    <div class="application-status-icon">
+      <span class="check-icon"><img src="/cmdspp_suce_doc_icon" alt="" /></span>
+    </div>
+
+    <div class="application-summary">
+
+      <div class="application-submitted-label">
+        Application submitted successfully
+      </div>
+
+      <h1>
+        Your Application is Under Review
+      </h1>
+
+      <p class="application-description">
+        All documents have been sent via DocuSign and received by NH Medicaid
+        Provider Relations. You will be notified by email once your application
+        is reviewed.
+      </p>
+
+      <div class="application-meta">
+
+        <div class="meta-badge">
+          <span class="meta-icon"><img src="/cmdspp_cal_doc_icon" alt="" /></span>
+          <span id="submittedDate">Loading...</span>
+        </div>
+
+        <div class="meta-badge">
+          <span class="meta-icon"><img src="/cmdspp_track_doc_icon" alt="" /></span>
+          <span>
+            Tracking #
+            <strong id="trackingNumber">Loading...</strong>
+          </span>
+        </div>
+
+      </div>
+
+    </div>
+
+  </section>
+
+
+  <!-- =========================================================
+       SUBMITTED DOCUMENTS
+       ========================================================= -->
+  <section class="documents-card">
+
+    <div class="documents-header">
+
+      <div class="documents-header-icon">
+        <span><img src="/cmdspp_sbm_doc_icon" alt="" /></span>
+      </div>
+
+      <div>
+        <div class="documents-title">
+          Submitted Documents
+        </div>
+
+        <div class="documents-count">
+          <span id="documentsCount">0</span> documents
+        </div>
+      </div>
+
+    </div>
+
+
+    <!-- Loading -->
+    <div id="documentsLoading" class="documents-loading">
+      Loading submitted documents...
+    </div>
+
+
+    <!-- Error -->
+    <div
+      id="documentsError"
+      class="documents-error"
+      style="display:none;"
+    >
+      Unable to load submitted documents.
+    </div>
+
+
+    <!-- Dynamic document rows -->
+    <div
+      id="submittedDocuments"
+      class="submitted-documents"
+    >
+    </div>
+
+
+    <div class="documents-footer">
+
+      <span class="footer-info-icon"><img src="/cmdspp_info_doc_icon" alt="" /></span>
+
+      <span>
+        A copy of all signed documents has been emailed to you.
+        You can also view them anytime in your DocuSign account.
+      </span>
+
+    </div>
+
+  </section>
+
+
+  <!-- =========================================================
+       FOOTER ACTIONS
+       ========================================================= -->
+  <section class="review-footer">
+
+    <div class="help-text">
+      <span class="help-icon"><img src="/cmdspp_info_doc_icon" alt="" /></span>
+      <span>
+        Need help? Call 1-866-291-1674 or fax 1-866-446-3318
+      </span>
+    </div>
+
+    <div class="footer-actions">
+
+      <button
+        type="button"
+        id="backDashboardBtn"
+        class="dashboard-button"
+      >
+        Back to Dashboard
+      </button>
+
+      <button
+        type="button"
+        id="downloadSummaryBtn"
+        class="download-button"
+      >
+        <span><img src="/cmdspp_download_icon" alt="" /></span>
+        Download Summary
+      </button>
+
+    </div>
+
+  </section>
+
+</div>
+
+
+<style>
+
+/* ============================================================
+   PAGE
+   ============================================================ */
+
+.application-review-page {
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 20px;
+  box-sizing: border-box;
+  font-family: Arial, Helvetica, sans-serif;
+  color: #274463;
+}
+
+
+/* ============================================================
+   APPLICATION CARD
+   ============================================================ */
+
+.application-card {
+  width: 100%;
+  box-sizing: border-box;
+
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  align-items: flex-start;
+
+  padding: 30px;
+
+  background: #ffffff;
+
+  border: 1px solid #274463;
+  border-radius: 15px;
+
+  margin-bottom: 20px;
+}
+
+
+.application-status-icon {
+  flex: 0 0 60px;
+  width: 60px;
+  height: 60px;
+
+  border-radius: 50%;
+
+  background: #edf0f3;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+
+.check-icon {
+  width: 27px;
+  height: 27px;
+
+  border: 2px solid #274463;
+  border-radius: 50%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size: 18px;
+  font-weight: 600;
+}
+
+
+.application-summary {
+  flex: 1;
+  min-width: 0;
+}
+
+
+.application-submitted-label {
+  color: #5a7099;
+  font-size: 13px;
+  line-height: 20px;
+  margin-bottom: 4px;
+}
+
+
+.application-summary h1 {
+  margin: 0 0 8px 0;
+
+  color: #274463;
+
+  font-size: 25px;
+  line-height: 32px;
+  font-weight: 400;
+}
+
+
+.application-description {
+  margin: 0;
+
+  color: #5a7099;
+
+  font-size: 13px;
+  line-height: 20px;
+}
+
+
+.application-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+
+  margin-top: 14px;
+}
+
+
+.meta-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+
+  padding: 7px 12px;
+
+  background: #edf1f4;
+
+  border: 1px solid #d7dfe7;
+
+  border-radius: 7px;
+
+  color: #50698a;
+
+  font-size: 12px;
+}
+
+
+.meta-badge strong {
+  font-weight: 500;
+}
+
+
+.meta-icon {
+  font-size: 13px;
+}
+
+.meta-icon img {
+  vertical-align: text-top;
+}
+.footer-info-icon img {
+  vertical-align: sub;
+
+}
+.help-icon img{
+  vertical-align: text-bottom;
+
+}
+
+
+/* ============================================================
+   DOCUMENT CARD
+   ============================================================ */
+
+.documents-card {
+  width: 100%;
+
+  background: #ffffff;
+
+  border: 1px solid #e5e7eb;
+
+  border-radius: 15px;
+
+  overflow: hidden;
+
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.04);
+
+  margin-bottom: 55px;
+}
+
+
+.documents-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  padding: 15px 22px;
+
+  border-bottom: 1px solid #e7e9ec;
+}
+
+
+.documents-header-icon {
+  width: 34px;
+  height: 34px;
+
+  border-radius: 8px;
+
+  background: #ffb900;
+
+  color: #ffffff;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size: 15px;
+}
+
+
+.documents-title {
+  color: #274463;
+
+  font-size: 14px;
+  line-height: 20px;
+
+  font-weight: 500;
+}
+
+
+.documents-count {
+  color: #5a7099;
+
+  font-size: 12px;
+  line-height: 18px;
+}
+
+
+.submitted-documents {
+  width: 100%;
+}
+
+
+.document-row {
+  display: grid;
+
+  grid-template-columns:
+    28px
+    38px
+    minmax(220px, 1fr)
+    90px;
+
+  align-items: center;
+
+  gap: 12px;
+
+  padding: 14px 22px;
+
+  min-height: 66px;
+
+  box-sizing: border-box;
+
+  border-bottom: 1px solid #edf0f2;
+}
+
+
+.document-number {
+  width: 26px;
+  height: 26px;
+
+  background: #f0f3f5;
+
+  border-radius: 50%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  color: #5a7099;
+
+  font-size: 11px;
+}
+
+
+.document-file-icon {
+  width: 34px;
+  height: 34px;
+
+  border-radius: 8px;
+
+  background: #eef8f5;
+
+  color: #00a77b;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size: 17px;
+}
+
+
+.document-details {
+  min-width: 0;
+}
+
+
+.document-name {
+  color: #274463;
+
+  font-size: 13px;
+  line-height: 18px;
+
+  font-weight: 500;
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+
+.document-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+
+  margin-top: 3px;
+
+  color: #7b8da6;
+
+  font-size: 11px;
+  line-height: 16px;
+}
+
+.document-meta img{
+  vertical-align: text-bottom;
+
+}
+
+
+.document-envelope {
+  color: #a1aab5;
+
+  white-space: nowrap;
+}
+
+
+.document-status {
+  justify-self: end;
+
+  padding: 6px 12px;
+
+  border-radius: 15px;
+
+  font-size: 11px;
+
+  white-space: nowrap;
+}
+
+
+.document-status.signed {
+  background: #e5f5ef;
+  color: #00a77b;
+}
+
+
+.document-status.submitted {
+  background: #e5f5ef;
+  color: #00a77b;
+}
+
+
+.documents-footer {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+
+  padding: 12px 22px;
+
+  background: #fafbfc;
+
+  color: #617898;
+
+  font-size: 11px;
+  line-height: 17px;
+}
+
+
+.footer-info-icon {
+  flex: 0 0 auto;
+}
+
+
+/* ============================================================
+   LOADING / ERROR
+   ============================================================ */
+
+.documents-loading {
+  padding: 35px 20px;
+
+  text-align: center;
+
+  color: #5a7099;
+
+  font-size: 13px;
+}
+
+
+.documents-error {
+  padding: 25px 20px;
+
+  text-align: center;
+
+  color: #b42318;
+
+  font-size: 13px;
+}
+
+
+/* ============================================================
+   FOOTER
+   ============================================================ */
+
+.review-footer {
+  width: 100%;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+
+  gap: 20px;
+
+  padding: 15px 20px;
+
+  box-sizing: border-box;
+
+  background: #ffffff;
+
+  border: 1px solid #e7e9ec;
+
+  border-radius: 15px;
+
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.04);
+}
+
+
+.help-text {
+  display: flex;
+  align-items: center;
+
+  gap: 8px;
+
+  color: #5a7099;
+
+  font-size: 12px;
+}
+
+
+.help-icon {
+  font-size: 13px;
+}
+
+
+.footer-actions {
+  display: flex;
+  gap: 12px;
+}
+
+
+.dashboard-button,
+.download-button {
+  height: 36px;
+
+  padding: 0 20px;
+
+  border-radius: 7px;
+
+  font-size: 12px;
+
+  cursor: pointer;
+}
+
+
+.dashboard-button {
+  background: #ffffff;
+
+  color: #5a7099;
+
+  border: 1px solid #cfd6de;
+}
+
+
+.download-button {
+  background: #9aa9ba;
+
+  color: #ffffff;
+
+  border: none;
+}
+
+
+.download-button span {
+  margin-right: 6px;
+}
+
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+
+@media (max-width: 768px) {
+
+  .application-review-page {
+    padding: 15px;
+  }
+
+
+  .application-card {
+    align-items: flex-start;
+
+    padding: 22px;
+
+    gap: 15px;
+  }
+
+
+  .application-status-icon {
+    flex: 0 0 50px;
+
+    width: 50px;
+    height: 50px;
+  }
+
+
+  .application-summary h1 {
+    font-size: 21px;
+    line-height: 28px;
+  }
+
+
+  .application-description {
+    font-size: 12px;
+  }
+
+
+  .document-row {
+    grid-template-columns:
+      28px
+      38px
+      minmax(0, 1fr);
+
+    gap: 10px;
+
+    padding: 14px 15px;
+  }
+
+
+  .document-status {
+    grid-column: 3;
+
+    justify-self: start;
+
+    margin-top: -5px;
+  }
+
+
+  .documents-footer {
+    padding: 12px 15px;
+  }
+
+
+  .review-footer {
+    flex-direction: column;
+
+    align-items: stretch;
+
+    gap: 15px;
+  }
+
+
+  .help-text {
+    justify-content: center;
+
+    text-align: center;
+  }
+
+
+  .footer-actions {
+    width: 100%;
+  }
+
+
+  .dashboard-button,
+  .download-button {
+    flex: 1;
+  }
+}
+
+
+@media (max-width: 480px) {
+
+  .application-review-page {
+    padding: 10px;
+  }
+
+
+  .application-card {
+    padding: 18px;
+
+    flex-direction: column;
+  }
+
+
+  .application-status-icon {
+    width: 48px;
+    height: 48px;
+  }
+
+
+  .application-meta {
+    flex-direction: column;
+
+    align-items: flex-start;
+
+    gap: 8px;
+  }
+
+
+  .meta-badge {
+    width: auto;
+  }
+
+
+  .documents-header {
+    padding: 14px 15px;
+  }
+
+
+  .document-name {
+    font-size: 12px;
+  }
+
+
+  .document-meta {
+    font-size: 10px;
+  }
+
+
+  .footer-actions {
+    flex-direction: column;
+  }
+
+
+  .dashboard-button,
+  .download-button {
+    width: 100%;
+  }
+}
+
+</style>
+
+
+<script>
+
+(function () {
+
+  /* ==========================================================
+     CONFIGURATION
+     ========================================================== */
+
+  const config = {
+
+    /*
+     * Application table
+     */
+    application: {
+
+      entitySet: "cmdspp_p_dtl_tbs",
+
+      idField: "cmdspp_p_sys_id",
+
+      /*
+       * Change these to your actual fields.
+       */
+      trackingField: "cmdspp_p_sys_id",
+
+      submittedDateField: "cmdspp_p_submitted_on"
+
+    },
+
+
+    /*
+     * Submitted documents table.
+     *
+     * Replace this with your actual document entity set.
+     */
+    documents: {
+
+      entitySet: "YOUR_SUBMITTED_DOCUMENT_ENTITY_SET",
+
+      /*
+       * Lookup from document → application.
+       */
+      parentLookupField: "cmdspp_p_sys_id",
+
+      /*
+       * These correspond to the values from your React code.
+       * Replace them with the actual Dataverse logical names
+       * if they differ.
+       */
+      nameField: "documentName",
+
+      submittedDateField: "sumittedOn",
+
+      envelopeIdField: "envelopeId",
+
+      signatureField: "Signature"
+
+    }
+
+  };
+
+
+  /* ==========================================================
+     GET APPLICATION ID
+     ========================================================== */
+
+  function getApplicationId() {
+
+    const params =
+      new URLSearchParams(
+        window.location.search
+      );
+
+    return (
+      params.get("record") ||
+      ""
+    );
+
+  }
+
+
+  /* ==========================================================
+     POWER PAGES SAFE AJAX
+     ========================================================== */
+
+  function initializeWebApi() {
+
+    if (
+      window.webapi &&
+      window.webapi.safeAjax
+    ) {
+      return;
+    }
+
+
+    (function (webapi, $) {
+
+      function safeAjax(ajaxOptions) {
+
+        const deferredAjax =
+          $.Deferred();
+
+
+        shell
+          .getTokenDeferred()
+          .done(function (token) {
+
+            if (!token) {
+
+              deferredAjax.rejectWith(
+                this,
+                [{
+                  status: 403,
+                  statusText:
+                    "No CSRF Token"
+                }]
+              );
+
+              return;
+            }
+
+
+            if (!ajaxOptions.headers) {
+              ajaxOptions.headers = {};
+            }
+
+
+            ajaxOptions.headers[
+              "__RequestVerificationToken"
+            ] = token;
+
+
+            $.ajax(ajaxOptions)
+
+              .done(function (
+                data,
+                textStatus,
+                jqXHR
+              ) {
+
+                deferredAjax.resolveWith(
+                  this,
+                  [
+                    data,
+                    textStatus,
+                    jqXHR
+                  ]
+                );
+
+              })
+
+              .fail(function (
+                jqXHR,
+                textStatus,
+                errorThrown
+              ) {
+
+                deferredAjax.rejectWith(
+                  this,
+                  [
+                    jqXHR,
+                    textStatus,
+                    errorThrown
+                  ]
+                );
+
+              });
+
+          })
+
+          .fail(function () {
+
+            deferredAjax.rejectWith(
+              this,
+              [{
+                status: 403,
+                statusText:
+                  "Token retrieval failed"
+              }]
+            );
+
+          });
+
+
+        return deferredAjax.promise();
+
+      }
+
+
+      webapi.safeAjax =
+        safeAjax;
+
+    })(
+      window.webapi =
+        window.webapi || {},
+      jQuery
+    );
+
+  }
+
+
+  /* ==========================================================
+     FORMAT DATE
+     ========================================================== */
+
+  function formatDate(value) {
+
+    if (!value) {
+      return "--";
+    }
+
+
+    const date =
+      new Date(value);
+
+
+    if (isNaN(date.getTime())) {
+      return value;
+    }
+
+
+    return date.toLocaleDateString(
+      "en-US",
+      {
+        month: "short",
+        day: "numeric",
+        year: "numeric"
+      }
+    );
+
+  }
+
+
+  /* ==========================================================
+     FORMAT DATE + TIME
+     ========================================================== */
+
+  function formatDateTime(value) {
+
+    if (!value) {
+      return "--";
+    }
+
+
+    const date =
+      new Date(value);
+
+
+    if (isNaN(date.getTime())) {
+      return value;
+    }
+
+
+    return date.toLocaleDateString(
+      "en-US",
+      {
+        month: "short",
+        day: "numeric",
+        year: "numeric"
+      }
+    )
+    +
+    " · "
+    +
+    date.toLocaleTimeString(
+      "en-US",
+      {
+        hour: "2-digit",
+        minute: "2-digit"
+      }
+    );
+
+  }
+
+
+  /* ==========================================================
+     GET APPLICATION
+     ========================================================== */
+
+  async function fetchApplication() {
+
+    const applicationId =
+      getApplicationId();
+
+
+    if (!applicationId) {
+
+      throw new Error(
+        "Application ID is missing from URL."
+      );
+
+    }
+
+
+    const selectFields = [
+      config.application.idField,
+      config.application.trackingField,
+      config.application.submittedDateField
+    ].join(",");
+
+
+    const url =
+      `/_api/cmdspp_p_documents_tbs` +
+      `?$select= cmdspp_p_file_nam,cmdspp_p_sign_status,cmdspp_p_envlop_id,createdon` +
+      `&$filter=_cmdspp_p_doc_to_p_dtl_fk_value eq '${applicationId}'` +
+      ` and statecode eq 0`;
+
+
+    console.log(
+      "Application Web API:",
+      url
+    );
+
+
+    return new Promise(
+      function (resolve, reject) {
+
+        webapi.safeAjax({
+
+          type: "GET",
+
+          url: url,
+
+          contentType:
+            "application/json",
+
+          success:
+            function (response) {
+
+              console.log(
+                "Application response:",
+                response
+              );
+
+
+              resolve(
+                response?.value ||
+                []
+              );
+
+            },
+
+          error:
+            function (
+              xhr
+            ) {
+
+              console.error(
+                "Application API error:",
+                xhr
+              );
+
+
+              reject(xhr);
+
+            }
+
+        });
+
+      }
+    );
+
+  }
+
+
+  /* ==========================================================
+     GET SUBMITTED DOCUMENTS
+     ========================================================== */
+
+  async function fetchSubmittedDocuments() {
+
+    const applicationId =
+      getApplicationId();
+
+
+    if (!applicationId) {
+      return [];
+    }
+
+
+    
+
+
+    /*
+     * Dataverse lookup fields are normally filtered
+     * using _<lookup>_value.
+     */
+    
+
+
+    const url = "/_api/cmdspp_p_idt_inf_dtls" + "?$select=cmdspp_p_fst_nam,_cmdspp_p_pvd_typ_lkp_value,_cmdspp_p_createdby_user_id_value,cmdspp_p_app_id_lkp" +
+                        "&$filter=_cmdspp_p_app_id_lkp_value eq " + applicationId +
+                        "&$expand=" + 
+                        "cmdspp_p_app_id_lkp($select=cmdspp_p_appln_email,cmdspp_p_sys_id),"+
+                        "cmdspp_p_pvd_typ_lkp($select=cmdspp_p_pvd_typ_nam)"
+
+
+    
+
+
+    return new Promise(
+      function (resolve, reject) {
+
+        webapi.safeAjax({
+
+          type: "GET",
+
+          url: url,
+
+          contentType:
+            "application/json",
+
+          headers: {
+            "Prefer":
+              'odata.include-annotations="OData.Community.Display.V1.FormattedValue"'
+          },
+
+          success:
+            function (response) {
+
+              console.log(
+                "email Response:",
+                response
+              );
+
+
+              resolve(
+                response?.value || []
+              );
+
+            },
+
+          error:
+            function (
+              xhr
+            ) {
+
+              console.error(
+                "Documents API error:",
+                xhr
+              );
+
+
+              reject(xhr);
+
+            }
+
+        });
+
+      }
+    );
+
+  }
+
+
+  /* ==========================================================
+     RENDER APPLICATION
+     ========================================================== */
+
+  function renderApplication(
+    application
+  ) {
+
+    if (!application) {
+      return;
+    }
+
+
+    const tracking =
+      document.getElementById(
+        "trackingNumber"
+      );
+
+
+    const submittedDate =
+      document.getElementById(
+        "submittedDate"
+      );
+
+
+    if (tracking) {
+
+      tracking.textContent = getApplicationId();
+
+    }
+
+
+    if (submittedDate) {
+
+      submittedDate.textContent =
+        formatDateTime(
+          application[
+            "createdon"
+          ]
+        );
+
+    }
+
+  }
+
+
+  /* ==========================================================
+     GET DOCUMENT STATUS
+     ========================================================== */
+
+  function getDocumentStatus(
+    documentRecord
+  ) {
+
+    const signature =
+      documentRecord[
+        "cmdspp_p_sign_status"
+      ];
+
+
+    return String(signature || "")
+      .toLowerCase() === "completed"
+      ? "Signed"
+      : "Submitted";
+
+  }
+
+
+  /* ==========================================================
+     RENDER DOCUMENTS
+     ========================================================== */
+
+  function renderDocuments(
+    documents
+  ) {
+    const container =
+      document.getElementById(
+        "submittedDocuments"
+      );
+
+
+    const count =
+      document.getElementById(
+        "documentsCount"
+      );
+
+
+    const loading =
+      document.getElementById(
+        "documentsLoading"
+      );
+
+
+    if (loading) {
+      loading.style.display =
+        "none";
+    }
+
+
+    if (count) {
+
+      count.textContent =
+        documents.length;
+
+    }
+
+
+    if (!container) {
+      return;
+    }
+
+
+    container.innerHTML = "";
+
+
+    if (!documents.length) {
+
+      container.innerHTML = `
+        <div class="documents-loading">
+          No submitted documents found.
+        </div>
+      `;
+
+      return;
+    }
+
+
+    documents.forEach(
+      function (
+        documentRecord,
+        index
+      ) {
+
+        const name =
+          documentRecord[
+            'cmdspp_p_file_nam'
+          ] || "Document";
+
+
+        const date =
+          documentRecord[
+            'createdon'
+          ];
+
+
+        const envelope =
+          documentRecord[
+            "cmdspp_p_envlop_id"
+          ];
+
+
+        const status =
+          getDocumentStatus(
+            documentRecord
+          );
+
+
+        const statusClass =
+          status === "Signed"
+            ? "signed"
+            : "submitted";
+
+
+        const row =
+          document.createElement(
+            "div"
+          );
+
+
+        row.className =
+          "document-row";
+
+
+        row.innerHTML = `
+
+          <div class="document-number">
+            ${index + 1}
+          </div>
+
+        <div class="document-file-icon">
+          <img
+            src="${
+            status === "Submitted"
+            ? "/cmdspp_sub_file_doc_icon": "/cmdspp_tick_doc_icon"
+          }"
+          alt=""
+          />
+        </div>
+
+          <div class="document-details">
+
+            <div
+              class="document-name"
+              title="${escapeHtml(name)}"
+            >
+              ${escapeHtml(name)}
+            </div>
+
+            <div class="document-meta">
+
+              <span>
+                <img src="/cmdspp_clk_doc_icon" alt="" />
+                ${escapeHtml(
+                  formatDateTime(date)
+                )}
+              </span>
+
+              ${
+                envelope
+                  ? `
+                    <span class="document-envelope">
+                      <img src="/cmdspp_dis_doc_icon" alt="" />
+                      ${escapeHtml(envelope)}
+                    </span>
+                  `
+                  : ""
+              }
+
+            </div>
+
+          </div>
+
+          <div
+            class="document-status ${statusClass}"
+          >
+            ${status}
+          </div>
+
+        `;
+
+
+        container.appendChild(
+          row
+        );
+
+      }
+    );
+
+  }
+
+
+  /* ==========================================================
+     HTML ESCAPE
+     ========================================================== */
+
+  function escapeHtml(
+    value
+  ) {
+
+    return String(value ?? "")
+      .replace(
+        /&/g,
+        "&amp;"
+      )
+      .replace(
+        /</g,
+        "&lt;"
+      )
+      .replace(
+        />/g,
+        "&gt;"
+      )
+      .replace(
+        /"/g,
+        "&quot;"
+      )
+      .replace(
+        /'/g,
+        "&#039;"
+      );
+
+  }
+var cmdsppRaw = {{ settings["cmdspp_ENV_Automate_Flow_Url"] | json }};
+var cmdsppUrls = typeof cmdsppRaw === "string" ? JSON.parse(cmdsppRaw) : cmdsppRaw;
+window.cmdsppConfig = Object.assign({}, window.cmdsppConfig || {}, {
+    emailUrl: cmdsppUrls && cmdsppUrls.cmdspp_createValidatePinForUser
+});
+var cfg = window.cmdsppConfig || {};
+  var API_URLS = {
+        emailUrl: cfg.emailUrl
+    };
+  function postJson(url, payload) {
+            return fetch(url, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(payload)
+            }).then(function(r) {
+                if (!r.ok) {
+                    throw new Error("HTTP " + r.status);
+                }
+                return r.json();
+            });
+        }
+
+
+  /* ==========================================================
+     INITIALIZE PAGE
+     ========================================================== */
+
+  async function initializePage() {
+
+    try {
+
+      initializeWebApi();
+
+
+      const results = await fetchApplication()
+      const messagePayload = await fetchSubmittedDocuments()
+      const applicationDetails = messagePayload[0]
+      const emailPayload = {
+          "transType": "email_MSG278",
+          "userEmail": applicationDetails?.cmdspp_p_app_id_lkp?.cmdspp_p_appln_email || "",
+          "userId": applicationDetails?._cmdspp_p_createdby_user_id_value || "",
+          "providerType": applicationDetails?.cmdspp_p_pvd_typ_lkp?.cmdspp_p_pvd_typ_nam || "",
+          "applicationId":  applicationDetails?.cmdspp_p_app_id_lkp?.cmdspp_p_sys_id ||"",
+          "userName": applicationDetails?.cmdspp_p_fst_nam ||""
+        }
+        postJson(API_URLS.emailUrl,emailPayload);
+        console.log(emailPayload, "results")
+      const documents = results;
+
+    application = results[0];
+
+
+      renderApplication(
+        application
+      );
+
+
+      renderDocuments(
+        documents
+      );
+
+
+    } catch (error) {
+
+      console.error(
+        "Failed to load application review page:",
+        error
+      );
+
+
+      const loading =
+        document.getElementById(
+          "documentsLoading"
+        );
+
+
+      const errorElement =
+        document.getElementById(
+          "documentsError"
+        );
+
+
+      if (loading) {
+        loading.style.display =
+          "none";
+      }
+
+
+      if (errorElement) {
+        errorElement.style.display =
+          "block";
+      }
+
+    }
+
+  }
+
+
+  /* ==========================================================
+     BUTTONS
+     ========================================================== */
+
+  document.addEventListener(
+    "click",
+    function (event) {
+
+      const target =
+        event.target;
+
+
+      if (
+        target.closest(
+          "#backDashboardBtn"
+        )
+      ) {
+
+        /*
+         * Change this to your dashboard URL.
+         */
+        window.location.href =
+          "/dashboard";
+
+      }
+
+
+      if (
+        target.closest(
+          "#downloadSummaryBtn"
+        )
+      ) {
+
+        /*
+         * Add your existing download-summary
+         * functionality here.
+         */
+        console.log(
+          "Download Summary clicked"
+        );
+
+      }
+
+    }
+  );
+
+
+  /* ==========================================================
+     START
+     ========================================================== */
+
+  document.addEventListener(
+    "DOMContentLoaded",
+    initializePage
+  );
+
+})();
+
+</script>

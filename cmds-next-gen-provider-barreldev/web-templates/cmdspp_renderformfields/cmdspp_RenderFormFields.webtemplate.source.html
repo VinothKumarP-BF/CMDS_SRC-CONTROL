@@ -1,0 +1,988 @@
+{% assign page_data = formData %}
+
+<div class="dynamic-form-host"></div>
+
+<script>
+
+(async function () {
+    window.cmdsppLookupOptions = window.cmdsppLookupOptions || {};
+
+    let formData = {{ page_data | json }};
+    let formDefinition = formData?.fields;
+    const containerId = formData.containerId;
+    const submitBtnId = formData.addBtnId;
+
+    const host = document.currentScript.previousElementSibling;
+          host.id = formData.containerId;
+
+    let formValues = {};
+    let errors = {};
+
+    // renderForm() replaces the whole card's innerHTML on every change, so an
+    // open multiselect panel would otherwise slam shut after every checkbox
+    // click. Track which field names are open here and re-open their panels
+    // at the end of renderForm().
+    let openMultiselects = new Set();
+
+    document.addEventListener('click', function (e) {
+        if (openMultiselects.size === 0) return;
+        if (e.target.closest(`#${containerId} .cmdspp-multiselect`)) return;
+        openMultiselects.clear();
+        renderForm();
+    });
+
+    formDefinition.forEach(field => {
+
+        const initial = field.value;
+
+        if (field.type === "checkbox") {
+            formValues[field.name] = !!initial;
+        }
+        else if (field.type === "checkboxgroup" || field.type === "multiselect") {
+            formValues[field.name] = Array.isArray(initial) ? initial : [];
+        }
+        else if (initial !== undefined && initial !== null && initial !== "") {
+            formValues[field.name] = initial;
+        }else if(field.type === "date" && initial && initial.includes("T")){
+            formValues[field.name] = initial.split("T")[0]
+        }
+
+    });
+
+    formDefinition.forEach(field => {
+        if (!isVisible(field)) {
+            delete formValues[field.name];
+        }
+    });
+
+    async function loadLookup(field) {
+
+        return new Promise(function (resolve) {
+
+            $.ajax({
+
+                url:
+                    "/_api/" + field.source.table +
+                    "?$filter=" + field.source.domainName + " eq " + `'${field.source.domainVal}'` +
+                    " &$select=" +
+                    field.source.valueField +
+                    "," +
+                    field.source.labelField,
+                type: "GET",
+                headers: {
+                    "__RequestVerificationToken":
+                        document.querySelector(
+                            'input[name="__RequestVerificationToken"]'
+                        )?.value
+                },
+
+                success: function (response) {
+                    const options =
+                        response.value.map(item => ({
+                            label: item[field.source.labelField],
+                            value: item[field.source.valueField]
+                        }));
+
+                    field.options = options;
+                    resolve();
+                },
+                error: function () {
+                    resolve();
+                }
+
+            });
+        });
+    }
+
+    const lookupFields = formDefinition.filter(field => (field.type === "lookup" || field.type === "checkboxgroup" || field.type === "multiselect")&& field?.source?.table);
+    await Promise.all(lookupFields.map(field => loadLookup(field)));
+      window.dispatchEvent(
+                new CustomEvent("onLoadOptionMapping", {
+                    detail: {
+                        containerId: containerId,
+                        formFlds: formDefinition
+                    }
+                })
+            );
+    
+    function isRequired(field) {
+
+        return field.validations &&
+            field.validations.some(
+                v => v.type === "mandatory"
+            );
+    }
+
+
+    function evaluateDependency(dep) {
+
+        const value = formValues[dep.field];
+
+        switch (dep.operator) {
+
+            case "equals":
+                return value == dep.value;
+
+            case "notEquals":
+                return value != dep.value;
+
+            case "notEmpty":
+                return value &&
+                       value.toString().trim() !== "";
+
+            case "empty":
+                return !value;
+
+            case "greaterThan":
+                return Number(value) > Number(dep.value);
+
+            case "lessThan":
+                return Number(value) < Number(dep.value);
+
+            default:
+                return true;
+        }
+    }
+
+    function clearHiddenFields() {
+
+        formDefinition.forEach(field => {
+
+            if (!isVisible(field)) {
+
+                delete formValues[field.name];
+                delete errors[field.name];
+            }
+
+        });
+
+    }
+
+    function isVisible(field) {
+
+        if (!field.dependency || !field.dependency?.length) {
+            return true;
+        }
+
+        return field.dependency.every(dep => {
+
+            if (dep.type !== "visibility") {
+                return true;
+            }
+
+            return dep.depId.every(parentField => {
+
+                const parentValue =
+                    formValues[parentField];
+
+                    // added for muliti select choices
+                    if (Array.isArray(parentValue)) {
+return parentValue.includes(dep.value);
+}
+
+                return parentValue == dep.value;
+            });
+
+        });
+    }
+
+    function isEmptyValue(value) {
+
+        if (Array.isArray(value)) {
+            return value.length === 0;
+        }
+
+        return value === undefined || value === null || String(value).trim() === "";
+    }
+
+    function validateField(field) {
+
+        if (!isVisible(field))
+            return null;
+
+        const value =
+            formValues[field.name];
+
+        if (!field.validations)
+            return null;
+
+        for (let validation of field.validations) {
+
+            switch (validation.type) {
+
+                case "mandatory":
+
+                    if (isEmptyValue(value)) {
+                        return validation.message;
+                    }
+
+                break;
+
+                case "email":
+
+                    if (value) {
+
+                        const regex =
+                            /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+                        if (!regex.test(value))
+                            return validation.message;
+                    }
+
+                break;
+
+                case "pattern":
+
+                    if (
+                        value &&
+                        !new RegExp(validation.regex)
+                            .test(value)
+                    ) {
+                        return validation.message;
+                    }
+
+                break;
+
+                case "numeric":
+
+                    if (
+                        value &&
+                        isNaN(value)
+                    ) {
+                        return validation.message;
+                    }
+
+                break;
+
+                case "minLength":
+
+                    if (
+                        value &&
+                        value.length < validation.value
+                    ) {
+                        return validation.message;
+                    }
+
+                break;
+
+                case "maxLength":
+
+                    if (
+                        value &&
+                        value.length > validation.value
+                    ) {
+                        return validation.message;
+                    }
+
+                break;
+
+                case "minValue":
+
+                    if (
+                        value &&
+                        Number(value) < validation.value
+                    ) {
+                        return validation.message;
+                    }
+
+                break;
+
+                case "maxValue":
+
+                    if (
+                        value &&
+                        Number(value) > validation.value
+                    ) {
+                        return validation.message;
+                    }
+
+                break;
+
+                case "pastDate":
+
+                    if (
+                        value &&
+                        new Date(value) > new Date()
+                    ) {
+                        return validation.message;
+                    }
+
+                break;
+
+                case "futureDate":
+
+                    if (
+                        value &&
+                        new Date(value) < new Date()
+                    ) {
+                        return validation.message;
+                    }
+
+                break;
+            }
+        }
+
+        return null;
+    }
+
+    function validateForm() {
+
+        errors = {};
+
+        formDefinition.forEach(field => {
+
+            if (!isVisible(field))
+                return;
+
+            const error =
+                validateField(field);
+
+            if (error) {
+                errors[field.name] = error;
+            }
+
+        });
+
+        return Object.keys(errors).length === 0;
+    }
+
+    function handleChange(fieldName, value) {
+
+        formValues[fieldName] = value;
+
+        clearHiddenFields();
+
+        const field =
+            formDefinition.find(
+                x => x.name === fieldName
+            );
+        if (field.type === "radio" && value === "No") {
+
+            window.dispatchEvent(
+                new CustomEvent("depRadioNo", {
+                    detail: {
+                        containerId: containerId,
+                        fieldName: fieldName
+                    }
+                })
+            );
+          }
+        const error =
+            validateField(field);
+
+        if (error) {
+            errors[fieldName] = error;
+        }
+        else {
+            delete errors[fieldName];
+        }
+
+        renderForm();
+    }
+
+    function getFieldError(name) {
+
+        return errors[name]
+            ? `<div class="text-danger small mt-1">${errors[name]}</div>`
+            : "";
+    }
+
+    function renderField(field) {
+
+        const value =
+            formValues[field.name] ?? "";
+
+        const required =
+            isRequired(field)
+                ? '<span class="text-danger">*</span>'
+                : '';
+
+        const invalid =
+            errors[field.name]
+                ? "is-invalid"
+                : "";
+
+        switch (field.type) {
+            case "note":
+
+                return `
+                    <div class="cmdspp-note-text">
+                        ${field.label}
+                    </div>
+                `;
+            case "input":
+
+                return `
+                    <label class="form-label">
+                        ${field.label} ${required}
+                    </label>
+
+                    <input
+                        type="text"
+                        class="form-control ${invalid}"
+                        data-field="${field.name}"
+                        value="${value}"
+                        placeholder="${field.placeholder || ''}"
+                        maxLength = ${field.maxLength}
+                    />
+
+                    ${getFieldError(field.name)}
+                `;
+
+            case "number":
+
+                return `
+                    <label class="form-label">
+                        ${field.label} ${required}
+                    </label>
+
+                    <input
+                        type="number"
+                        class="form-control ${invalid}"
+                        data-field="${field.name}"
+                        value="${value}"
+                    />
+
+                    ${getFieldError(field.name)}
+                `;
+
+            case "date": {
+    const dateClass = value ? "has-value" : "is-placeholder";
+    const isReq = isRequired(field) ? "required" : "";
+
+    return `
+        <label class="form-label">
+            ${field.label} ${required}
+        </label>
+
+        <input
+            type="date"
+            class="form-control ${invalid} ${dateClass}"
+             placeholder="${field.placeholder || 'MM/DD/YYYY'}"
+            data-field="${field.name}"
+            value="${value}"
+            ${isReq}
+        />
+
+        ${getFieldError(field.name)}
+    `;
+}
+
+            case "textarea":
+
+                return `
+                    <label class="form-label">
+                        ${field.label} ${required}
+                    </label>
+
+                    <textarea
+                        class="form-control ${invalid}"
+                        rows="4"
+                        data-field="${field.name}"
+                    >${value}</textarea>
+
+                    ${getFieldError(field.name)}
+                `;
+
+        case "select":
+case "lookup": {
+
+    const selectClass = value ? "has-value" : "is-placeholder";
+
+    return `
+        <label class="form-label">
+            ${field.label} ${required}
+        </label>
+
+        <select
+            class="form-select ${invalid} ${selectClass}"
+            data-field="${field.name}"
+            id="${field.name}"
+            >
+
+            <option value="">
+                Select
+            </option>
+
+           ${(
+                field.dynamicOptionKey
+                    ? (window.providerDynamicOptions?.[field.dynamicOptionKey] || [])
+                    : (field.options || [])
+            ).map(option => `
+                <option
+                    value="${option.value}"
+                    ${value === option.value ? "selected" : ""}
+                >
+                    ${option.label}
+                </option>
+            `).join("")}
+
+        </select>
+
+        ${getFieldError(field.name)}
+    `;
+}
+
+            case "radio":
+
+                return `
+                    <label class="form-label">
+                        ${field.label} ${required}
+                    </label>
+
+                    <div class="cmdspp-segmented">
+
+                        ${field.options.map(option => `
+
+                            <label class="cmdspp-segment-item">
+
+                                <input
+                                    type="radio"
+                                    name="${field.name}"
+                                    value="${option.value}"
+                                    data-field="${field.name}"
+                                    ${value === option.value ? "checked" : ""}
+                                >
+
+                                <span class="cmdspp-segment-text">
+                                    ${option.label}
+                                </span>
+
+                            </label>
+
+                        `).join("")}
+
+                    </div>
+
+                    ${getFieldError(field.name)}
+                `;
+
+            case "checkboxgroup": {
+
+                const selected = Array.isArray(value) ? value : [];
+
+                return `
+                    <label class="form-label">
+                        ${field.label} ${required}
+                    </label>
+
+                    <div class="cmdspp-checkboxgroup">
+                        ${(field.options || []).map(option => `
+                            <div class="form-check">
+                                <input
+                                    type="checkbox"
+                                    class="form-check-input"
+                                    data-field="${field.name}"
+                                    data-checkbox-group="true"
+                                    data-checkbox-value="${option.value}"
+                                    id="${containerId}_${field.name}_${option.value}"
+                                    ${selected.includes(option.value) ? "checked" : ""}
+                                />
+                                <label class="form-check-label" for="${containerId}_${field.name}_${option.value}">
+                                    ${option.label}
+                                </label>
+                            </div>
+                        `).join("")}
+                    </div>
+
+                    ${getFieldError(field.name)}
+                `;
+            }
+
+            case "multiselect": {
+
+                const selected = Array.isArray(value) ? value : [];
+
+                const selectedLabels = (field.options || [])
+                    .filter(o => selected.includes(o.value))
+                    .map(o => o.label);
+
+                const maxInline = 4;
+                let summaryText = field.placeholder || "Select";
+                let hasSelection = false;
+
+                if (selectedLabels.length > 0) {
+                    hasSelection = true;
+                    summaryText = selectedLabels.length <= maxInline
+                        ? selectedLabels.join(", ")
+                        : selectedLabels.slice(0, maxInline).join(", ") + " +" + (selectedLabels.length - maxInline);
+                }
+
+                return `
+                    <label class="form-label">
+                        ${field.label} ${required}
+                    </label>
+
+                    <div class="cmdspp-multiselect">
+                        <button type="button"
+                                class="cmdspp-multiselect-toggle ${invalid}"
+                                data-multiselect-toggle="${field.name}">
+                            <span class="cmdspp-multiselect-summary${hasSelection ? ' has-selection' : ''}">${summaryText}</span>
+                            <span class="cmdspp-multiselect-chevron">&#9662;</span>
+                        </button>
+
+                        <div class="cmdspp-multiselect-panel" data-multiselect-panel="${field.name}" style="display:none;">
+                            ${(field.options || []).map(option => `
+                                <label class="cmdspp-multiselect-option">
+                                    <input
+                                        type="checkbox"
+                                        data-field="${field.name}"
+                                        data-checkbox-group="true"
+                                        data-checkbox-value="${option.value}"
+                                        ${selected.includes(option.value) ? "checked" : ""}
+                                    />
+                                    <span>${option.label}</span>
+                                </label>
+                            `).join("")}
+                        </div>
+                    </div>
+
+                    ${getFieldError(field.name)}
+                `;
+            }
+
+            case "checkbox": {
+
+                const checkboxMarkup = `
+                    <div class="form-check${field.headerBox ? ' mb-0' : ''}">
+
+                        <input
+                            type="checkbox"
+                            class="form-check-input"
+                            data-field="${field.name}"
+                            ${value ? "checked" : ""}
+                        />
+
+                        <label class="form-check-label">
+                            ${field.label}
+                        </label>
+
+                    </div>
+                `;
+
+                if (field.headerBox) {
+                    return `
+                        <div class="checkbox-header-box">
+                            ${checkboxMarkup}
+                        </div>
+                        ${getFieldError(field.name)}
+                    `;
+                }
+
+                return `
+                    ${checkboxMarkup}
+                    ${getFieldError(field.name)}
+                `;
+            }
+        }
+
+        return "";
+    }
+
+    function bindEvents() {
+
+        document
+            .querySelectorAll(`#${containerId} [data-field]`)
+            .forEach(control => {
+
+                control.addEventListener(
+                    "change",
+                    function () {
+
+                        const fieldName =
+                            this.dataset.field;
+
+                        if (this.dataset.checkboxGroup === "true") {
+
+                            const checkedValues = Array.from(
+                                document.querySelectorAll(
+                                    `#${containerId} [data-field="${fieldName}"][data-checkbox-group="true"]:checked`
+                                )
+                            ).map(el => el.dataset.checkboxValue);
+
+                            handleChange(fieldName, checkedValues);
+                            return;
+                        }
+
+                        let value;
+
+                        if (this.type === "checkbox") {
+                            value = this.checked;
+                        }
+                        else {
+                            value = this.value;
+                        }
+
+                        handleChange(
+                            fieldName,
+                            value
+                        );
+
+                    }
+                );
+
+            });
+
+        document
+            .querySelectorAll(`#${containerId} [data-multiselect-toggle]`)
+            .forEach(toggleBtn => {
+
+                toggleBtn.addEventListener("click", function (e) {
+                    e.stopPropagation();
+                    const fieldName = this.dataset.multiselectToggle;
+
+                    if (openMultiselects.has(fieldName)) {
+                        openMultiselects.delete(fieldName);
+                    } else {
+                        openMultiselects.add(fieldName);
+                    }
+
+                    renderForm();
+                });
+
+            });
+
+        const submitBtn =
+            document.querySelector(
+                `#${containerId} .cmdspp-submit-btn`
+            );
+
+// commented to check issue
+        // if (submitBtn) {
+
+        //     submitBtn.addEventListener(
+        //         "click",
+        //         function () {
+        //             submitForm();
+        //         }
+        //     );
+
+        // }
+        if (submitBtn) {
+    submitBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        submitForm();
+    });
+}
+
+        const cancelBtn =
+            document.querySelector(
+                `#${containerId} .cmdspp-cancel-btn`
+            );
+
+        if (cancelBtn) {
+
+            cancelBtn.addEventListener(
+                "click",
+                function () {
+                    resetForm();
+                    window.dispatchEvent(
+                        new CustomEvent("dynamicFormCancelEdit", {
+                            detail: { containerId }
+                        })
+                    );
+                }
+            );
+
+        }
+
+    }
+    function updateFieldDependancy(field){
+        if(field.dependency?.length){
+            field.dependency.forEach((dep)=>{
+                if(dep.type ==="label"){
+                    dep.depId.every(parentField => {
+
+                        const parentValue = formValues[parentField];
+                        if(parentValue){
+                            field.label = dep.deplabelObj[parentValue]
+                        }
+                        
+                    })
+                }
+            })
+
+        }
+        return field;
+
+    }
+
+    function renderForm() {
+
+        let html = `
+            <div class="cmdspp-form-card">
+                <div class="row">
+        `;
+
+        let i = 0;
+
+        while (i < formDefinition.length) {
+
+            const field = updateFieldDependancy(formDefinition[i]);
+
+            if (!isVisible(field)) {
+                i++;
+                continue;
+            }
+
+            if (field.cardGroup) {
+
+                const groupId = field.cardGroup;
+                const groupFields = [];
+
+                while (
+                    i < formDefinition.length &&
+                    formDefinition[i].cardGroup === groupId
+                ) {
+                    if (isVisible(formDefinition[i])) {
+                        groupFields.push(formDefinition[i]);
+                    }
+                    i++;
+                }
+
+                if (groupFields.length) {
+
+                            const sharedGroupLabel = groupFields.find(f => f.groupLabel)?.groupLabel;
+
+                    html += `
+                        <div class="col-md-12 mb-3">
+                            <div class="field-card-container">
+                                ${sharedGroupLabel ? `
+                                    <div class="cmdspp-group-label mb-2">
+                                        ${sharedGroupLabel}
+                                    </div>
+                                ` : ''}
+                                <div class="row">
+                                    ${groupFields.map(f => `
+                                        <div class="${field.column == 12 ? 'col-12' : `col-md-${field.column || 6}`} ${field.type} mb-3">
+                                            ${renderField(f)}
+                                        </div>
+                                    `).join("")}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                continue;
+            }
+
+            html += `
+                <div class="${field.column == 12 ? 'col-12' : `col-md-${field.column || 6}`} ${field.type} mb-3">
+                    ${renderField(field)}
+                </div>
+            `;
+
+            i++;
+        }
+
+        html += '</div>';
+
+        const isEditing = !!formValues.__editingId;
+       const showSubmitButton = formData && formData.showSubmitButton !== undefined 
+        ? Boolean(formData.showSubmitButton) 
+        : true;// default true - existing schemas keep working unchanged
+
+        if (showSubmitButton) {
+            html += `
+                <div class="cmdspp-action-bar">
+                    ${isEditing ? `
+                        <button type="button" class="btn btn-outline-secondary cmdspp-cancel-btn">
+                            Cancel Edit
+                        </button>
+                    ` : ''}
+                    <button
+                        type="button"
+                        id="${submitBtnId}"
+                        class="btn btn-primary cmdspp-submit-btn">
+
+                        ${isEditing ? (formData.editBtnLabel || 'Update') : formData.primaryBtnLabel}
+
+                    </button>
+                </div>
+            `;
+        }
+
+        document
+            .getElementById(containerId)
+            .innerHTML = html;
+
+        bindEvents();
+
+        openMultiselects.forEach(function (fieldName) {
+            const panel = document.querySelector(`#${containerId} [data-multiselect-panel="${fieldName}"]`);
+            if (panel) panel.style.display = 'block';
+        });
+    }
+
+    function submitForm() {
+
+        if (!validateForm()) {
+
+            renderForm();
+            return false;
+        }
+        
+        const isEditing = !!formValues.__editingId;
+        const editingId = formValues.__editingId;
+        const valuesToSend = { ...formValues };
+        delete valuesToSend.__editingId;
+
+        window.dispatchEvent(
+            new CustomEvent(
+                "dynamicFormSubmit",
+                {
+                    detail: {
+                        containerId: containerId,
+                        isEditing: isEditing,
+                        editingId: editingId,
+                        values: valuesToSend,
+                        formFlds:formDefinition
+                    }
+                }
+            )
+        );
+
+        if (formData.resetAfterSubmit !== false) {
+            resetForm();
+        }
+        return true
+    }
+
+    function resetForm() {
+        formValues = {};
+        errors = {};
+        renderForm();
+    }
+
+    function setValues(values, editingId) {
+        formValues = { ...values };
+        if (editingId !== undefined) {
+            formValues.__editingId = editingId;
+        }
+        errors = {};
+        renderForm();
+    }
+
+    function getValues() {
+        return { ...formValues };
+    }
+
+    function validate() {
+        const isValid = validateForm();
+        renderForm();
+        return isValid;
+    }
+
+    window.cmdsppForms = window.cmdsppForms || {};
+    window.cmdsppForms[containerId] = {
+        setValues,
+        getValues,
+        reset: resetForm,
+        validate: submitForm
+    };
+
+    renderForm();
+
+})();
+</script>

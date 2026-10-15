@@ -1,0 +1,46 @@
+{% fetchxml sectionJsonSchema %}
+<fetch>
+  <entity name="cmdspp_pc_enrol_page_json_tb">
+    <attribute name="cmdspp_p_jsontxt" />
+    <attribute name="cmdspp_p_table_nam" />
+    <attribute name="cmdspp_p_page_nam" />
+    <filter>
+      <condition attribute="cmdspp_p_page_nam" operator="eq" value="service_location_eft" />
+    </filter>
+  </entity>
+</fetch>
+{% endfetchxml %}
+<script id="wizardSchemaData" type="application/json">
+[{% for rec in sectionJsonSchema.results.entities %}
+    {{ rec.cmdspp_p_jsontxt }}
+    {% unless forloop.last %},{% endunless %}
+{% endfor %}]
+</script>
+
+
+<div class="EFTInstuction">
+  <label class="form-check-label">
+    For Instructions related to EFT Enrollment
+    <a href="https://mmis.nd.gov/portals/wps/wcm/connect/383c6fe5-cbd2-4b85-9233-0b6fae6062d7/EFT+enrollment+form+fields+and+descriptions+v1.0.pdf?MOD=AJPERES&CVID=lNviGpG"
+       target="_blank"
+       rel="noopener noreferrer"
+       class="href-link">
+       click here
+    </a>.
+  </label>
+</div>
+{% include 'common_page_template' %}
+<style>
+.EFTInstuction label{
+      font-weight: 400;
+    font-size: 14px;
+    line-height: 16.5px;
+    letter-spacing: 0px;  
+    color: #274463;
+    margin-bottom: 12px;
+}
+.EFTInstuction a{
+        color: #0196F3;
+    text-decoration-line: underline;
+}
+  </style>

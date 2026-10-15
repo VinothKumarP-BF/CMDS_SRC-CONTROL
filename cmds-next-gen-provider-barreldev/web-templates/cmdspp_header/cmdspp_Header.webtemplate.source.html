@@ -1,0 +1,771 @@
+{% assign defaultlang = settings['LanguageLocale/Code'] | default: 'en-us' %}
+{% assign homeurl = website.adx_partialurl %}
+{% include 'cmdspp_CommonJS' %}
+{% include 'cmdspp_ToastModal' %}
+<script>
+window.flowConfig = {{ settings['cmdspp_ENV_Automate_Flow_Url'] | raw }};
+window.flowConfig2 = {{ settings['cmdspp_ENV_Automate_Flow_Url_2'] | raw }};
+  
+</script>
+
+{% if user %}
+  {% include 'cmdspp_SideMenu' %}
+{% endif %}
+
+<div class="cmdspp-top-header">
+  <!-- Left Side: Portal Title / Logo -->
+  <div class="cmdspp-header-left">
+    <a href="{% if user %}{% if window.cmdsppCurrentRole contains "Configuration Administrator" %}/form-config{% else %}/Dashboard{% endif %}{%else if homeurl %}/{{ homeurl }}{% else %}/{% endif %}" class="cmdspp-brand">
+      CMdS NextGen Provider Portal
+    </a>
+  </div>
+
+  <!-- Right Side: Conditional Content based on Login State -->
+  <div class="cmdspp-header-right">
+    {% if user %}
+      <!-- ================= LOGGED-IN HEADER CONTENT ================= -->
+
+      {% if accountInfo.results.entities.size > 0 %}
+        {% assign account = accountInfo.results.entities[0] %}
+      {% else %}
+        {% assign account = null %}
+      {% endif %}
+
+      <!-- Secure Connection Indicator Badge -->
+      <div class="cmdspp-secure-badge">
+        <span class="cmdspp-secure-dot"></span> Secure Connection
+      </div>
+
+      <!-- Notification Bell Icon -->
+      {% unless currentRole contains "Configuration Administrator" %}
+        <div id="cmdspp-notification-icon-id" class="cmdspp-notification-icon">
+          <img src="/cmdspp_notification_icon" alt="notificationIcon"/>
+          {% if unreadcount > 0 %}
+              <span id="cmdspp-notification-count" class="cmdspp-notification-count">{{unreadcount}}</span>
+          {% endif %}
+        </div>
+      {% endunless %}
+
+      <div id="cmdspp-notification-popup" class="cmdspp-notification-popup">
+        <div class="cmdspp-notification-header">
+            <div class="cmdspp-notification-title">
+                <img src="/cmdspp_NotificationIconDark"/> Notifications
+                {% if unreadcount > 0 %}
+                  <span class="cmdspp-notification-total">{{unreadcount}}</span>
+                {% endif %}
+            </div>
+            <div class="cmdspp-notification-actions">
+                <a href="javascript:void(0)" id="cmdspp-mark-all-read">
+                    Mark all read
+                </a>
+                <span id="cmdspp-close-notification">
+                    <img src="/cmdspp_CloseIcon"/>
+                </span>
+            </div>
+        </div>
+        <div id="cmdspp-notification-list">
+        </div>
+        <div class="cmdspp-notification-footer">
+            <a href="/inbox">
+                View all in Inbox →
+            </a>
+        </div>
+    </div>
+      
+
+      <!-- User Profile & Dropdown -->
+      <div class="cmdspp-user-profile">
+        <div class="cmdspp-user-avatar">
+          {% assign rawName = account.cmdspp_full_name | default: user.fullname %}
+          {% if rawName %}
+            {% assign nameParts = rawName | split: ' ' %}
+            {% if nameParts.size >= 2 %}
+              {{ nameParts[0] | slice: 0 }}{{ nameParts[1] | slice: 0 }}
+            {% else %}
+              {{ nameParts[0] | slice: 0 }}
+            {% endif %}
+          {% else %}
+            U
+          {% endif %}
+        </div>
+
+        {% assign profile_enabled = settings['Profile/Enabled'] | boolean | default: true %}
+        {% if profile_enabled %}
+          <div class="nav-item cmdspp-dropdown-logout" style="list-style: none;">
+            {% assign username = user.fullname | escape %}
+            <a href="#" class="nav-link dropdown-toggle" aria-roledescription="link" title="{{ username | default: resx['Default_Profile_name'] }}" data-bs-toggle="dropdown" role="button" aria-expanded="false">
+              <div class="cmdspp-menu">
+                {% if account %}
+                  {% assign display_name = account.cmdspp_full_name | default: resx['Default_Profile_name'] %}
+                  {% assign display_role = account.cmdspp_role2.label | default: 'Administrator' %}
+                {% else %}
+                  {% assign display_name = user.fullname | default: resx['Default_Profile_name'] %}
+                  {% assign display_role = 'Administrator' %}
+                {% endif %}
+                <span class="cmdspp-user-name">{{ display_name }}</span>
+                <span class="cmdspp-user-role">{{ display_role }}</span>
+              </div>
+              <img src="/cmdspp_dropdownIcon" alt="profileDropdown"/>
+            </a>
+
+            <ul class="dropdown-menu dropdown-menu-end">
+              <li class="cmdspp-log-out-menu-list">
+                <a class="dropdown-item cmdspp-dropdown-item"
+                   href="/Account/Login/LogOff?returnUrl={% if homeurl %}/{{ homeurl }}{% else %}/signin?returnUrl=/postlogin{% endif %}"
+                   onclick="sessionStorage.removeItem('pp_login_contact_updated');">
+                  {{ snippets['cmdspp_links/logout'] | default: resx['Sign_Out'] | escape }}
+                </a>
+              </li>
+            </ul>
+          </div>
+        {% endif %}
+      </div>
+
+    {% else %}
+      <!-- ================= LOGGED-OUT HEADER CONTENT ================= -->
+      <nav class="cmdspp-public-nav">
+        <a href="/about" class="cmdspp-nav-link">About</a>
+        <a href="/guidelines" class="cmdspp-nav-link">Guidelines</a>
+        <a href="/help-center" class="cmdspp-nav-link">Help Center</a>
+        <a href="tel:18006634357" class="cmdspp-nav-link cmdspp-phone-link">
+          <img class="phone" src="/cmdspp_header_MobileLogo"></img> 1800-NME-HELP
+        </a>
+        <a id="cmdspp-login-btn-id" class="cmdspp-login-btn" href="/SignIn?returnUrl=/postlogin">
+          {{ snippets["cmdspp_links/login"] | default: "Login" | escape }}
+        </a>
+      </nav>
+
+      <!-- Brand Logo / Icon on far right -->
+      <div class="cmdspp-brand-logo">
+        <img src="/cmdspp_headerLogo" alt="headerLogo"/>
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+<style>
+/* Main Container */
+.cmdspp-top-header {
+  /* position: relative; */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: linear-gradient(90deg, #0B3A6F 12.12%, #1AA3A3 100%);
+  padding: 0 30px;
+  padding-left: 60px;
+  padding-right: 40px;
+  position: sticky;
+  top: 0;
+  z-index: 99999;
+  height: 64px;
+  color: #ffffff;
+}
+.cmdspp-header-left{}
+/* Left Brand Text */
+.cmdspp-brand {
+  color: #ffffff !important;
+  font-size: 16px;
+  text-decoration: none !important;
+  font-weight: 400;
+  leading-trim: NONE;
+  line-height: 17.5px;
+  letter-spacing: -0.35px;
+}
+
+/* Right Section Alignment */
+.cmdspp-header-right {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+/* ================= Public / Logged-Out Styles ================= */
+.cmdspp-public-nav {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+.cmdspp-nav-link {
+  color: #ffffff !important;
+  text-decoration: none !important;
+  opacity: 0.9;
+  transition: opacity 0.2s;
+  font-weight: 400;
+  font-size: 14px;
+  leading-trim: NONE;
+  line-height: 20px;
+  letter-spacing: 0px;
+  text-align: right;
+}
+.cmdspp-nav-link:hover {
+  opacity: 1;
+}
+.cmdspp-phone-link i {
+  margin-right: 5px;
+}
+
+.cmdspp-header-left{
+  
+}
+.cmdspp-login-btn {
+  background: #0B3A6F;
+  color: #ffffff !important;
+  padding: 6px 20px;
+  border-radius: 4px;
+  text-decoration: none !important;
+  width: 80;
+  height: 32;
+  angle: 0 deg;
+  opacity: 1;
+  gap: 10px;
+  border-radius: 9px;
+  font-weight: 400;
+  font-size: 14px;
+  leading-trim: NONE;
+  line-height: 20px;
+  letter-spacing: 0px;
+  text-align: center;
+}
+
+.cmdspp-brand-logo {
+  display: flex;
+  align-items: center;
+}
+
+/* ================= Logged-In Styles ================= */
+.cmdspp-secure-badge {
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 400;
+  font-size: 12px;
+  leading-trim: NONE;
+  line-height: 16px;
+  letter-spacing: 0px;
+  width: 144;
+  height: 30;
+  angle: 0 deg;
+  opacity: 1;
+  gap: 6px;
+  padding-top: 6px;
+  padding-right: 12px;
+  padding-bottom: 6px;
+  padding-left: 12px;
+  border-width: 1px;
+  border-radius: 33554400px;
+}
+img.phone {
+  padding-right: 13px;
+  padding-bottom: 3px;
+}
+.cmdspp-secure-dot {
+  width: 6px;
+  height: 6px;
+  background-color: #00D492;
+  border-radius: 50%;
+  display: inline-block;
+}
+/* .cmdspp-notification-icon {
+  position: relative;
+  cursor: pointer;
+  font-size: 18px;
+} */
+.cmdspp-notification-icon{
+    position:relative;
+    cursor:pointer;
+    img{
+      width: 27px;
+      height: 27px;
+    }
+}
+
+.cmdspp-notification-count{
+    position:absolute;
+    top:-4px;
+    right:-4px;
+
+    min-width:16px;
+    height:16px;
+
+    background: #DC2626;
+    color:#ffffff;
+
+    border-radius:33554400px;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-weight: 400 !important;
+font-size: 9px;
+line-height: 13.5px;
+letter-spacing: 0px;
+text-align: center;
+    z-index:999;
+}
+.cmdspp-notification-icon .badge {
+  position: absolute;
+  top: -6px;
+  right: -8px;
+  background-color: #E63946;
+  color: white;
+  font-size: 10px;
+  border-radius: 50%;
+  padding: 2px 5px;
+}
+
+.cmdspp-notification-popup{
+    position:absolute;
+    top:60px;
+    right:24px;
+
+    width:360px;
+    /* max-height:500px; */
+
+    background:#ffffff;
+
+    border:1px solid #e5e7eb;
+    border-radius:16px;
+
+    box-shadow: 0px 25px 50px -12px #00000040;
+    display:none;
+    z-index:99999;
+}
+.cmdspp-notification-total{
+  min-width:18px;
+    height:19px;
+
+    background: #DC2626;
+    color:#ffffff;
+
+    border-radius:33554400px;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-weight: 400 !important;
+font-size: 10px;
+line-height: 15px;
+letter-spacing: 0px;
+text-align: center;
+}
+.cmdspp-notification-header{
+    display:flex;
+    height: 50px;
+    justify-content:space-between;
+    align-items:center;
+    padding:16px;
+    border-bottom: 1px solid #F3F4F6
+}
+
+.cmdspp-notification-title{
+  display: flex;
+  gap:8px;
+   font-weight: 400 !important;
+font-size: 14px;
+line-height: 20px;
+letter-spacing: 0px;
+color: #0B3A6F;
+}
+
+.cmdspp-notification-actions{
+    display:flex;
+    gap:12px;
+    align-items:center;
+}
+
+.cmdspp-notification-actions a{
+    text-decoration:none;
+    font-weight: 400 !important;
+font-size: 11px;
+line-height: 16.5px;
+letter-spacing: 0px;
+text-align: center;
+color: #0196F3;
+}
+
+#cmdspp-close-notification{
+    cursor:pointer;
+}
+
+#cmdspp-notification-list{
+
+    max-height:500px;
+    overflow:auto;
+}
+
+.cmdspp-notification-item{
+    display:flex;
+    padding:12px 16px;
+    border-bottom: 1px solid #F3F4F6;
+    height: 82.5px;
+
+    /* cursor:pointer; */
+}
+
+.cmdspp-notification-item-highlight{
+    background: #0B3A6F08;
+}
+
+.cmdspp-notification-avatar{
+    width: 32px;
+height: 32px;
+opacity: 1;
+border-radius: 33554400px;
+background: #274463;
+font-weight: 400 !important;
+font-size: 11px;
+line-height: 16.5px;
+letter-spacing: 0px;
+margin-right:12px;
+    color:#ffffff;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    flex-shrink:0;
+}
+
+.cmdspp-notification-content{
+    flex:1;
+    min-width:0;
+}
+
+.cmdspp-notification-sender{
+    display:flex;
+    justify-content: space-between;
+    font-weight: 400 !important;
+font-size: 12px;
+line-height: 16px;
+letter-spacing: 0px;
+color: #0B3A6F;
+    margin-bottom:4px;
+    align-items: center;
+}
+
+.cmdspp-notification-subject{
+
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    font-weight: 400 !important;
+font-size: 11px;
+line-height: 16.5px;
+letter-spacing: 0px;
+margin-bottom:4px;
+color: #0B3A6F;
+}
+
+.cmdspp-notification-item-footer{
+  display:flex;
+  justify-content: space-between;
+}
+
+.cmdspp-notification-time{
+   font-weight: 400 !important;
+font-size: 10px;
+line-height: 15px;
+letter-spacing: 0px;
+color: #5A7099;
+}
+
+.cmdspp-notification-tag{
+    height: 19px;
+opacity: 1;
+padding-top: 2px;
+padding-right: 6px;
+padding-bottom: 2px;
+padding-left: 6px;
+border-radius: 33554400px;
+background: #0B3A6F12;
+font-weight: 400 !important;
+font-size: 10px;
+line-height: 15px;
+letter-spacing: 0px;
+color: #0B3A6F;
+}
+
+.cmdspp-notification-unread{
+    width: 8px;
+height: 8px;
+angle: 0 deg;
+opacity: 1;
+border-radius: 33554400px;
+background: #0B3A6F;
+    flex-shrink:0;
+}
+
+.cmdspp-notification-footer{
+    padding:16px;
+    height:47px;
+text-align: center;
+    justify-content: center;
+    display: flex;
+}
+
+.cmdspp-notification-footer a{
+    text-decoration:none;
+        font-weight: 400 !important;
+font-size: 12px;
+line-height: 16px;
+letter-spacing: 0px;
+text-align: center;
+color: #274463;
+}
+
+.cmdspp-user-profile {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.cmdspp-user-name {
+  color: #ffffff;
+  display: block;
+  font-weight: 400;
+  font-size: 12px;
+  leading-trim: NONE;
+  line-height: 15px;
+  letter-spacing: 0px;
+}
+.cmdspp-user-role {
+  font-weight: 400;
+  font-size: 10px;
+  leading-trim: NONE;
+  line-height: 12.5px;  
+  letter-spacing: 0px;
+  color: #FFFFFF99;
+
+}
+.cmdspp-user-avatar {
+  font-weight: 400;
+  font-size: 12px;
+  leading-trim: NONE;
+  line-height: 16px;
+  letter-spacing: 0px;
+  text-align: center;
+  width: 32px;
+  height: 32px;
+  angle: 0 deg;
+  opacity: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--Primary-100, #0B3A6F);
+  border-radius: 33554400px;
+}
+.cmdspp-dropdown-arrow {
+  margin-left: 8px;
+  color: #ffffff;
+  font-size: 12px;
+}
+.nav-item .dropdown-toggle::after {
+  display: none !important;
+}
+.cmdspp-dropdown-logout{
+  padding: 0px !important;
+  margin: 0px !important;
+}
+.cmdspp-menu {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+.cmdspp-dropdown-logout > a {
+  display: flex;
+  align-items: center;
+  text-decoration: none !important;
+  gap: 8px;
+}
+.cmdspp-dropdown-logout > a:hover {
+  background: none !important;
+}
+.cmdspp-dropdown-item {
+  text-decoration: none !important;
+  cursor: pointer !important;
+  padding: 8px 16px;
+}
+.cmdspp-log-out-menu-list {
+  padding: 2px 0;
+}
+.cmdspp-dropdown-item:hover {
+  background-color: #1352F1 !important;
+  color: #ffffff !important;
+}
+.cmdspp-dropdown-divider {
+  margin: 0 !important;
+}
+.cmdspp-no-inbox-message{
+  color:#0B3A6F;
+  display: flex;
+  justify-content: center;
+  font-size: 12px;
+}
+</style>
+
+{% if user %}
+<style>
+#mainContent {
+    width: calc(100% - 221px);
+    position: relative;
+    left: 221px;
+    /* height: calc(100% - 64px); */
+}
+.row {
+    --bs-gutter-x: 0 !important;
+    --bs-gutter-y: 0 !important;
+}
+body{
+      background-color: #FCFCFC !important;
+      overflow-y: hidden !important;
+      overflow-x: hidden !important
+}
+</style>
+{% endif %}
+
+<script>
+  function cmdsppRenderNotifications() {
+
+    const records = window.cmdsppInboxNotificationData || [];
+
+    
+
+    let html = records.map(x => `
+
+        <div class="cmdspp-notification-item ${!x.readInd ? "cmdspp-notification-item-highlight" :''}" data-threadid="${x.threadId}">
+            <div class="cmdspp-notification-avatar">
+                ${x.senderName.charAt(0)}
+            </div>
+            <div class="cmdspp-notification-content">
+                <div class="cmdspp-notification-sender">
+                    <div>${x.senderName}</div>
+                    ${
+                    !x.readInd
+                    ? '<div class="cmdspp-notification-unread"></div>'
+                    : ''
+                    }
+                </div>
+                <div class="cmdspp-notification-subject">
+                    ${x.emailSubject}
+                </div>
+                <div class="cmdspp-notification-item-footer">
+                    <div class="cmdspp-notification-tag">
+                        ${x.providerType}
+                    </div>
+                    <div class="cmdspp-notification-time">
+                        ${x.modifiedTime}
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+    `).join("");
+    if(!records.length){
+       html = `<div class='cmdspp-no-inbox-message'>No messages found in your Secure Inbox</div>`;
+       $("#cmdspp-mark-all-read").hide();
+    }
+
+    $("#cmdspp-notification-list").html(html);
+  }
+
+const notificationIcon =
+    document.getElementById(
+        "cmdspp-notification-icon-id"
+    );
+
+if(notificationIcon){
+
+    notificationIcon.addEventListener(
+        "click",
+        function(e){
+
+            e.stopPropagation();
+
+            cmdsppRenderNotifications();
+            const popup =document.getElementById("cmdspp-notification-popup");
+
+if(
+    popup.style.display === "block"
+){
+    popup.style.display = "none";
+}
+else{
+    popup.style.display = "block";
+}
+
+        }
+    );
+}
+
+const closeIcon =
+    document.getElementById(
+        "cmdspp-close-notification"
+    );
+
+if(closeIcon){
+
+    closeIcon.addEventListener(
+        "click",
+        function(e){
+
+            e.stopPropagation();
+            const popup =document.getElementById("cmdspp-notification-popup");
+            popup.style.display = "none";
+        }
+    );
+
+}
+
+document.addEventListener("click",async function (e) {
+  const popup =
+        document.getElementById(
+            "cmdspp-notification-popup"
+        );
+
+    if (!popup) {
+        return;
+    }
+
+    if (e.target.id === "cmdspp-mark-all-read") {
+        e.preventDefault();
+ 
+        try {
+ 
+          e.target.style.pointerEvents = "none";
+          await cmdsppExecuteInboxAction({
+                userId: window.cmdsppUserId,
+                transType: "markAllAsRead"
+            });
+          e.target.style.pointerEvents = "";
+          popup.style.display = "none";
+          window.location.reload();
+        }
+        catch (error) {
+ 
+          console.error("Failed to mark all as read",error);
+ 
+        }
+ 
+    }
+    
+
+    const insidePopup =
+        e.target.closest(
+            "#cmdspp-notification-popup"
+        );
+
+    const notificationIcon =
+        e.target.closest(
+            ".cmdspp-notification-icon"
+        );
+
+    if (!insidePopup && !notificationIcon) {
+        popup.style.display = "none";
+    }
+
+});
+
+</script>

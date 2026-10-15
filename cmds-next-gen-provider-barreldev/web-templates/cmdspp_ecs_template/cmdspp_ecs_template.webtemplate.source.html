@@ -1,0 +1,880 @@
+{% block main %}
+{% assign token = website.front_end_page_verification_token %}
+{% assign rawRecordGuid = request.params['record'] %}
+{% assign appNumber = request.params['id'] %}
+
+{% assign appGuid = rawRecordGuid | replace: '{', '' | replace: '}', '' | downcase %}
+
+{% comment %}
+  ===================================================================
+  FETCH SCHEMA JSON FROM cmdspp_pc_enrol_page_json (same pattern as
+  Group Affiliation). cmdspp_p_page_nam is the row's lookup key - the
+  Electronic Claims Submission row is stored under
+  "electronic_claims_submission" (see PC_ENROL_PAGE_JSONS grid, row 1021).
+  ===================================================================
+{% endcomment %}
+{% assign pageName = 'electronic_claims_submission' %}
+
+{% fetchxml schema_fetch %}
+<fetch version="1.0" output-format="xml-platform" mapping="logical" top="1">
+  <entity name="cmdspp_pc_enrol_page_json_tb">
+    <attribute name="cmdspp_p_jsontxt" />
+    <filter type="and">
+      <condition attribute="cmdspp_p_page_nam" operator="eq" value="{{ pageName }}" />
+    </filter>
+  </entity>
+</fetch>
+{% endfetchxml %}
+
+{% assign serverPageSchema = "" %}
+{% if schema_fetch.results.entities.size > 0 %}
+  {% assign serverPageSchema = schema_fetch.results.entities[0].cmdspp_p_jsontxt %}
+{% endif %}
+
+{% assign ecsFormData = serverPageSchema | parse_json %}
+
+<style>
+  .accordion-toggle-header {
+    cursor: pointer;
+    user-select: none;
+    width: 100%;
+    margin: 0;
+    padding: 20px 24px !important;
+    background: #fff;
+    border-bottom: 1px solid #eee;
+  }
+  .chevron-icon {
+    transition: transform 0.3s ease;
+    font-size: 1.1rem;
+    color: #23476d;
+  }
+  .accordion-toggle-header.collapsed .chevron-icon {
+    transform: rotate(180deg);
+  }
+
+  /* Shared Instruction Box Styling */
+  .cmdspp-instruction-box {
+
+    color: #4a5568;
+    font-size: 0.875rem;
+    line-height: 1.5;
+  }
+  .cmdspp-instruction-title {
+    color: #274463;
+    font-weight: 700;
+    font-size: 0.875rem;
+    margin-bottom: 0.25rem;
+  }
+  .cmdspp-instruction-box ul {
+    padding-left: 24px;
+    margin-bottom: 24px;
+    font-weight: 400;
+    font-size: 12px;
+    line-height: 16.5px;
+    letter-spacing: 0px;
+    color: #274463;
+  }
+  .cmdspp-instruction-box li {
+    margin-bottom: 0.35rem;
+  }
+
+  /* Form Container Overrides */
+  #ecsFormContainer .cmdspp-action-bar {
+    display: none;
+  }
+  #ecsSection{
+     padding: 20px 24px;
+  }
+</style>
+
+<div class="card border rounded-3 bg-white shadow-sm overflow-hidden mb-4">
+  <div class="d-flex align-items-center justify-content-between p-4 accordion-toggle-header"
+       data-bs-toggle="collapse"
+       data-bs-target="#ecsSection"
+       aria-expanded="true"
+       aria-controls="ecsSection">
+    <div class="d-flex align-items-center">
+      <!-- Text populated by renderStaticText() from pageJson[0], not
+           via Liquid dot-notation (see the comment above ecsSchemaJson). -->
+      <span class="step-circle me-3" id="ecsStepLabel"></span>
+      <h5 class="mb-0 fw-semibold" style="color: #274463; margin: 0px;" id="ecsSectionHeader"></h5>
+    </div>
+    <div>
+          <span class="accordion-arrow active"></span>
+    </div>
+  </div>
+
+  <div id="ecsSection" class="collapse show px-4 pb-4">
+
+    <div class="cmdspp-instruction-box mb-4">
+      <p class="mb-3" id="ecsInstructionsIntro"></p>
+      <ul id="ecsInstructionsBullets"></ul>
+      <div class="cmdspp-instruction-title mt-3" id="ecsInstructionsPrompt"></div>
+    </div>
+
+    <!-- Schema-driven fields: checkboxes + their dependent sub-fields,
+         rendered/hidden by cmdspp_RenderFormFields exactly like the
+         "Yes" radio branches in Relative01/Relative02. -->
+    <div class="p-1">
+      {% include 'cmdspp_RenderFormFields', formData: ecsFormData %}
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+      <button type="button" id="btnResetEcs" class="btn-reset-custom"></button>
+      <div class="d-flex gap-2">
+        <a href="/Enrollment-PP/Group-Affiliation/?id={{ appNumber }}&record={{ appGuid }}" id="ecsBackLink" class="btn-back-custom"></a>
+        <button type="button" id="ecsContinueBtn" class="btn-continue-custom" data-current="section-ecs"></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var parentAppGuid = "{{ appGuid }}";
+  var antiForgeryToken = "{{ website.front_end_page_verification_token }}";
+  // ================================
+// READ-ONLY STATUS CHECK
+// ================================
+var readOnlyDeferred = $.Deferred();
+window.cmdsppIsReadOnly = window.cmdsppIsReadOnly || false;
+
+function checkApplicationReadOnlyStatus(recordId) {
+  if (!recordId) { readOnlyDeferred.resolve(false); return; }
+
+  webapi.safeAjax({
+    type: "GET",
+    url: "/_api/cmdspp_p_dtl_tbs" +
+         "?$select=cmdspp_p_appln_status" +
+         "&$filter=cmdspp_p_dtl_tbid eq " + recordId,
+    headers: { "Accept": "application/json" }
+  }).done(function (res) {
+    var isRO = false;
+    if (res && res.value && res.value.length) {
+      var status = Number(res.value[0].cmdspp_p_appln_status);
+      isRO = (status === 2); // Awaiting Signature
+    }
+    window.cmdsppIsReadOnly = isRO;
+    readOnlyDeferred.resolve(isRO);
+  }).fail(function (err) {
+    console.error("Unable to fetch application status", err);
+    window.cmdsppIsReadOnly = false;
+    readOnlyDeferred.resolve(false);
+  });
+}
+
+// ================================
+// LOCK THE RENDERED FORM
+// ================================
+function applyReadOnlyModeToForm(containerId) {
+  if (!window.cmdsppIsReadOnly) return;
+  var container = document.getElementById(containerId);
+  if (!container) return;
+
+  container.querySelectorAll('input[type="text"], input[type="date"], input[type="number"], input[type="email"], input[type="tel"], textarea')
+    .forEach(function (el) { el.readOnly = true; el.classList.add('cmdspp-readonly'); });
+
+  container.querySelectorAll('select, input[type="radio"], input[type="checkbox"]')
+    .forEach(function (el) { el.disabled = true; el.classList.add('cmdspp-readonly'); });
+}
+
+// form.setValues() re-renders controls (e.g. the 835-asterisk mutation),
+// so re-lock whenever the container's children change.
+function observeFormForReadOnly(containerId) {
+  if (!window.cmdsppIsReadOnly) return;
+  var container = document.getElementById(containerId);
+  if (!container) return;
+
+  var observer = new MutationObserver(function () {
+    applyReadOnlyModeToForm(containerId);
+  });
+  observer.observe(container, { childList: true, subtree: true });
+}
+
+
+  // Server-injected schema, fetched from cmdspp_pc_enrol_page_json above -
+  // same handoff pattern as the Group Affiliation template.
+  var schema = {% if serverPageSchema != "" %}{{ serverPageSchema }}{% else %}null{% endif %};
+
+  // ---------------------------------------------------------------
+  // Bail out early if the schema row wasn't found in
+  // cmdspp_pc_enrol_page_json - nothing below has anything to work with.
+  // ---------------------------------------------------------------
+  if (!schema) {
+    console.error("Electronic Claims Submission schema not found in cmdspp_pc_enrol_page_json for page name.");
+    return;
+  }
+
+  var pageJson = [schema];
+
+  var sections = {};
+  pageJson.forEach(function (section) {
+    sections[section.sectionId] = section;
+
+    // Existing main record id - populated by fetchEcsSection() once the
+    // client-side load completes. Kept on the section object (rather
+    // than a loose global) so the save flow below can update it in
+    // place once a create turns into an id we can PATCH against later.
+    section.existingId = "";
+
+    // Last-known-saved snapshot, used by Reset to revert without a
+    // fresh round trip - same idea as the PIN template's savedRecord.
+    // Submit/Receive transaction selections now live directly on the
+    // main record (cmdspp_p_sub_trans / cmdspp_p_rec_trans multi-select
+    // choice columns), so there is no separate child-collection state
+    // to track any more.
+    section.savedRecord = null;
+  });
+
+  function cleanGuid(guid) {
+    return (guid || "").replace(/[{}]/g, "");
+  }
+
+  // Dataverse Web API returns multi-select choice ("Choice" with
+  // "Allow multiple selections") columns as a comma-separated string of
+  // option values (e.g. "100000000,100000001"), never as an array, even
+  // though it *writes* accept (and require) an array of integers. This
+  // normalizes a GET result into the array of strings the checkbox-group
+  // form control expects.
+  function parseMultiSelectChoice(raw) {
+    if (raw === null || raw === undefined || raw === "") return [];
+    return String(raw)
+      .split(",")
+      .map(function (v) { return v.trim(); })
+      .filter(function (v) { return v !== ""; });
+  }
+
+  // nextPageUrl in the schema is a plain path (no Liquid placeholders),
+  // since it comes from Dataverse now and Liquid never touches it. Build
+  // the id/record query string here from the actual current-page URL,
+  // same pattern as the Group Affiliation template's buildNextPageUrl().
+  function buildNextPageUrl(targetPath) {
+    if (!targetPath) return targetPath;
+    var idParam = getUrlParameter('id');
+    var recordParam = getUrlParameter('record');
+    var params = [];
+    if (idParam) params.push('id=' + encodeURIComponent(idParam));
+    if (recordParam) params.push('record=' + encodeURIComponent(recordParam));
+    return targetPath + (params.length > 0 ? '?' + params.join('&') : '');
+  }
+
+  function getUrlParameter(name) {
+    var regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
+    var results = regex.exec(location.search);
+    return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
+  }
+
+  function getSectionByContainerId(containerId) {
+    return pageJson.find(function (section) { return section.containerId === containerId; });
+  }
+  function getSectionByElementId(sectionId) {
+    return pageJson.find(function (section) { return section.sectionId === sectionId; });
+  }
+
+  /*
+   * STATIC TEXT (header / step label / instructions / button labels)
+   * Populated here in JS from the section config rather than through
+   * Liquid dot-notation in the HTML - see the comment above
+   * ecsSchemaJson for why. This is the single place that renders all
+   * of that copy, and it's driven entirely by the JSON schema, so the
+   * JSON is still the one source of truth for this text.
+   */
+  function renderStaticText(section) {
+    var headerEl = document.getElementById("ecsSectionHeader");
+    if (headerEl) headerEl.textContent = section.header || "";
+
+    var stepEl = document.getElementById("ecsStepLabel");
+    if (stepEl) stepEl.textContent = section.stepLabel || "";
+
+    var resetBtn = document.getElementById(section.resetBtnId);
+    if (resetBtn) resetBtn.textContent = section.resetButtonLabel || "Reset";
+
+    var continueBtn = document.getElementById(section.submitBtnId);
+    if (continueBtn) continueBtn.textContent = section.continueButtonLabel || "Continue";
+
+    var backLink = document.getElementById("ecsBackLink");
+    if (backLink) backLink.textContent = section.backButtonLabel || "Back";
+
+    var instructions = section.instructions;
+    if (!instructions) return;
+
+    var introEl = document.getElementById("ecsInstructionsIntro");
+    if (introEl) introEl.textContent = instructions.intro || "";
+
+    var bulletsEl = document.getElementById("ecsInstructionsBullets");
+    if (bulletsEl && Array.isArray(instructions.bullets)) {
+      bulletsEl.innerHTML = "";
+      instructions.bullets.forEach(function (bulletText) {
+        var li = document.createElement("li");
+        li.textContent = bulletText;
+        bulletsEl.appendChild(li);
+      });
+    }
+
+    var promptEl = document.getElementById("ecsInstructionsPrompt");
+    if (promptEl) promptEl.textContent = instructions.sectionPrompt || "";
+  }
+
+  /*
+   * POWER PAGES WEB API
+   */
+  (function (webapi, $) {
+    function getAuthenticationToken() {
+      return $('input[name="__RequestVerificationToken"]').val() || antiForgeryToken;
+    }
+    function safeAjax(ajaxOptions) {
+      var deferred = $.Deferred();
+      var token = getAuthenticationToken();
+      ajaxOptions.beforeSend = function (xhr) {
+        if (token) xhr.setRequestHeader("RequestVerificationToken", token);
+      };
+      $.ajax(ajaxOptions)
+        .done(function (data, textStatus, jqXHR) { deferred.resolve(data, textStatus, jqXHR); })
+        .fail(function (jqXHR, textStatus, errorThrown) { deferred.reject(jqXHR, textStatus, errorThrown); });
+      return deferred.promise();
+    }
+    webapi.safeAjax = safeAjax;
+  })(window.webapi = window.webapi || {}, jQuery);
+
+  // Dataverse returns the new record's URI in the OData-EntityId (or
+  // legacy Location) response header on a 204 POST - pull the guid out
+  // of it so in-memory state can be updated without a page reload.
+  function extractEntityIdFromXhr(jqXHR) {
+    var header =
+      jqXHR.getResponseHeader('OData-EntityId') ||
+      jqXHR.getResponseHeader('Odata-Entityid') ||
+      jqXHR.getResponseHeader('Location');
+    if (!header) return null;
+    var match = header.match(/\(([0-9a-fA-F-]{36})\)/);
+    return match ? match[1] : null;
+  }
+
+  // cmdspp_RenderFormFields registers window.cmdsppForms[containerId] only
+  // after its own async option-loading finishes, so poll briefly rather
+  // than assuming it's ready.
+  function waitForForm(containerId, callback, attemptsLeft) {
+    attemptsLeft = attemptsLeft === undefined ? 40 : attemptsLeft;
+    var form = window.cmdsppForms && window.cmdsppForms[containerId];
+    if (form) { callback(form); return; }
+    if (attemptsLeft <= 0) { console.warn("Form never became ready:", containerId); return; }
+    setTimeout(function () { waitForForm(containerId, callback, attemptsLeft - 1); }, 50);
+  }
+
+  function setSectionLoading(buttonId, isLoading) {
+    var button = document.getElementById(buttonId);
+    if (!button) return;
+    if (isLoading) {
+      button.dataset.originalText = button.textContent;
+      button.disabled = true;
+      button.textContent = "Saving...";
+    } else {
+      button.disabled = false;
+      button.textContent = button.dataset.originalText || "Continue";
+    }
+  }
+
+  function markSectionCompleted(sectionId) {
+    var target = document.getElementById(sectionId);
+    if (target) {
+      var fieldset = target.querySelector("fieldset");
+      if (fieldset) fieldset.classList.add("completed");
+    }
+  }
+
+  /*
+   * DATAVERSE READ (main record) - same approach as the PIN template's
+   * fetchOtherStateSection/getDataverseSelectFields/mapDataverseRecord,
+   * driven off fieldMappings instead of a hardcoded field list.
+   *
+   * The Submit/Receive transaction selections (cmdspp_p_sub_trans /
+   * cmdspp_p_rec_trans, type "multiselectchoice" in fieldMappings) are
+   * just two more mapped columns now - no separate child-table read.
+   */
+  function getDataverseSelectFields(section) {
+    var fields = [section.recordIdField];
+    (section.fieldMappings || []).forEach(function (mapping) {
+      if (mapping.type === "lookup") {
+        var lookupField = "_" + mapping.dataverseField + "_value";
+        if (fields.indexOf(lookupField) === -1) fields.push(lookupField);
+      } else {
+        fields.push(mapping.dataverseField);
+      }
+    });
+    return fields.join(",");
+  }
+
+  function getDataverseLookupValue(raw, fieldName) {
+    return raw["_" + fieldName + "_value"] || "";
+  }
+
+  function mapDataverseRecord(section, raw) {
+    var record = {
+      recordId: raw[section.recordIdField],
+      dbId: raw[section.recordIdField],
+      isNew: false
+    };
+
+    (section.fieldMappings || []).forEach(function (mapping) {
+      if (mapping.type === "boolean") {
+        record[mapping.formField] = raw[mapping.dataverseField] === true;
+      } else if (mapping.type === "lookup") {
+        record[mapping.formField] = getDataverseLookupValue(raw, mapping.dataverseField);
+      } else if (mapping.type === "multiselectchoice") {
+        record[mapping.formField] = parseMultiSelectChoice(raw[mapping.dataverseField]);
+      } else {
+        record[mapping.formField] = raw[mapping.dataverseField] == null ? "" : raw[mapping.dataverseField];
+      }
+    });
+
+    return record;
+  }
+
+  function defaultEcsRecord(section) {
+    var record = { recordId: null, dbId: null, isNew: true };
+    (section.fieldMappings || []).forEach(function (mapping) {
+      if (mapping.type === "boolean") {
+        record[mapping.formField] = false;
+      } else if (mapping.type === "multiselectchoice") {
+        record[mapping.formField] = [];
+      } else {
+        record[mapping.formField] = "";
+      }
+    });
+    return record;
+  }
+
+  function fetchEcsMainRecord(section, cleanParentGuid) {
+    var deferred = $.Deferred();
+
+    if (!cleanParentGuid) {
+      deferred.resolve(defaultEcsRecord(section));
+      return deferred.promise();
+    }
+
+    var selectFields = getDataverseSelectFields(section);
+    var filter = "_cmdspp_p_sys_id_value eq " + cleanParentGuid + " and statecode eq 0";
+    var url = "/_api/" + section.entitySet + "?$top=1&$select=" + encodeURIComponent(selectFields) + "&$filter=" + encodeURIComponent(filter);
+
+    webapi.safeAjax({
+      type: "GET", url: url, contentType: "application/json",
+      headers: { "Accept": "application/json", "OData-MaxVersion": "4.0", "OData-Version": "4.0" }
+    }).done(function (data) {
+      var rows = (data && data.value) || [];
+      deferred.resolve(rows.length ? mapDataverseRecord(section, rows[0]) : defaultEcsRecord(section));
+    }).fail(function (xhr) {
+      console.error("Failed to load ECS record:", xhr);
+      deferred.resolve(defaultEcsRecord(section));
+    });
+
+    return deferred.promise();
+  }
+
+  /*
+   * Loads the main record - which now includes the Submit/Receive
+   * multi-select choice columns directly, see mapDataverseRecord -
+   * snapshots it for Reset, and pushes the values into the rendered
+   * form. No separate child-collection read/sync any more.
+   */
+  function fetchEcsSection(section) {
+    var deferred = $.Deferred();
+    var cleanParentGuid = cleanGuid(parentAppGuid);
+
+    fetchEcsMainRecord(section, cleanParentGuid).done(function (record) {
+      section.existingId = record.dbId || "";
+      section.record = record;
+      section.savedRecord = JSON.parse(JSON.stringify(record));
+
+      waitForForm(section.containerId, function (form) { form.setValues(record); });
+      deferred.resolve();
+    });
+
+    return deferred.promise();
+  }
+
+  /*
+   * BUILD MAIN-ENTITY PAYLOAD FROM fieldMappings
+   *
+   *  - "boolean" fields always go through as true/false.
+   *  - "multiselectchoice" fields (cmdspp_p_sub_trans / cmdspp_p_rec_trans)
+   *    are only persisted while "All" (cmdspp_p_all) is checked - this
+   *    mirrors the old child-collection sync, which deactivated every
+   *    row once "All", or an individual box, was unchecked. Values must
+   *    be sent as an array of option-set integers (Dataverse's Web API
+   *    write shape for a multi-select choice column), even though a GET
+   *    returns them as a comma-separated string.
+   *  - text/lookup fields under a "clearGroup" header checkbox are only
+   *    populated while that checkbox is checked; otherwise they resolve
+   *    to null (on CREATE, nulls are stripped below since there's
+   *    nothing to clear yet; on UPDATE they're kept so unchecking a
+   *    section actually clears the previously saved values instead of
+   *    just hiding them in the UI).
+   *  - lookup fields ("state", "protocol") are never sent as a null
+   *    "@odata.bind" - Dataverse's Web API rejects that with a generic
+   *    500. When a lookup needs to be cleared on an UPDATE, its nav
+   *    property is collected into lookupsToClear and cleared afterwards
+   *    via DELETE .../<navProperty>/$ref instead.
+   */
+  function buildEcsPayload(section, values, isUpdate) {
+    var payload = {};
+    var lookupsToClear = [];
+    var isAllChecked = !!values.cmdspp_p_all;
+
+    (section.fieldMappings || []).forEach(function (mapping) {
+      if (mapping.type === "boolean") {
+        payload[mapping.dataverseField] = !!values[mapping.formField];
+        return;
+      }
+
+      if (mapping.type === "multiselectchoice") {
+        var selected = (isAllChecked && Array.isArray(values[mapping.formField])) ? values[mapping.formField] : [];
+        var cleanIds = selected
+          .map(function (v) { return parseInt(v, 10); })
+          .filter(function (v) { return !isNaN(v); });
+        // NOTE: the Portals Web API (the /_api endpoint) is a separate,
+        // thinner wrapper around Dataverse - not the raw Dataverse Web
+        // API - and its OData model has a history of not treating
+        // multi-select Choice columns as collection-valued. A JSON array
+        // here throws "unexpected StartArray node... PrimitiveValue
+        // expected". Since a GET already returns these columns as a
+        // comma-separated string, try writing that same shape back.
+        // If this endpoint still rejects it, multi-select Choice columns
+        // may not be writable at all via /_api, and cmdspp_p_sub_trans /
+        // cmdspp_p_rec_trans will need to become plain Text columns
+        // storing this same comma-separated string instead.
+        payload[mapping.dataverseField] = cleanIds.length ? cleanIds.join(",") : null;
+        return;
+      }
+
+      var parentChecked = mapping.clearGroup ? !!values[mapping.clearGroup] : true;
+
+      if (mapping.type === "lookup") {
+        if (parentChecked && values[mapping.formField]) {
+          payload[mapping.dataverseField + "@odata.bind"] = "/" + mapping.entitySet + "(" + values[mapping.formField] + ")";
+        } else if (isUpdate) {
+          lookupsToClear.push(mapping.navProperty);
+        }
+        return;
+      }
+
+      // plain text fields
+      payload[mapping.dataverseField] = parentChecked ? (values[mapping.formField] || null) : null;
+    });
+
+    if (!isUpdate) {
+      Object.keys(payload).forEach(function (key) {
+        if (payload[key] === null || payload[key] === undefined) delete payload[key];
+      });
+    }
+
+    return { payload: payload, lookupsToClear: lookupsToClear };
+  }
+
+  /*
+   * RESET
+   */
+  function resetEcsSection(section) {
+    section.record = section.savedRecord
+      ? JSON.parse(JSON.stringify(section.savedRecord))
+      : defaultEcsRecord(section);
+
+    waitForForm(section.containerId, function (form) { form.setValues(section.record); });
+  }
+
+  function bindResetButtons() {
+    pageJson.forEach(function (section) {
+      var button = document.getElementById(section.resetBtnId);
+      if (!button) return;
+       if (window.cmdsppIsReadOnly) {
+        button.disabled = true;
+        button.style.opacity = '0.5';
+        button.style.cursor = 'not-allowed';
+        return;
+        }
+      button.addEventListener("click", function () { resetEcsSection(section); });
+    });
+  }
+
+  /*
+   * CONTINUE / SAVE
+   */
+  function submitEcsSection(section) {
+    if (window.cmdsppIsReadOnly) {
+    if (section.nextPageUrl) {
+      window.location.href = buildNextPageUrl(section.nextPageUrl);
+    }
+    return; // no save, no validation
+  }
+    waitForForm(section.containerId, function (form) {
+      var values = form.getValues();
+
+      var requiredAnyOf = section.requiredAnyOf || [];
+      var anySelected = requiredAnyOf.some(function (fieldName) { return !!values[fieldName]; });
+      if (requiredAnyOf.length && !anySelected) {
+        alert(section.requiredAnyOfMessage || "Please select at least one option before continuing.");
+        return;
+      }
+
+      if (!form.validate()) return;
+
+      // Re-read values after validation click, in case renderForm() re-rendered controls.
+      values = form.getValues();
+
+      var cleanParentGuid = parentAppGuid ? parentAppGuid.replace(/[{}]/g, '') : '';
+      if (!cleanParentGuid) {
+        alert("Parent record GUID missing in URL.");
+        return;
+      }
+
+      var isUpdate = !!(section.existingId && section.existingId.length > 0);
+      var cleanEcsId = isUpdate ? section.existingId.replace(/[{}]/g, '') : '';
+
+      var built = buildEcsPayload(section, values, isUpdate);
+      var payload = built.payload;
+      var lookupsToClear = built.lookupsToClear;
+
+      var requestUrl = "/_api/" + section.entitySet;
+      var requestType = "POST";
+
+      if (isUpdate) {
+        requestUrl += "(" + cleanEcsId + ")";
+        requestType = "PATCH";
+      } else {
+        payload["cmdspp_p_sys_id@odata.bind"] = "/cmdspp_p_dtl_tbs(" + cleanParentGuid + ")";
+      }
+
+      setSectionLoading(section.submitBtnId, true);
+
+      var mainSavePromise = webapi.safeAjax({
+        type: requestType,
+        url: requestUrl,
+        contentType: "application/json; charset=utf-8",
+        headers: { "Accept": "application/json" },
+        data: JSON.stringify(payload)
+      }).done(function (data, textStatus, jqXHR) {
+        // If this save was a CREATE, capture the new id so a second Save
+        // click later in the same session correctly PATCHes instead of
+        // POSTing another row.
+        if (!isUpdate) {
+          var newId = extractEntityIdFromXhr(jqXHR);
+          if (newId) {
+            section.existingId = newId;
+            cleanEcsId = newId;
+            isUpdate = true;
+          }
+        }
+      });
+
+      // Lookup-clear requests only apply on update, and only run AFTER
+      // the main save succeeds.
+      function runLookupClears() {
+        if (!isUpdate || lookupsToClear.length === 0) return $.when();
+        var clearPromises = lookupsToClear.map(function (navProperty) {
+          return webapi.safeAjax({
+            type: "DELETE",
+            url: "/_api/" + section.entitySet + "(" + cleanEcsId + ")/" + navProperty + "/$ref",
+            headers: { "Accept": "application/json" }
+          });
+        });
+        return $.when.apply($, clearPromises);
+      }
+      // ================================
+// UPDATE PROVIDER DETAIL LOOKUP
+// Mirrors updateProviderDetailSectionLookup() from the wizard framework.
+// After the ECS main record is created/updated, point cmdspp_p_dtl_tb's
+// cmdspp_p_ecs_tran_lkup column at this ECS record.
+// ================================
+function updateProviderDetailLookupForEcs(section, sectionRecordId) {
+  var deferred = $.Deferred();
+
+  if (section.updateProviderDtlLookup !== true) {
+    deferred.resolve();
+    return deferred.promise();
+  }
+
+  var lookupField = section.providerDtlLookupField; // "cmdspp_p_ecs_tran_lkup"
+  var cleanRecordId = cleanGuid(getUrlParameter('record'));
+  var cleanSectionRecordId = cleanGuid(sectionRecordId);
+
+  if (!lookupField || !cleanRecordId || !cleanSectionRecordId || !section.entitySet) {
+    deferred.resolve();
+    return deferred.promise();
+  }
+
+  var payload = {};
+  payload[lookupField + "@odata.bind"] = "/" + section.entitySet + "(" + cleanSectionRecordId + ")";
+
+  webapi.safeAjax({
+    type: "PATCH",
+    url: "/_api/cmdspp_p_dtl_tbs(" + cleanRecordId + ")",
+    contentType: "application/json; charset=utf-8",
+    headers: { "Accept": "application/json" },
+    data: JSON.stringify(payload)
+  }).done(function () {
+    deferred.resolve();
+  }).fail(function (xhr) {
+    console.error("Failed to update Provider Detail lookup (ECS):", xhr);
+    deferred.resolve(); // don't block Continue on this failing
+  });
+
+  return deferred.promise();
+}
+
+      $.when(mainSavePromise)
+        .then(function () {
+          return runLookupClears();
+        })
+         .then(function () {
+    // cleanEcsId reflects the POST-created id by now, since mainSavePromise's
+    // .done() already ran and reassigned it above.
+    return updateProviderDetailLookupForEcs(section, cleanEcsId);
+  })
+        .done(function () {
+          // Update application progress after a successful save.This is used by the Enrollment dashboard/Application Processes  ,menu to track the last completed page and resume navigation
+          cmdsppUpdateApplicationProgress({
+    recordId: parentAppGuid,
+    pageTitle: "Electronic-Claims-Submission",
+    pageNumber: 7
+});
+          // Refresh section.record/existingId from Dataverse so a second
+          // Save in the same session (no page reload) sees accurate
+          // state - this also keeps Reset in sync with what was just
+          // saved.
+          fetchEcsSection(section).always(function () {
+            setSectionLoading(section.submitBtnId, false);
+            markSectionCompleted(section.sectionId);
+
+            if (section.nextPageUrl) {
+              window.location.href = buildNextPageUrl(section.nextPageUrl);
+            }
+            // else: stay on page, same as the previous implementation
+            // (no forced navigation/alert on plain save).
+          });
+        })
+        .fail(function (xhr) {
+          setSectionLoading(section.submitBtnId, false);
+          var msg = "Unable to save.";
+          if (xhr && xhr.status) {
+            msg += "\nStatus: " + xhr.status;
+            try {
+              var res = JSON.parse(xhr.responseText);
+              if (res && res.error && res.error.message) msg += "\nDataverse: " + res.error.message;
+            } catch (e) {}
+          }
+          alert(msg);
+        });
+    });
+  }
+
+  function bindContinueButtons() {
+    $(document)
+      .off("click.cmdsppEcsContinue", ".btn-continue-custom")
+      .on("click.cmdsppEcsContinue", ".btn-continue-custom", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        var sectionId = this.getAttribute("data-current");
+        var section = getSectionByElementId(sectionId);
+        if (!section) { console.error("Section not found:", sectionId); return; }
+
+        submitEcsSection(section);
+      });
+  }
+
+  /*
+   * INITIALIZE
+   */
+
+  // --- RA "Electronic (835)" flag, sourced from P_SER_RA_INF_TB ---------
+var ra835Deferred = $.Deferred();   // resolves true/false
+var receiveFieldsRef = null;        // live reference to formDefinition, captured from the render event
+
+// Capture the live field array as soon as cmdspp_RenderFormFields loads its options
+window.addEventListener("onLoadOptionMapping", function (e) {
+  if (!e.detail || e.detail.containerId !== "ecsFormContainer") return;
+  receiveFieldsRef = e.detail.formFlds;
+  applyRa835Asterisk();
+});
+
+function fetchRa835Selected(cleanParentGuid) {
+  if (!cleanParentGuid) { ra835Deferred.resolve(false); return; }
+
+  var filter = "_cmdspp_p_sys_id_value eq " + cleanParentGuid + " and statecode eq 0";
+  var url = "/_api/cmdspp_p_ser_ra_inf_tbs" +
+    "?$filter=" + encodeURIComponent(filter) +
+    "&$select=cmdspp_p_ser_ra_inf_tbid" +
+    "&$expand=" + encodeURIComponent("cmdspp_p_rmt_advice_type($select=cmdspp_r_vv_long_desc)");
+
+  webapi.safeAjax({
+    type: "GET", url: url, contentType: "application/json",
+    headers: { "Accept": "application/json", "OData-MaxVersion": "4.0", "OData-Version": "4.0" }
+  }).done(function (data) {
+    var rows = (data && data.value) || [];
+    var has835 = rows.some(function (row) {
+      var label = row.cmdspp_p_rmt_advice_type && row.cmdspp_p_rmt_advice_type.cmdspp_r_vv_long_desc;
+      return !!label && /835/.test(label) && !/820/.test(label);
+    });
+    ra835Deferred.resolve(has835);
+  }).fail(function (xhr) {
+    console.error("Failed to load RA 835 status:", xhr);
+    ra835Deferred.resolve(false);
+  });
+}
+
+// Mutates the matching checkboxgroup option's label and forces a re-render.
+// Safe to call multiple times / in any order relative to fetchRa835Selected resolving,
+// since ra835Deferred.done() fires immediately if already resolved.
+function applyRa835Asterisk() {
+  if (!receiveFieldsRef) return;
+
+  ra835Deferred.done(function (is835Selected) {
+    if (!is835Selected) return;
+
+    ["cmdspp_p_receive_transactions", "cmdspp_p_submit_transactions"].forEach(function (fieldName) {
+      var field = receiveFieldsRef.find(function (f) { return f.name === fieldName; });
+      if (!field || !Array.isArray(field.options)) return;
+
+      var opt = field.options.find(function (o) { return /835/.test(o.label) && !/820/.test(o.label); });
+      if (opt && opt.label.indexOf("*") === -1) {
+        opt.label = opt.label + " *";
+      }
+    });
+
+    waitForForm("ecsFormContainer", function (form) {
+      form.setValues(form.getValues()); // re-render with mutated labels
+    });
+  });
+}
+  function initializePage() {
+  pageJson.forEach(function (section) { renderStaticText(section); });
+
+  var cleanParentGuid = cleanGuid(parentAppGuid);
+  checkApplicationReadOnlyStatus(cleanParentGuid);
+  fetchRa835Selected(cleanParentGuid);
+
+  var fetchPromises = pageJson.map(function (section) {
+    return fetchEcsSection(section).fail(function (err) {
+      console.error("Initial ECS fetch failed:", section.sectionId, err);
+    });
+  });
+
+  $.when.apply($, [readOnlyDeferred].concat(fetchPromises)).always(function () {
+    bindResetButtons();
+    bindContinueButtons();
+
+    if (window.cmdsppIsReadOnly) {
+      pageJson.forEach(function (section) {
+        applyReadOnlyModeToForm(section.containerId);
+        observeFormForReadOnly(section.containerId);
+      });
+      // showReadOnlyBanner();
+    }
+  });
+}
+
+  initializePage();
+
+})();
+</script>
+{% endblock %}

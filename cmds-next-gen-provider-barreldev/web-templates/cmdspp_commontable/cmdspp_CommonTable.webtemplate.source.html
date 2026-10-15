@@ -1,0 +1,600 @@
+<div class="cmdspp-table-wrapper">
+       <table class="cmdspp-common-table cmdspp-header-table">
+        <thead id="cmdspp-table-header"></thead>
+    </table>
+
+    <div class="cmdspp-table-container">
+        <table class="cmdspp-common-table cmdspp-body-table">
+            <tbody id="cmdspp-table-body"></tbody>
+        </table>
+    </div>
+
+
+    <div class="cmdspp-table-pagination" id="cmdspp-pagination-container">
+        <div class="cmdspp-pagination-info" id="cmdspp-pagination-info">
+            Showing 0 entries
+        </div>
+
+        <div class="cmdspp-pagination-controls">
+            <button id="cmdspp-prev-page" class="cmdspp-page-btn" disabled>&larr;</button>
+            <div id="cmdspp-page-numbers" class="cmdspp-page-numbers">
+                <button type="button" class="cmdspp-page-number active" data-page="1" disabled>1</button>
+            </div>
+            <button id="cmdspp-next-page" class="cmdspp-page-btn" disabled>&rarr;</button>
+        </div>
+    </div>
+</div>
+
+<style>
+    .cmdspp-table-wrapper {
+        width: 100%;
+        border: 1px solid #E5E9F0;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        display: flex;
+        flex-direction: column;
+    }
+
+    .cmdspp-table-container {
+        flex: 1 1 auto;
+        overflow-y: auto;
+        overflow-x: auto;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .cmdspp-common-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .cmdspp-table-pagination {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        height: 50px;
+        padding: 12px 20px;
+        border-top: 1px solid #F9FAFB;
+        background: #FFFFFF;
+    }
+    .cmdspp-pagination-info {
+        font-size: 11px;
+        color: #5A7099;
+    }
+    .cmdspp-pagination-controls {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+    /* Holds 1-2 page-number buttons side by side. display:contents keeps the
+       gap/alignment identical to the old flat button-in-controls layout, so
+       spacing does not shift for pages that only ever render one button. */
+    .cmdspp-page-numbers {
+        display: contents;
+    }
+    .cmdspp-page-btn,
+    .cmdspp-page-number {
+        height: 24px;
+        min-width: 24px;
+        padding: 0 6px;
+        border: 1px solid #D9E1EC;
+        border-radius: 3px;
+        background: #FFFFFF;
+        color: #5A7099;
+        font-size: 11px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .cmdspp-page-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+    .cmdspp-page-number.active {
+        background: #274463;
+        border-color: #274463;
+        color: #FFFFFF;
+        cursor: default;
+    }
+    .cmdspp-common-table th {
+        background: #274463;
+        color: #FFFFFF;
+        padding: 8px 12px;
+        text-align: left;
+        font-size: 11px;
+        font-weight: 500;
+        line-height: 16.5px;
+        text-transform: uppercase;
+        letter-spacing: 0.55px;
+        white-space: nowrap;
+    }
+    /* Action column is always last and is right-aligned flush to the table edge (matches Figma) */
+    .cmdspp-common-table th:last-child,
+    .cmdspp-common-table td:last-child {
+        text-align: right;
+    }
+    .cmdspp-common-table tbody tr {
+        height: 48px;
+        border-bottom: 1px solid #F9FAFB;
+    }
+    .cmdspp-common-table tbody tr:nth-child(even) {
+        background: #F8F8F8;
+    }
+    .cmdspp-common-table tbody tr:nth-child(odd) {
+        background: #FFFFFF;
+    }
+    .cmdspp-common-table td {
+        padding: 12px 16px;
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 16px;
+        color: #274463;
+        vertical-align: middle;
+    }
+    .cmdspp-common-table tr:last-child td {
+        border-bottom: none;
+    }
+    .cmdspp-common-table tr.cmdspp-row-clickable:hover {
+        background: #F7F9FC;
+        cursor: pointer;
+    }
+    .cmdspp-no-data {
+        text-align: center;
+        padding: 24px;
+        color: #5A7099;
+        height: 100%;
+        vertical-align: middle;
+    }
+
+    /* ---- Status text (Figma shows plain text, no pill) ---- */
+    .cmdspp-status-badge {
+        font-size: 12px;
+        font-weight: 400;
+        color: #274463;
+    }
+
+    /* ---- Action icons: icon-only, no button/box background (matches Figma) ---- */
+    .cmdspp-action-group {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 10px;
+    }
+    .cmdspp-action-icon {
+        width: 18px;
+        height: 18px;
+        padding: 0;
+        border: none;
+        background: transparent;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        color: #8C9CB4;          /* muted default (view / sign / cancel) */
+        transition: color 0.15s ease, opacity 0.15s ease;
+    }
+    .cmdspp-action-icon svg {
+        width: 16px;
+        height: 16px;
+        display: block;
+    }
+    .cmdspp-action-icon:hover {
+        opacity: 0.7;
+    }
+    .cmdspp-action-icon.cmdspp-continue-btn {
+        color: #274463;          /* accent colour for the primary "continue" action */
+    }
+    .cmdspp-action-icon.cmdspp-cancel-btn:hover {
+        color: #DC2626;
+    }
+    .cmdspp-common-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;   /* required so both tables size columns identically */
+}
+
+/* Header table sits outside the scroll box now — no more sticky needed */
+.cmdspp-header-table thead th {
+    position: static;      /* remove the old sticky rule, it's no longer needed */
+    background: #274463;
+}
+
+.cmdspp-table-container {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: auto;
+    box-sizing: border-box;
+}
+.cmdspp-view-btn{
+    opacity: 0.5;
+    cursor: not-allowed;
+    /* pointer-events: none; */
+}
+.cmdspp-view-btn:disabled {
+    cursor: not-allowed !important;
+    pointer-events: auto !important;
+}
+</style>
+
+<script>
+    // common-table-template.js
+
+
+    window.CommonTableTemplate = window.CommonTableTemplate || {
+        onPrev: null,
+        onNext: null,
+        onPageClick: null,
+        onCancel: null,
+        onDelete: null,
+        onContinue: null,  
+        onView: null,     
+        onSign: null,   
+        onAWTSign: null,  
+
+        // ---- Built-in pagination ----
+      
+        pageSize: 4,
+        currentPage: 1,
+        _columns: null,
+        _allRecords: [],
+
+        // Icons drawn as inline SVG (stroke = currentColor) so they inherit the
+        // muted / accent colours defined in CSS instead of using emoji glyphs.
+        
+          icons: {
+    view: '<img src="/cmdspp_readonlyicon" alt="View" class="cmdspp-icon-img cmdspp-i-icon" />',
+    continue: '<img src="/cmdspp_Continue_Icon" alt="Continue" class="cmdspp-icon-img" />',
+    awaitingSignature: '<img src="/cmdspp_Awaiting_Signature_Icon" alt="Awaiting Signature" class="cmdspp-icon-img" />',
+    sign: '<img src="/cmdspp_readonlyIcon" alt="Sign" class="cmdspp-icon-img" />',
+    cancel: '<img src="/cmdspp_Cancel_Icon" alt="Cancel" class="cmdspp-icon-img" />'
+},
+        
+
+        renderStatus: function (value) {
+            if (!value) return "";
+            return `<span class="cmdspp-status-badge">${value}</span>`;
+        },
+
+    
+       renderActions: function (record) {
+    const applicationId = record.applicationId || "";
+    const recordId = record.recordId || "";
+    const pageTitle = record.pageTitle || "Enroll-Form" ;
+    const enrollmentId = record.enrollmentId || "";
+    const status = (record.status || "").toString().trim().toLowerCase();
+
+    const btn = (cls, icon, title, disabled) => `
+        <button
+            type="button"
+            class="cmdspp-action-icon ${cls}"
+            data-app-id="${applicationId}"
+            data-record-id="${recordId}"
+            data-page-title="${pageTitle}"
+            data-enrollment-id="${enrollmentId}"
+            title="${title}"
+            aria-label="${title}"
+            ${disabled ? 'disabled' : ''}>
+            ${icon}
+        </button>
+    `;
+
+            let buttons = "";
+
+            switch (status) {
+                case "in progress":
+                    buttons =
+                        btn("cmdspp-continue-btn", this.icons.continue, "Continue") +
+                        btn("cmdspp-cancel-btn", this.icons.cancel, "Cancel");
+                    break;
+                case "awaiting signature":
+                  buttons =
+                      btn("cmdspp-awtsign-btn", this.icons.awaitingSignature, "Awaiting Signature") +
+                      btn("cmdspp-cancel-btn", this.icons.cancel, "Cancel");
+                  break;
+              case "submitted":
+                buttons =
+                    btn("cmdspp-view-btn", this.icons.view, "View");
+                break;
+                case "in-review":
+                case "approved":
+                case "denied":
+                    // BR-DASH-005: Read-Only Locking — Status = In Review, Approved,
+                    // Denied (and Submitted, pending review) => View-only mode.
+                    buttons = btn("cmdspp-view-btn", this.icons.view, "View",true);
+                    break;
+
+                default:
+                    
+                    buttons = btn("cmdspp-view-btn", this.icons.view, "View",true);
+            }
+
+            return `<div class="cmdspp-action-group">${buttons}</div>`;
+        },
+
+        initPaginationEvents: function () {
+            const prevBtn = document.getElementById("cmdspp-prev-page");
+            const nextBtn = document.getElementById("cmdspp-next-page");
+            const pageNumbersContainer = document.getElementById("cmdspp-page-numbers");
+
+            if (prevBtn) {
+                prevBtn.onclick = () => {
+                    if (!prevBtn.disabled && typeof this.onPrev === "function") {
+                        this.onPrev();
+                    }
+                };
+            }
+
+            if (nextBtn) {
+                nextBtn.onclick = () => {
+                    if (!nextBtn.disabled && typeof this.onNext === "function") {
+                        this.onNext();
+                    }
+                };
+            }
+
+            // Delegated click handler for the page-number button(s). Works the
+            // same whether there's 1 button (existing behaviour, unchanged) or
+            // a 2-wide sliding window (new — only used by callers that pass
+            // pagination.pageWindow).
+            if (pageNumbersContainer) {
+                pageNumbersContainer.onclick = (e) => {
+                    const btn = e.target.closest(".cmdspp-page-number");
+                    if (!btn || btn.disabled || btn.classList.contains("active")) return;
+
+                    const pageNum = Number(btn.getAttribute("data-page"));
+                    if (!pageNum) return;
+
+                    if (typeof this.onPageClick === "function") {
+                        this.onPageClick(pageNum);
+                    } else {
+                        // Internal auto-pagination mode: no caller-supplied
+                        // onPageClick, so just move the built-in pager.
+                        this.goToPage(pageNum);
+                    }
+                };
+            }
+        },
+
+        renderPagination: function (pagination, totalRecords) {
+            const infoLabel = document.getElementById("cmdspp-pagination-info");
+            const pageNumbersContainer = document.getElementById("cmdspp-page-numbers");
+            const prevBtn = document.getElementById("cmdspp-prev-page");
+            const nextBtn = document.getElementById("cmdspp-next-page");
+
+            if (!pagination) {
+                if (infoLabel) {
+                    infoLabel.innerText = `Showing ${totalRecords} ${totalRecords === 1 ? 'record' : 'records'}`;
+                }
+                if (pageNumbersContainer) {
+                    pageNumbersContainer.innerHTML =
+                        `<button type="button" class="cmdspp-page-number active" data-page="1" disabled>1</button>`;
+                }
+                if (prevBtn) prevBtn.disabled = true;
+                if (nextBtn) nextBtn.disabled = true;
+                this.onPageClick = null;
+                return;
+            }
+
+            const visibleCount = pagination.visibleCount ?? totalRecords;
+            const totalCount = pagination.totalCount ?? totalRecords;
+            const page = pagination.currentPage ?? 1;
+
+            if (infoLabel) {
+                infoLabel.innerText = `Showing ${visibleCount} of ${totalCount} records`;
+            }
+
+            // Backward compatible: callers that don't pass pageWindow (every
+            // existing page today) keep getting exactly one button showing
+            // the current page — identical to the old fixed single-button markup.
+            const pageWindow = Array.isArray(pagination.pageWindow) && pagination.pageWindow.length > 0
+                ? pagination.pageWindow
+                : [page];
+
+            if (pageNumbersContainer) {
+                pageNumbersContainer.innerHTML = pageWindow.map(pNum => `
+                    <button
+                        type="button"
+                        class="cmdspp-page-number${pNum === page ? ' active' : ''}"
+                        data-page="${pNum}"
+                        ${pNum === page ? 'disabled' : ''}>
+                        ${pNum}
+                    </button>
+                `).join("");
+            }
+
+            if (prevBtn) prevBtn.disabled = !pagination.hasPrev;
+            if (nextBtn) nextBtn.disabled = !pagination.hasNext;
+
+            this.onPrev = pagination.onPrev || null;
+            this.onNext = pagination.onNext || null;
+            this.onPageClick = typeof pagination.onPageClick === "function" ? pagination.onPageClick : null;
+        },
+
+        // Jump to a specific page of the currently loaded record set and redraw.
+        goToPage: function (page) {
+            this.currentPage = page;
+            this._renderCurrentPage();
+        },
+
+        // Slice this._allRecords for the current page and draw it, wiring up
+        // onPrev/onNext to move currentPage and redraw automatically.
+        // NOTE: intentionally does not pass pageWindow, so this internal
+        // auto-pagination mode keeps rendering a single page-number button,
+        // exactly as before — only callers that build their own pagination
+        // object (like Audit Log) opt into the sliding window.
+        _renderCurrentPage: function () {
+            const totalCount = this._allRecords.length;
+            const pageSize = this.pageSize > 0 ? this.pageSize : totalCount || 1;
+            const start = (this.currentPage - 1) * pageSize;
+            const pageRecords = this._allRecords.slice(start, start + pageSize);
+
+            this._draw(this._columns, pageRecords, {
+                visibleCount: pageRecords.length,
+                totalCount: totalCount,
+                currentPage: this.currentPage,
+                hasPrev: this.currentPage > 1,
+                hasNext: start + pageSize < totalCount,
+                onPrev: () => this.goToPage(this.currentPage - 1),
+                onNext: () => this.goToPage(this.currentPage + 1)
+            });
+        },
+
+     
+        render: function (columns, records, pagination) {
+            const isCallerControlled =
+                pagination &&
+                typeof pagination === "object" &&
+                (typeof pagination.onPrev === "function" ||
+                    typeof pagination.onNext === "function" ||
+                    Object.prototype.hasOwnProperty.call(pagination, "hasPrev"));
+
+            if (isCallerControlled) {
+                // Caller is managing its own paging/slicing — draw exactly what was passed.
+                this._draw(columns, records, pagination);
+                return;
+            }
+
+            // Internal auto-pagination mode: caller hands over the FULL record set.
+            if (typeof pagination === "number") {
+                this.pageSize = pagination;
+            }
+            this._columns = columns;
+            this._allRecords = records || [];
+            this.currentPage = 1;
+            this._renderCurrentPage();
+        },
+
+        _draw: function (columns, records, pagination) {
+            const header = document.getElementById("cmdspp-table-header");
+            const body = document.getElementById("cmdspp-table-body");
+            const safeRecords = records || [];
+
+            if (header) {
+                header.innerHTML = `
+                    <tr>
+                        ${columns.map(column => `<th>${column.label}</th>`).join("")}
+                    </tr>
+                `;
+            }
+
+            if (body) {
+                if (safeRecords.length === 0) {
+                    body.innerHTML = `
+                        <tr>
+                            <td colspan="${columns.length}" class="cmdspp-no-data">
+                                No Records Found
+                            </td>
+                        </tr>
+                    `;
+                } else {
+              
+                    // click handler.
+                    body.innerHTML = safeRecords.map((record, idx) => {
+                        return `
+                            <tr data-row-index="${idx}">
+                                ${columns.map(column => {
+                                    if (column.field === "status") {
+                                        return `<td>${this.renderStatus(record[column.field])}</td>`;
+                                    }
+                                    if (column.field === "action") {
+                                        return `<td>${this.renderActions(record)}</td>`;
+                                    }
+                                    return `<td>${record[column.field] ?? ""}</td>`;
+                                }).join("")}
+                            </tr>
+                        `;
+                    }).join("");
+
+                    // Handle View / Continue / Sign / Cancel clicks.
+                    body.onclick = (e) => {
+                        const viewBtn = e.target.closest(".cmdspp-view-btn");
+                       if (viewBtn) {
+                           e.stopPropagation();
+                       
+                           if (CommonTableTemplate.onView) {
+                               CommonTableTemplate.onView({
+                                   applicationId: viewBtn.getAttribute("data-app-id"),
+                                   recordId: viewBtn.getAttribute("data-record-id"),
+                                   enrollmentId: viewBtn.getAttribute("data-enrollment-id"),
+                                   pageTitle: viewBtn.getAttribute("data-page-title")
+                               });
+                           }
+                       
+                           return;
+                       }
+                        
+                       const continueBtn = e.target.closest(".cmdspp-continue-btn");
+                        if (continueBtn) {
+                        e.stopPropagation();
+                        if (CommonTableTemplate.onContinue) {
+                        CommonTableTemplate.onContinue({
+                        applicationId: continueBtn.getAttribute("data-app-id"),
+                        recordId: continueBtn.getAttribute("data-record-id"),
+                        enrollmentId: continueBtn.getAttribute("data-enrollment-id"),
+                        pageTitle: continueBtn.getAttribute("data-page-title")
+                        });
+                        }
+                        return;
+                        }
+                        
+                        const signBtn = e.target.closest(".cmdspp-sign-btn");
+                        if (signBtn) {
+                            e.stopPropagation();
+                            const applicationId = signBtn.getAttribute("data-app-id");
+                            if (CommonTableTemplate.onSign) {
+                                CommonTableTemplate.onSign(applicationId);
+                            }
+                            return;
+                        }
+                        const awtSignBtn = e.target.closest(".cmdspp-awtsign-btn");
+
+                   if (awtSignBtn) {
+                       e.stopPropagation();
+                   
+                       if (CommonTableTemplate.onAWTSign) {
+                           CommonTableTemplate.onAWTSign({
+                               applicationId: awtSignBtn.getAttribute("data-app-id"),
+                               recordId: awtSignBtn.getAttribute("data-record-id"),
+                               enrollmentId: awtSignBtn.getAttribute("data-enrollment-id"),
+                               pageTitle: awtSignBtn.getAttribute("data-page-title")
+                           });
+                       }
+                   
+                       return;
+                   }
+
+                        const cancelBtn = e.target.closest(".cmdspp-cancel-btn");
+                        if (cancelBtn) {
+                            e.stopPropagation();
+                            const applicationId = cancelBtn.getAttribute("data-app-id");
+                            const recId = cancelBtn.getAttribute("data-record-id");
+                            if (CommonTableTemplate.onCancel) {
+                                CommonTableTemplate.onCancel(applicationId,recId);
+                            }
+                            return;
+                        }
+
+                        const deleteBtn = e.target.closest(".cmdspp-delete-btn");
+                        if (deleteBtn) {
+                            e.stopPropagation();
+                            const applicationId = deleteBtn.getAttribute("data-app-id");
+                            if (CommonTableTemplate.onDelete) {
+                                CommonTableTemplate.onDelete(applicationId);
+                            }
+                            return;
+                        }
+                        // No fallback / row-level handling here on purpose —
+                        // clicking elsewhere in the row is a no-op.
+                    };
+                    
+                }
+            }
+
+            this.renderPagination(pagination, safeRecords.length);
+            this.initPaginationEvents();
+        }
+    };
+</script>

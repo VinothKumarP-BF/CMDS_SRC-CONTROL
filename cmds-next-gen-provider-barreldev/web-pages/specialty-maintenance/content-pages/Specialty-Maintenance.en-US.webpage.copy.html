@@ -1,0 +1,840 @@
+<meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /><title>Provider Type, Specialty and Taxonomy Maintenance</title><link rel="stylesheet" href="styles.css" />
+{% include 'cmdspp_ToastModal' %}
+{% include 'cmdspp_Loader' %}
+<div class="app" style="display: flex; flex-direction: column; min-height: unset;">
+  <!-- CONTENT -->
+  <div class="content" style="flex-grow: 1; flex-shrink: 1; flex-basis: 0%; display: flex; flex-direction: column; width: 100%;">
+    <main style="padding-top: 0px; padding-right: 0px; padding-bottom: 0px; padding-left: 0px; width: 100%; max-width: none;">
+      <!-- TITLE -->
+      <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; margin-top: 0px; margin-right: 0px; margin-bottom: 0px; margin-left: 0px; padding-left: 24px; padding-right: 24px; padding-top: 16px; padding-bottom: 20px; border-bottom-width: 1px; border-bottom-style: solid; border-bottom-color: rgb(229, 231, 235);">
+        <div>
+          <h1 class="page-title" style="margin-top: 0px; margin-right: 0px; margin-bottom: 0px; margin-left: 0px; font-weight: 400; font-size: 20px; line-height: 25px; letter-spacing: 0px; color: rgb(39, 68, 99);">Provider Type, Specialty and Taxonomy Maintenance</h1>
+          <p class="page-subtitle" style="margin-top: 5px; margin-bottom: 0px; white-space-collapse: collapse; text-wrap-mode: nowrap; overflow-x: hidden; overflow-y: hidden; text-overflow: ellipsis; font-family: FontAwesome; font-weight: 400; font-size: 12px; line-height: 18px; letter-spacing: 0px; color: rgb(90, 112, 153);">Configure and maintain provider type, specialty and taxonomy catalog</p>
+        </div>
+        <div class="header-actions" style="display: flex; row-gap: 12px; column-gap: 12px;">
+          <button type="button" id="save-specialty-catalog" class="save-btn" style="row-gap: 8px; column-gap: 8px; opacity: 1; padding-right: 20px; padding-left: 20px; border-top-left-radius: 10px; border-top-right-radius: 10px; border-bottom-right-radius: 10px; border-bottom-left-radius: 10px; background-image: initial; background-position-x: initial; background-position-y: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial; background-color: rgb(39, 68, 99); font-weight: 400; font-size: 13px; line-height: 19.5px; letter-spacing: 0px; text-align: center; color: white; border-top-width: medium; border-right-width: medium; border-bottom-width: medium; border-left-width: medium; border-top-style: none; border-right-style: none; border-bottom-style: none; border-left-style: none; border-top-color: currentcolor; border-right-color: currentcolor; border-bottom-color: currentcolor; border-left-color: currentcolor; border-image-source: none; border-image-slice: 100%; border-image-width: 1; border-image-outset: 0; border-image-repeat: stretch; padding-top: 8px; padding-bottom: 8px;">Save</button>
+        </div>
+      </div>
+      <!-- ENROLLMENT -->
+      <div class="container" style="max-width: none; margin-top: 0px; margin-right: 0px; margin-bottom: 0px; margin-left: 0px; width: 100%; padding-top: 16px; padding-right: 24px; padding-bottom: 17px; padding-left: 24px;">
+        <div class="form-group">
+          <label for="providerType">Provider Type</label>
+          <select id="providerType" placeHolder="Select provider type"></select>
+          <span id="providerTypeError">Provider type is required.</span>
+        </div>
+      </div>
+    </main>
+  </div>
+  <div id="enrollmentTypeModal" class="modal fade">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 520px;">
+      <div class="modal-content enrollment-modal">
+        <div class="modal-header border-0" style="display: flex; justify-content: space-between; font-weight: 400; font-size: 16px; line-height: 24px; letter-spacing: 0px; color: rgb(11, 58, 111); padding-top: 24px; padding-right: 24px; padding-left: 24px; padding-bottom: 20px;">
+          <div>
+            <h5 class="modal-title" style="margin-top: 0px; margin-right: 0px; margin-bottom: 0px; margin-left: 0px; font-weight: 400; font-size: 16px; line-height: 24px; letter-spacing: 0px; color: rgb(11, 58, 111);">Add Enrollment Type</h5>
+            <small style="font-weight: 400; font-size: 14px; line-height: 16px; letter-spacing: 0px; color: rgb(90, 112, 153);"> Add a new Enrollment type </small>
+          </div>
+          <button type="button" data-bs-dismiss="modal" class="btn-close"></button>
+        </div>
+        <div class="modal-body" style="padding-top: 0px; padding-right: 20px; padding-bottom: 20px; padding-left: 20px;">
+          <div>
+            <label class="form-label" style="font-weight: 400; font-size: 12px; line-height: 16px; letter-spacing: 0px; color: rgb(11, 58, 111); margin-bottom: 4px;"> Enrollment Name <span class="required">*</span></label
+            ><input type="text" id="enrollmentName" placeholder="Enter Text" class="form-control" style="border-top-left-radius: 4px; border-top-right-radius: 4px; border-bottom-right-radius: 4px; border-bottom-left-radius: 4px; row-gap: 10px; column-gap: 10px; opacity: 1; padding-top: 8px; padding-right: 8px; padding-bottom: 8px; padding-left: 8px; border-top-width: 1px; border-right-width: 1px; border-bottom-width: 1px; border-left-width: 1px; border-top-style: solid; border-right-style: solid; border-bottom-style: solid; border-left-style: solid; border-top-color: rgb(227, 232, 238); border-right-color: rgb(227, 232, 238); border-bottom-color: rgb(227, 232, 238); border-left-color: rgb(227, 232, 238); border-image-source: none; border-image-slice: 100%; border-image-width: 1; border-image-outset: 0; border-image-repeat: stretch; font-weight: 400; font-size: 16px; line-height: 24px; letter-spacing: 0px; color: rgb(11, 58, 111); vertical-align: middle; box-shadow: unset;" /><span id="enrollmentNameError" class="error-message" style="color: red; font-size: 12px; display: block; margin-top: 4px;"></span>
+          </div>
+          <div class="mb-3">
+            <label class="form-label" style="font-weight: 400; font-size: 12px; line-height: 16px; letter-spacing: 0px; color: rgb(11, 58, 111); margin-bottom: 4px;"> Sub Text <span class="required">*</span></label
+            ><input type="text" id="subText" placeholder="Enter Text" class="form-control" style="border-top-left-radius: 4px; border-top-right-radius: 4px; border-bottom-right-radius: 4px; border-bottom-left-radius: 4px; row-gap: 10px; column-gap: 10px; opacity: 1; padding-top: 8px; padding-right: 8px; padding-bottom: 8px; padding-left: 8px; border-top-width: 1px; border-right-width: 1px; border-bottom-width: 1px; border-left-width: 1px; border-top-style: solid; border-right-style: solid; border-bottom-style: solid; border-left-style: solid; border-top-color: rgb(227, 232, 238); border-right-color: rgb(227, 232, 238); border-bottom-color: rgb(227, 232, 238); border-left-color: rgb(227, 232, 238); border-image-source: none; border-image-slice: 100%; border-image-width: 1; border-image-outset: 0; border-image-repeat: stretch; font-weight: 400; font-size: 16px; line-height: 24px; letter-spacing: 0px; color: rgb(11, 58, 111); vertical-align: middle; box-shadow: unset;" /><span id="subTextError" class="error-message" style="color: red; font-size: 12px; display: block; margin-top: 4px;"></span>
+          </div>
+          <div class="mb-3">
+            <label class="form-label" style="font-weight: 400; font-size: 12px; line-height: 16px; letter-spacing: 0px; color: rgb(11, 58, 111); margin-bottom: 4px;"> Tooltip <span class="required">*</span></label
+            ><input type="text" id="toolTip" placeholder="Enter Text" class="form-control" style="border-top-left-radius: 4px; border-top-right-radius: 4px; border-bottom-right-radius: 4px; border-bottom-left-radius: 4px; row-gap: 10px; column-gap: 10px; opacity: 1; padding-top: 8px; padding-right: 8px; padding-bottom: 8px; padding-left: 8px; border-top-width: 1px; border-right-width: 1px; border-bottom-width: 1px; border-left-width: 1px; border-top-style: solid; border-right-style: solid; border-bottom-style: solid; border-left-style: solid; border-top-color: rgb(227, 232, 238); border-right-color: rgb(227, 232, 238); border-bottom-color: rgb(227, 232, 238); border-left-color: rgb(227, 232, 238); border-image-source: none; border-image-slice: 100%; border-image-width: 1; border-image-outset: 0; border-image-repeat: stretch; font-weight: 400; font-size: 16px; line-height: 24px; letter-spacing: 0px; color: rgb(11, 58, 111); vertical-align: middle; box-shadow: unset;" /><span id="toolTipError" class="error-message" style="color: red; font-size: 12px; display: block; margin-top: 4px;"></span>
+          </div>
+          <div class="upload-box" style="border-top-width: 1px; border-right-width: 1px; border-bottom-width: 1px; border-left-width: 1px; border-top-style: dashed; border-right-style: dashed; border-bottom-style: dashed; border-left-style: dashed; border-top-color: rgb(204, 204, 204); border-right-color: rgb(204, 204, 204); border-bottom-color: rgb(204, 204, 204); border-left-color: rgb(204, 204, 204); border-image-source: none; border-image-slice: 100%; border-image-width: 1; border-image-outset: 0; border-image-repeat: stretch; border-top-left-radius: 8px; border-top-right-radius: 8px; border-bottom-right-radius: 8px; border-bottom-left-radius: 8px; height: 180px; text-align: center; padding-top: 30px; padding-right: 20px; padding-bottom: 30px; padding-left: 20px; position: relative; width: 100%; overflow-x: hidden; overflow-y: hidden; display: flex; justify-content: center; align-items: center;">
+            <input type="file" id="iconUpload" accept=".png,.jpg,.jpeg" style="border-top-left-radius: 4px; border-top-right-radius: 4px; border-bottom-right-radius: 4px; border-bottom-left-radius: 4px; row-gap: 10px; column-gap: 10px; padding-top: 8px; padding-right: 8px; padding-bottom: 8px; padding-left: 8px; border-right-width: 1px; border-bottom-width: 1px; border-left-width: 1px; border-right-style: solid; border-bottom-style: solid; border-left-style: solid; border-right-color: rgb(227, 232, 238); border-bottom-color: rgb(227, 232, 238); border-left-color: rgb(227, 232, 238); border-image-source: none; border-image-slice: 100%; border-image-width: 1; border-image-outset: 0; border-image-repeat: stretch; font-weight: 400; font-size: 16px; line-height: 24px; letter-spacing: 0px; color: rgb(11, 58, 111); vertical-align: middle; box-shadow: unset; position: absolute; top: 0px; right: 0px; bottom: 0px; left: 0px; opacity: 0; cursor: pointer; border-top-width: 2px; border-top-style: dotted; border-top-color: rgb(210, 210, 210);" />
+            <div class="upload-content">
+              <div class="upload-icon" style="width: 40px; height: 40px; margin-top: auto; margin-right: auto; margin-bottom: auto; margin-left: auto; border-top-left-radius: 10px; border-top-right-radius: 10px; border-bottom-right-radius: 10px; border-bottom-left-radius: 10px; background-image: initial; background-position-x: initial; background-position-y: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial; background-color: rgb(238, 243, 247); display: flex; justify-content: center; align-items: center;"><img src="/cmdspp_upload_icon_logo.png" alt="Upload Icon" /><!--  <img src="/cmdspp_upload_icon_logo.png" alt="Upload Icon"> --></div>
+              <p style="font-weight: 400; font-size: 11px; line-height: 19.5px; letter-spacing: 0px; text-align: center; margin-top: 12px; margin-bottom: 0px; color: rgb(39, 68, 99);">Drag &amp; drop your icon here</p>
+              <small style="font-weight: 400; font-size: 10px; line-height: 18px; letter-spacing: 0px; text-align: center; color: rgb(90, 112, 153);"> or click to browse from your computer </small>
+              <div class="file-types" style="margin-top: 12px;"><span style="color: rgb(144, 153, 170); font-size: 10px; font-weight: 400; line-height: 16.5px; letter-spacing: 0px; padding-top: 2px; padding-right: 8px; padding-bottom: 2px; padding-left: 8px; background-image: initial; background-position-x: initial; background-position-y: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial; background-color: rgb(240, 240, 240); border-top-left-radius: 4px; border-top-right-radius: 4px; border-bottom-right-radius: 4px; border-bottom-left-radius: 4px;">.jpeg</span><span style="color: rgb(144, 153, 170); font-size: 10px; font-weight: 400; line-height: 16.5px; letter-spacing: 0px; padding-top: 2px; padding-right: 8px; padding-bottom: 2px; padding-left: 8px; background-image: initial; background-position-x: initial; background-position-y: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial; background-color: rgb(240, 240, 240); border-top-left-radius: 4px; border-top-right-radius: 4px; border-bottom-right-radius: 4px; border-bottom-left-radius: 4px;">.png</span><span style="color: rgb(144, 153, 170); font-size: 10px; font-weight: 400; line-height: 16.5px; letter-spacing: 0px; padding-top: 2px; padding-right: 8px; padding-bottom: 2px; padding-left: 8px; background-image: initial; background-position-x: initial; background-position-y: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial; background-color: rgb(240, 240, 240); border-top-left-radius: 4px; border-top-right-radius: 4px; border-bottom-right-radius: 4px; border-bottom-left-radius: 4px;">max 10 MB</span></div>
+              <img id="imagePreview" src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTEwOCIgaGVpZ2h0PSI0NTAiIHZpZXdCb3g9IjAgMCAxMTA4IDQ1MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGcgb3BhY2l0eT0iMC45NSIgZmlsdGVyPSJ1cmwoI2ZpbHRlcjBfYl8xMzQ4XzY0MDMpIj4KPHJlY3Qgd2lkdGg9IjExMDgiIGhlaWdodD0iNDUwIiB0cmFuc2Zvcm09Im1hdHJpeCgtMSAwIDAgMSAxMTA4IDApIiBmaWxsPSJ3aGl0ZSIvPgo8cmVjdCB4PSItMSIgeT0iMSIgd2lkdGg9IjExMDYiIGhlaWdodD0iNDQ4IiB0cmFuc2Zvcm09Im1hdHJpeCgtMSAwIDAgMSAxMTA2IDApIiBzdHJva2U9IiNEMkQwQ0UiIHN0cm9rZS13aWR0aD0iMiIvPgo8L2c+CjxwYXRoIGQ9Ik01NzcuOTU4IDE4Ny41QzU4NS40MzcgMTg3LjUgNTkxLjUgMTkzLjU2MyA1OTEuNSAyMDEuMDQyVjI0OC45NThDNTkxLjUgMjU2LjQzNyA1ODUuNDM3IDI2Mi41IDU3Ny45NTggMjYyLjVINTMwLjA0MkM1MjIuNTYzIDI2Mi41IDUxNi41IDI1Ni40MzcgNTE2LjUgMjQ4Ljk1OFYyMDEuMDQyQzUxNi41IDE5My41NjMgNTIyLjU2MyAxODcuNSA1MzAuMDQyIDE4Ny41SDU3Ny45NThaTTU4MC4zNzcgMjU1LjgzOUw1NTYuMTg2IDIzMi4xNDVDNTU1LjA4MiAyMzEuMDY0IDU1My4zNzUgMjMwLjk2NSA1NTIuMTYyIDIzMS44NUw1NTEuODEzIDIzMi4xNDVMNTI3LjYxOSAyNTUuODM4QzUyOC4zNzcgMjU2LjEwNSA1MjkuMTkyIDI1Ni4yNSA1MzAuMDQyIDI1Ni4yNUg1NzcuOTU4QzU3OC44MDYgMjU2LjI1IDU3OS42MiAyNTYuMTA1IDU4MC4zNzcgMjU1LjgzOUw1NTYuMTg2IDIzMi4xNDVMNTgwLjM3NyAyNTUuODM5Wk01NzcuOTU4IDE5My43NUg1MzAuMDQyQzUyNi4wMTUgMTkzLjc1IDUyMi43NSAxOTcuMDE1IDUyMi43NSAyMDEuMDQyVjI0OC45NThDNTIyLjc1IDI0OS44MjcgNTIyLjkwMiAyNTAuNjYgNTIzLjE4IDI1MS40MzJMNTQ3LjQ0MSAyMjcuNjc5QzU1MC45MTIgMjI0LjI4IDU1Ni4zNjUgMjI0LjExOSA1NjAuMDI0IDIyNy4xOTRMNTYwLjU1OSAyMjcuNjhMNTg0LjgxOCAyNTEuNDM2QzU4NS4wOTcgMjUwLjY2MiA1ODUuMjUgMjQ5LjgyOCA1ODUuMjUgMjQ4Ljk1OFYyMDEuMDQyQzU4NS4yNSAxOTcuMDE1IDU4MS45ODUgMTkzLjc1IDU3Ny45NTggMTkzLjc1Wk01NjcuNTUgMjAyLjA4M0M1NzIuNzMzIDIwMi4wODMgNTc2LjkzNCAyMDYuMjg1IDU3Ni45MzQgMjExLjQ2N0M1NzYuOTM0IDIxNi42NSA1NzIuNzMzIDIyMC44NTEgNTY3LjU1IDIyMC44NTFDNTYyLjM2OCAyMjAuODUxIDU1OC4xNjcgMjE2LjY1IDU1OC4xNjcgMjExLjQ2N0M1NTguMTY3IDIwNi4yODUgNTYyLjM2OCAyMDIuMDgzIDU2Ny41NSAyMDIuMDgzWk01NjcuNTUgMjA4LjMzM0M1NjUuODIgMjA4LjMzMyA1NjQuNDE3IDIwOS43MzYgNTY0LjQxNyAyMTEuNDY3QzU2NC40MTcgMjEzLjE5OCA1NjUuODIgMjE0LjYwMSA1NjcuNTUgMjE0LjYwMUM1NjkuMjgxIDIxNC42MDEgNTcwLjY4NCAyMTMuMTk4IDU3MC42ODQgMjExLjQ2N0M1NzAuNjg0IDIwOS43MzYgNTY5LjI4MSAyMDguMzMzIDU2Ny41NSAyMDguMzMzWiIgZmlsbD0iI0FDQUNBQyIvPgo8ZGVmcz4KPGZpbHRlciBpZD0iZmlsdGVyMF9iXzEzNDhfNjQwMyIgeD0iLTQiIHk9Ii00IiB3aWR0aD0iMTExNiIgaGVpZ2h0PSI0NTgiIGZpbHRlclVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgY29sb3ItaW50ZXJwb2xhdGlvbi1maWx0ZXJzPSJzUkdCIj4KPGZlRmxvb2QgZmxvb2Qtb3BhY2l0eT0iMCIgcmVzdWx0PSJCYWNrZ3JvdW5kSW1hZ2VGaXgiLz4KPGZlR2F1c3NpYW5CbHVyIGluPSJCYWNrZ3JvdW5kSW1hZ2UiIHN0ZERldmlhdGlvbj0iMiIvPgo8ZmVDb21wb3NpdGUgaW4yPSJTb3VyY2VBbHBoYSIgb3BlcmF0b3I9ImluIiByZXN1bHQ9ImVmZmVjdDFfYmFja2dyb3VuZEJsdXJfMTM0OF82NDAzIi8+CjxmZUJsZW5kIG1vZGU9Im5vcm1hbCIgaW49IlNvdXJjZUdyYXBoaWMiIGluMj0iZWZmZWN0MV9iYWNrZ3JvdW5kQmx1cl8xMzQ4XzY0MDMiIHJlc3VsdD0ic2hhcGUiLz4KPC9maWx0ZXI+CjwvZGVmcz4KPC9zdmc+Cg==" style="display: none; max-width: 120px; margin-top: 12px; border-radius: 8px;" />
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer border-0" style="border-top-width: 1px; border-top-style: solid; border-top-color: rgb(238, 241, 245); padding-top: 15px; padding-right: 20px; padding-bottom: 15px; padding-left: 20px; display: flex; row-gap: 10px; column-gap: 10px;"><button type="button" data-bs-dismiss="modal" id="cancelEnrollment" class="btn btn-outline-primary" style="width: 230px; height: 38px; border-top-left-radius: 10px; border-top-right-radius: 10px; border-bottom-right-radius: 10px; border-bottom-left-radius: 10px; padding-top: 8px; padding-right: 20px; padding-bottom: 8px; padding-left: 20px; opacity: 1; color: rgb(11, 58, 111); border-top-width: 1px; border-right-width: 1px; border-bottom-width: 1px; border-left-width: 1px; border-top-style: solid; border-right-style: solid; border-bottom-style: solid; border-left-style: solid; border-top-color: rgb(11, 58, 111); border-right-color: rgb(11, 58, 111); border-bottom-color: rgb(11, 58, 111); border-left-color: rgb(11, 58, 111); border-image-source: none; border-image-slice: 100%; border-image-width: 1; border-image-outset: 0; border-image-repeat: stretch; margin-top: 0px; margin-right: 0px; margin-bottom: 0px; margin-left: 0px;">Cancel</button><button type="button" id="submitEnrollment" class="btn btn-primary" style="width: 230px; height: 38px; border-top-left-radius: 10px; border-top-right-radius: 10px; border-bottom-right-radius: 10px; border-bottom-left-radius: 10px; padding-top: 8px; padding-right: 20px; padding-bottom: 8px; padding-left: 20px; opacity: 1; font-weight: 400; font-size: 14px; line-height: 20px; letter-spacing: 0px; text-align: center; background-image: initial; background-position-x: initial; background-position-y: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial; background-color: rgb(39, 68, 99); margin-top: 0px; margin-right: 0px; margin-bottom: 0px; margin-left: 0px;">Submit</button></div>
+      </div>
+    </div>
+  </div>
+  
+<div id="cmdspp_specialtyModal" class="cmdspp_modal-overlay" style="display:none;">
+    <div class="cmdspp_custom-modal">
+      <div class="cmdspp_modal-header">
+        <div>
+            <h3>Add Specialty</h3>
+            <p>Add a new Specialty</p>
+        </div>
+        <button class="cmdspp_close-btn"
+                onclick="cmdspp_closeModal('specialty')">
+            ×
+        </button>
+      </div>
+      <div class="cmdspp_modal-body">
+        <div class="cmdspp_form-group">
+            <label>
+                Specialty Code <span>*</span>
+            </label>
+            <input id="cmdspp_specialtyCode"
+                    class="cmdspp_form-control"
+                    type="text"
+                    placeholder="Unique specialty code">
+
+            <span id="cmdspp_specialtyCodeError"
+                  class="cmdspp_error-message"></span>
+        </div>
+        <div class="cmdspp_form-group">
+            <label>
+                Specialty Description <span>*</span>
+            </label>
+            <input id="cmdspp_specialtyDescription"
+                    class="cmdspp_form-control"
+                    type="text"
+                    placeholder="Specialty description">
+            <span id="cmdspp_specialtyDescriptionError"
+                  class="cmdspp_error-message"></span>
+        </div>
+      </div>
+      <div class="cmdspp_modal-footer">
+          <button class="cmdspp_cancel-btn"
+                  onclick="cmdspp_closeModal('specialty')">
+              Cancel
+          </button>
+          <button id="cmdspp_specialtySubmitBtn"
+                  class="cmdspp_submit-btn"
+                  onclick="cmdspp_submitModal('specialty')">
+              Submit
+          </button>
+      </div>
+    </div>
+</div>
+
+
+
+<div id="cmdspp_TaxonomyModal" class="cmdspp_modal-overlay" style="display:none;">
+    <div class="cmdspp_custom-modal">
+        <div class="cmdspp_modal-header">
+            <div>
+                <h3>Add Taxonomy</h3>
+                <p>Add a new Taxonomy</p>
+            </div>
+            <button class="cmdspp_close-btn"
+                    onclick="cmdspp_closeModal('taxonomy')">
+                ×
+            </button>
+        </div>
+        <div class="cmdspp_modal-body">
+            <div class="cmdspp_form-group">
+                <label>
+                    Taxonomy Code <span>*</span>
+                </label>
+                <input id="cmdspp_TaxonomyCode"
+                       class="cmdspp_form-control"
+                       type="text"
+                       placeholder="Unique taxonomy code">
+                <span id="cmdspp_TaxonomyCodeError"
+                      class="cmdspp_error-message"></span>
+            </div>
+            <div class="cmdspp_form-group">
+                <label>
+                    Taxonomy Description <span>*</span>
+                </label>
+                <input id="cmdspp_TaxonomyDescription"
+                       class="cmdspp_form-control"
+                       type="text"
+                       placeholder="Taxonomy description">
+                <span id="cmdspp_TaxonomyDescriptionError"
+                      class="cmdspp_error-message"></span>
+            </div>
+        </div>
+        <div class="cmdspp_modal-footer">
+            <button 
+                    class="cmdspp_cancel-btn"
+                    onclick="cmdspp_closeModal('taxonomy')">
+                Cancel
+            </button>
+            <button id="cmdspp_TaxonomySubmitBtn"
+                    class="cmdspp_submit-btn"
+                    onclick="cmdspp_submitModal('taxonomy')">
+                Submit
+            </button>
+        </div>
+    </div>
+</div>
+  <!-- Tab Content -->
+  <div id="tabContent"></div>
+  <!-- Hidden File Upload Control --><input type="file" id="fileUpload" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" class="hidden-file-upload" style="display: none;" />
+</div>
+
+<script>
+window.flowConfig = {{ settings['cmdspp_ENV_Automate_Flow_Url'] | raw }};
+</script>
+
+<script>
+/*
+ * Specialty / Taxonomy Active-first ordering - V2
+ * ------------------------------------------------
+ * ADDITIVE / UI ONLY.
+ *
+ * Existing fetch, save, edit, activate/inactivate, modal and render
+ * functionality is NOT replaced.
+ *
+ * Behavior:
+ *   - Active records first.
+ *   - Inactive records after Active.
+ *   - Existing order is preserved inside each status group.
+ *   - Re-applies after dynamic rendering or status/toggle changes.
+ */
+(function () {
+    "use strict";
+
+    const root = document.getElementById("tabContent");
+    if (!root) return;
+
+    let sortTimer = null;
+    let isSorting = false;
+
+    function normalizeText(value) {
+        return String(value || "")
+            .replace(/\s+/g, " ")
+            .trim()
+            .toLowerCase();
+    }
+
+    /*
+     * Return:
+     *   0 = Active
+     *   1 = Inactive
+     *   null = status could not be safely determined
+     */
+    function getRowStatus(node) {
+        if (!node) return null;
+
+        /*
+         * 1. Explicit Dataverse/custom data attributes.
+         */
+        const candidates = [
+            node,
+            ...node.querySelectorAll(
+                "[data-statecode], " +
+                "[data-state-code], " +
+                "[data-status], " +
+                "[data-state], " +
+                "[data-active], " +
+                "[data-is-active], " +
+                "[data-isactive]"
+            )
+        ];
+
+        for (const el of candidates) {
+            const stateCode =
+                el.getAttribute("data-statecode") ??
+                el.getAttribute("data-state-code");
+
+            if (
+                stateCode !== null &&
+                stateCode !== ""
+            ) {
+                const numeric = Number(stateCode);
+
+                if (!Number.isNaN(numeric)) {
+                    // Standard Dataverse statecode:
+                    // 0 = Active, non-zero = Inactive
+                    return numeric === 0 ? 0 : 1;
+                }
+            }
+
+            const statusText =
+                normalizeText(
+                    el.getAttribute("data-status") ??
+                    el.getAttribute("data-state")
+                );
+
+            if (statusText === "active") {
+                return 0;
+            }
+
+            if (statusText === "inactive") {
+                return 1;
+            }
+
+            const activeAttr =
+                el.getAttribute("data-active") ??
+                el.getAttribute("data-is-active") ??
+                el.getAttribute("data-isactive");
+
+            if (activeAttr !== null) {
+                const normalizedActive =
+                    normalizeText(activeAttr);
+
+                if (
+                    normalizedActive === "true" ||
+                    normalizedActive === "1" ||
+                    normalizedActive === "yes"
+                ) {
+                    return 0;
+                }
+
+                if (
+                    normalizedActive === "false" ||
+                    normalizedActive === "0" ||
+                    normalizedActive === "no"
+                ) {
+                    return 1;
+                }
+            }
+        }
+
+        /*
+         * 2. Explicit Active / Inactive status badges/classes.
+         */
+        const inactiveMarker =
+            node.querySelector(
+                '.inactive, ' +
+                '.status-inactive, ' +
+                '.badge-inactive, ' +
+                '[class*="status-inactive" i], ' +
+                '[class*="inactive-status" i]'
+            );
+
+        if (inactiveMarker) {
+            return 1;
+        }
+
+        const activeMarker =
+            node.querySelector(
+                '.status-active, ' +
+                '.badge-active, ' +
+                '[class*="status-active" i], ' +
+                '[class*="active-status" i]'
+            );
+
+        if (activeMarker) {
+            return 0;
+        }
+
+        /*
+         * 3. Status switch / checkbox.
+         */
+        const statusToggle =
+            node.querySelector(
+                'input[type="checkbox"][name*="active" i], ' +
+                'input[type="checkbox"][id*="active" i], ' +
+                'input[type="checkbox"][class*="active" i], ' +
+                'input[type="checkbox"][aria-label*="active" i], ' +
+                'input[type="checkbox"][title*="active" i], ' +
+                'input[type="checkbox"][name*="status" i], ' +
+                'input[type="checkbox"][id*="status" i], ' +
+                'input[type="checkbox"][class*="status" i], ' +
+                '[role="switch"][aria-label*="active" i], ' +
+                '[role="switch"][title*="active" i], ' +
+                '[role="switch"][aria-label*="status" i]'
+            );
+
+        if (statusToggle) {
+            if (
+                statusToggle.matches(
+                    'input[type="checkbox"]'
+                )
+            ) {
+                return statusToggle.checked ? 0 : 1;
+            }
+
+            const ariaChecked =
+                normalizeText(
+                    statusToggle.getAttribute(
+                        "aria-checked"
+                    )
+                );
+
+            if (ariaChecked === "true") {
+                return 0;
+            }
+
+            if (ariaChecked === "false") {
+                return 1;
+            }
+        }
+
+        /*
+         * 4. Action button semantics.
+         *
+         * Deactivate/Inactivate/Disable means the CURRENT row is Active.
+         * Activate/Enable means the CURRENT row is Inactive.
+         */
+        const controlsText =
+            normalizeText(
+                [...node.querySelectorAll(
+                    "button, a, [role='button']"
+                )]
+                    .map(el =>
+                        [
+                            el.textContent,
+                            el.getAttribute("title"),
+                            el.getAttribute("aria-label")
+                        ].filter(Boolean).join(" ")
+                    )
+                    .join(" ")
+            );
+
+        if (
+            /\bdeactivate\b/.test(controlsText) ||
+            /\binactivate\b/.test(controlsText) ||
+            /\bdisable\b/.test(controlsText)
+        ) {
+            return 0;
+        }
+
+        if (
+            /\bactivate\b/.test(controlsText) ||
+            /\benable\b/.test(controlsText)
+        ) {
+            return 1;
+        }
+
+        /*
+         * 5. Visible row text.
+         * Check Inactive before Active.
+         */
+        const rowText =
+            normalizeText(node.textContent);
+
+        if (/\binactive\b/.test(rowText)) {
+            return 1;
+        }
+
+        if (/\bactive\b/.test(rowText)) {
+            return 0;
+        }
+
+        return null;
+    }
+
+    function getContainerMarker(element) {
+        if (!element) return "";
+
+        const pieces = [
+            element.id,
+            element.className,
+            element.getAttribute?.("data-type"),
+            element.getAttribute?.("data-tab"),
+            element.getAttribute?.("data-section"),
+            element.getAttribute?.("aria-label"),
+            element.getAttribute?.("title")
+        ];
+
+        return normalizeText(
+            pieces
+                .filter(Boolean)
+                .join(" ")
+        );
+    }
+
+    function tableLooksLikeSpecialtyOrTaxonomy(table) {
+        if (!table) return false;
+
+        /*
+         * Strongest check: actual table headers.
+         * This specifically catches Taxonomy tables whose wrapper/id
+         * does not contain the word "taxonomy".
+         */
+        const headerText =
+            normalizeText(
+                [...table.querySelectorAll(
+                    "thead th, thead td, th"
+                )]
+                    .map(cell => cell.textContent)
+                    .join(" ")
+            );
+
+        if (
+            headerText.includes("taxonomy") ||
+            headerText.includes("specialty")
+        ) {
+            return true;
+        }
+
+        /*
+         * Common catalog shape:
+         * Code / Description / Status
+         */
+        if (
+            headerText.includes("description") &&
+            headerText.includes("status") &&
+            (
+                headerText.includes("code") ||
+                headerText.includes("name")
+            )
+        ) {
+            return true;
+        }
+
+        const ownMarker =
+            getContainerMarker(table);
+
+        if (
+            ownMarker.includes("taxonomy") ||
+            ownMarker.includes("specialty")
+        ) {
+            return true;
+        }
+
+        /*
+         * Inspect ancestors and nearby headings.
+         */
+        let current = table;
+
+        for (
+            let depth = 0;
+            depth < 6 && current;
+            depth++
+        ) {
+            const marker =
+                getContainerMarker(current);
+
+            if (
+                marker.includes("taxonomy") ||
+                marker.includes("specialty")
+            ) {
+                return true;
+            }
+
+            const heading =
+                current.querySelector?.(
+                    "h1, h2, h3, h4, h5, h6, .title, .section-title, .tab-title"
+                );
+
+            if (heading) {
+                const headingText =
+                    normalizeText(
+                        heading.textContent
+                    );
+
+                if (
+                    headingText.includes("taxonomy") ||
+                    headingText.includes("specialty")
+                ) {
+                    return true;
+                }
+            }
+
+            let previous =
+                current.previousElementSibling;
+
+            let checked = 0;
+
+            while (
+                previous &&
+                checked < 5
+            ) {
+                const previousText =
+                    normalizeText(
+                        previous.textContent
+                    ).slice(0, 350);
+
+                if (
+                    previousText.includes("taxonomy") ||
+                    previousText.includes("specialty")
+                ) {
+                    return true;
+                }
+
+                previous =
+                    previous.previousElementSibling;
+
+                checked++;
+            }
+
+            current =
+                current.parentElement;
+
+            if (
+                !current ||
+                current === root
+            ) {
+                break;
+            }
+        }
+
+        return false;
+    }
+
+    /*
+     * Stable Active-first reorder.
+     * Existing order inside Active/Inactive is preserved.
+     */
+    function reorderActiveFirst(
+        parent,
+        items
+    ) {
+        if (
+            !parent ||
+            items.length < 2
+        ) {
+            return;
+        }
+
+        const decorated =
+            items.map(
+                (item, originalIndex) => ({
+                    item,
+                    originalIndex,
+                    status: getRowStatus(item)
+                })
+            );
+
+        /*
+         * Do not touch a collection if no status can be identified.
+         */
+        if (
+            !decorated.some(
+                entry =>
+                    entry.status !== null
+            )
+        ) {
+            return;
+        }
+
+        const rank = status =>
+            status === 0
+                ? 0
+                : status === 1
+                    ? 1
+                    : 2;
+
+        const sorted =
+            [...decorated].sort(
+                (a, b) => {
+                    const rankDiff =
+                        rank(a.status) -
+                        rank(b.status);
+
+                    if (rankDiff !== 0) {
+                        return rankDiff;
+                    }
+
+                    return (
+                        a.originalIndex -
+                        b.originalIndex
+                    );
+                }
+            );
+
+        const changed =
+            sorted.some(
+                (entry, index) =>
+                    entry.item !==
+                    items[index]
+            );
+
+        if (!changed) {
+            return;
+        }
+
+        sorted.forEach(entry => {
+            parent.appendChild(
+                entry.item
+            );
+        });
+    }
+
+    function sortTables() {
+        root.querySelectorAll(
+            "table"
+        ).forEach(table => {
+            if (
+                !tableLooksLikeSpecialtyOrTaxonomy(
+                    table
+                )
+            ) {
+                return;
+            }
+
+            [...table.tBodies].forEach(
+                tbody => {
+                    const rows =
+                        [...tbody.rows];
+
+                    reorderActiveFirst(
+                        tbody,
+                        rows
+                    );
+                }
+            );
+        });
+    }
+
+    function containerLooksLikeSpecialtyOrTaxonomy(
+        container
+    ) {
+        const marker =
+            getContainerMarker(
+                container
+            );
+
+        if (
+            marker.includes("taxonomy") ||
+            marker.includes("specialty")
+        ) {
+            return true;
+        }
+
+        const headingText =
+            normalizeText(
+                container.querySelector?.(
+                    "h1, h2, h3, h4, h5, h6"
+                )?.textContent
+            );
+
+        return (
+            headingText.includes("taxonomy") ||
+            headingText.includes("specialty")
+        );
+    }
+
+    function sortNonTableLists() {
+        const candidateContainers =
+            root.querySelectorAll(
+                '[id*="taxonomy" i], ' +
+                '[class*="taxonomy" i], ' +
+                '[data-tab*="taxonomy" i], ' +
+                '[data-type*="taxonomy" i], ' +
+                '[data-section*="taxonomy" i], ' +
+                '[id*="specialty" i], ' +
+                '[class*="specialty" i], ' +
+                '[data-tab*="specialty" i], ' +
+                '[data-type*="specialty" i], ' +
+                '[data-section*="specialty" i]'
+            );
+
+        candidateContainers.forEach(
+            container => {
+                if (
+                    container.tagName ===
+                        "TABLE" ||
+                    container.closest(
+                        "tbody"
+                    ) ||
+                    !containerLooksLikeSpecialtyOrTaxonomy(
+                        container
+                    )
+                ) {
+                    return;
+                }
+
+                const children =
+                    [...container.children].filter(
+                        child => {
+                            if (
+                                child.tagName ===
+                                    "SCRIPT" ||
+                                child.tagName ===
+                                    "STYLE"
+                            ) {
+                                return false;
+                            }
+
+                            return (
+                                getRowStatus(
+                                    child
+                                ) !== null
+                            );
+                        }
+                    );
+
+                if (
+                    children.length >= 2
+                ) {
+                    reorderActiveFirst(
+                        container,
+                        children
+                    );
+                }
+            }
+        );
+    }
+
+    function sortActiveFirst() {
+        if (isSorting) return;
+
+        isSorting = true;
+
+        try {
+            sortTables();
+            sortNonTableLists();
+        } finally {
+            isSorting = false;
+        }
+    }
+
+    function scheduleSort() {
+        clearTimeout(
+            sortTimer
+        );
+
+        sortTimer =
+            setTimeout(
+                sortActiveFirst,
+                60
+            );
+    }
+
+    /*
+     * Initial sort.
+     */
+    scheduleSort();
+
+    /*
+     * Re-apply after dynamic rendering/status changes.
+     */
+    const observer =
+        new MutationObserver(
+            () => {
+                if (!isSorting) {
+                    scheduleSort();
+                }
+            }
+        );
+
+    observer.observe(
+        root,
+        {
+            childList: true,
+            subtree: true,
+            attributes: true,
+            attributeFilter: [
+                "class",
+                "checked",
+                "aria-checked",
+                "data-statecode",
+                "data-state-code",
+                "data-status",
+                "data-state",
+                "data-active",
+                "data-is-active",
+                "data-isactive"
+            ]
+        }
+    );
+
+    root.addEventListener(
+        "change",
+        function () {
+            scheduleSort();
+        },
+        true
+    );
+
+    /*
+     * Public manual hook only; no existing function is replaced.
+     */
+    window.cmdsppSortSpecialtyTaxonomyActiveFirst =
+        sortActiveFirst;
+})();
+</script>

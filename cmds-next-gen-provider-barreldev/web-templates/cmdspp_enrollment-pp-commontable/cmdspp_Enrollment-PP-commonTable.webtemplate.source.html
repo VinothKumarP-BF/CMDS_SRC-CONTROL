@@ -1,0 +1,342 @@
+{% include 'cmdspp_Enrollment-PP-commonPopUP' %}
+{% assign currentTableId = tableId %}
+
+<div class="cmdspp-table-wrapper">
+    <table class="cmdspp-common-table cmdspp-header-table-{{currentTableId}}">
+        <thead id="cmdspp-table-header-{{currentTableId}}"></thead>
+    </table>
+    <div class="cmdspp-table-container">
+        <table class="cmdspp-common-table cmdspp-body-table-{{currentTableId}}">
+            <tbody id="cmdspp-table-body-{{currentTableId}}"></tbody>
+        </table>
+    </div>
+    <div class="cmdspp-table-pagination" id="cmdspp-pagination-container-{{currentTableId}}">
+        <div class="cmdspp-pagination-info" id="cmdspp-pagination-info-{{currentTableId}}">
+            showing 0 records
+        </div>
+        <div class="cmdspp-pagination-controls">
+            <button class="cmdspp-page-btn" type="button" id="cmdspp-prev-page-{{currentTableId}}" disabled>&larr; </button>
+            <div id="cmdspp-page-numbers-{{currentTableId}}" class="cmdspp-page-numbers">
+                <button type="button" class="cmdspp-page-number active" data-page="1" disabled>1</button>
+            </div>
+            <button type="button" class="cmdspp-page-btn" id="cmdspp-next-page-{{currentTableId}}" disabled>&rarr; </button>
+        </div>
+    </div>
+</div>
+
+<script>
+
+    window.CommonTableTemplate = window.CommonTableTemplate || (function () {
+
+        const instances = {};
+
+        function formatDate(value) {
+
+    if (!value) return "";
+
+    const date = new Date(value);
+
+    if (isNaN(date)) return value;
+
+    return (
+        String(date.getMonth() + 1).padStart(2, "0") +
+        "/" +
+        String(date.getDate()).padStart(2, "0") +
+        "/" +
+        date.getFullYear()
+    );
+}
+
+
+        function mapOptionLable(records,columns,fields){
+            if(fields?.length && columns?.length && records?.length){
+               columns.forEach(col=>{
+                if(col.type==="lookup"){
+                    records.forEach(rec=>{
+                          let lkpFld =  fields.find(f=>f.name===col.field)
+                          let selectedOpt = {}
+                          if(lkpFld?.dynamicOptionKey){
+                            selectedOpt = window?.providerDynamicOptions?.[lkpFld?.dynamicOptionKey]?.find(o=>o.value===rec[col.field])
+
+                          }else{
+                            selectedOpt = lkpFld?.options?.find(o=>o.value===rec[col.field])
+                            
+                          }
+                          let displayLabel = col.field + "_display"
+                          rec[displayLabel] = selectedOpt?.label ? selectedOpt?.label : rec[col.field]
+                     })
+                 }
+              })
+            }
+
+            return records
+           
+        }
+
+        function createInstance(tableId, options) {
+
+            options = options || {};
+            return {
+                tableId: tableId,
+                pageSize: options.pageSize || 4,
+                currentPage: 1,
+                columns: null,
+                allRecords: [],
+                actions: options.actions || null, // { onEdit(record), onDelete(record) }
+
+                render: function (columns, records, pagination,flds) {
+
+                    if (typeof pagination === "number") {
+                        this.pageSize = pagination;
+                    }
+                    records = mapOptionLable(records,columns,flds)
+                    this.columns = columns;
+                    this.allRecords = records || [];
+                    this.currentPage = 1;
+                    this.renderCurrentPage();
+                },
+
+                renderCurrentPage: function () {
+
+                    const totalCount = this.allRecords.length;
+                    const pageSize = this.pageSize > 0 ? this.pageSize : (totalCount || 1);
+                    const start = (this.currentPage - 1) * pageSize;
+                    const pageRecords = this.allRecords.slice(start, start + pageSize);
+
+                    this.draw(this.columns, pageRecords, {
+                        visibleCount: pageRecords.length,
+                        totalCount: totalCount,
+                        currentPage: this.currentPage,
+                        hasPrev: this.currentPage > 1,
+                        hasNext: start + pageSize < totalCount,
+                        onPrev: () => this.goToPage(this.currentPage - 1),
+                        onNext: () => this.goToPage(this.currentPage + 1)
+                    });
+                },
+
+                draw: function (columns, records, pagination) {
+
+                    const header = document.getElementById("cmdspp-table-header-" + this.tableId);
+                    const body = document.getElementById("cmdspp-table-body-" + this.tableId);
+                    const safeRecords = records || [];
+                    const self = this;
+
+                    if (header) {
+                        header.innerHTML = `
+                            <tr>
+                                ${columns.map(column => `<th>${column.label}</th>`).join("")}
+                            </tr>
+                        `;
+                    }
+
+                    if (body) {
+                        if (safeRecords.length === 0) {
+                            body.innerHTML = `
+                                <tr>
+                                    <td colspan="${columns.length}" class="cmdspp-no-data">
+                                        No Records Found
+                                    </td>
+                                </tr>
+                            `;
+                        }
+                        else {
+                            body.innerHTML = safeRecords.map((record, idx) => {
+                                if(!record.isDeleted){
+                                    return `
+                                    <tr data-row-index="${idx}">
+                                        ${columns.map(column => {
+
+                                            if (column.field === "actions" || column.type === "actions") {
+                                                return `
+                                                    <td>
+                                                        <div class="cmdspp-action-group">
+                                                            ${self.actions && self.actions.onEdit ? `
+                                                                <button type="button" class="cmdspp-action-icon cmdspp-edit-btn" data-action="edit" data-row-index="${idx}" title="Edit">
+                                                                   <img src="/tableediticon.svg" alt="Enrollment-PP icon" class="cmdspp-sidemenu-icon">
+                                                                </button>
+                                                            ` : ''}
+                                                            ${self.actions && self.actions.onDelete ? `
+                                                                <button type="button" class="cmdspp-action-icon cmdspp-delete-btn" data-action="delete" data-row-index="${idx}" title="Delete">
+                                                                <img src="/tablecancelicon.svg" alt="Enrollment-PP icon" class="cmdspp-sidemenu-icon">
+                                                                </button>
+                                                            ` : ''}
+                                                        </div>
+                                                    </td>
+                                                `;
+                                            }
+                                              if (column.type === "lookup") {
+                                             return `<td>${record[column.field+"_display"] ?? record[column.field]}`;
+                                            }if (column.type === "date") {
+                                            return `<td>${formatDate(record[column.field])}</td>`;
+                                           }
+                                            return `<td>${record[column.field] ?? ""}</td>`;
+                                        }).join("")}
+                                    </tr>
+                                `;
+
+                                }
+                                
+                            }).join("");
+                        }
+
+                        // Delegated action-icon clicks (re-bound every draw, one listener replaces the last via cloning-free delegation).
+                        body.onclick = function (e) {
+
+                            const btn = e.target.closest("[data-action]");
+                            if (!btn) return;
+
+                            const rowIndex = Number(btn.getAttribute("data-row-index"));
+                            const record = safeRecords[rowIndex];
+                            if (!record || !self.actions) return;
+
+                            if (btn.dataset.action === "edit" && self.actions.onEdit) {
+                                self.actions.onEdit(record);
+                            } 
+//                             else if (btn.dataset.action === "delete" && self.actions.onDelete) {
+//     self.actions.onDelete(record);
+// }
+else if (
+        btn.dataset.action === "delete" &&
+        self.actions.onDelete
+    ) {
+
+        showConfirmationPopup({
+
+            title: "Delete Record",
+
+            message:
+                "Are you sure you want to remove this record?",
+
+            confirmText: "Yes",
+
+            cancelText: "No",
+
+            onConfirm: function () {
+
+                self.actions.onDelete(record);
+
+            },
+
+            onCancel: function () {
+                // Popup closes automatically
+            }
+
+        });
+
+    }
+                    }
+
+                    this.renderPagination(pagination, safeRecords.length);
+                    this.initPaginationEvents();
+                },
+
+                goToPage: function (page) {
+                    this.currentPage = page;
+                    this.renderCurrentPage();
+                },
+
+                renderPagination: function (pagination, totalRecords) {
+
+                    const infoLabel = document.getElementById("cmdspp-pagination-info-" + this.tableId);
+                    const pageNumbersContainer = document.getElementById("cmdspp-page-numbers-" + this.tableId);
+                    const prevBtn = document.getElementById("cmdspp-prev-page-" + this.tableId);
+                    const nextBtn = document.getElementById("cmdspp-next-page-" + this.tableId);
+
+                    if (!pagination) {
+                        if (infoLabel) {
+                            infoLabel.innerText = `Showing ${totalRecords} ${totalRecords === 1 ? 'record' : 'records'}`;
+                        }
+                        if (pageNumbersContainer) {
+                            pageNumbersContainer.innerHTML =
+                                `<button type="button" class="cmdspp-page-number active" data-page="1" disabled>1</button>`;
+                        }
+                        if (prevBtn) prevBtn.disabled = true;
+                        if (nextBtn) nextBtn.disabled = true;
+                        return;
+                    }
+
+                    const visibleCount = pagination.visibleCount ?? totalRecords;
+                    const totalCount = pagination.totalCount ?? totalRecords;
+                    const page = pagination.currentPage ?? 1;
+
+                    if (infoLabel) {
+                        infoLabel.innerText = `Showing ${visibleCount} of ${totalCount} records`;
+                    }
+
+                    const pageWindow = Array.isArray(pagination.pageWindow) && pagination.pageWindow.length > 0
+                        ? pagination.pageWindow
+                        : [page];
+
+                    if (pageNumbersContainer) {
+                        pageNumbersContainer.innerHTML = pageWindow.map(pNum => `
+                            <button
+                                type="button"
+                                class="cmdspp-page-number${pNum === page ? ' active' : ''}"
+                                data-page="${pNum}"
+                                ${pNum === page ? 'disabled' : ''}>
+                                ${pNum}
+                            </button>
+                        `).join("");
+                    }
+
+                    if (prevBtn) prevBtn.disabled = !pagination.hasPrev;
+                    if (nextBtn) nextBtn.disabled = !pagination.hasNext;
+
+                    this._onPrev = pagination.onPrev || null;
+                    this._onNext = pagination.onNext || null;
+                },
+
+                initPaginationEvents: function () {
+
+                    const self = this;
+                    const prevBtn = document.getElementById("cmdspp-prev-page-" + this.tableId);
+                    const nextBtn = document.getElementById("cmdspp-next-page-" + this.tableId);
+                    const pageNumbersContainer = document.getElementById("cmdspp-page-numbers-" + this.tableId);
+
+                    if (prevBtn) {
+                        prevBtn.onclick = () => {
+                            if (!prevBtn.disabled && typeof self._onPrev === "function") {
+                                self._onPrev();
+                            }
+                        };
+                    }
+
+                    if (nextBtn) {
+                        nextBtn.onclick = () => {
+                            if (!nextBtn.disabled && typeof self._onNext === "function") {
+                                self._onNext();
+                            }
+                        };
+                    }
+
+                    if (pageNumbersContainer) {
+                        pageNumbersContainer.onclick = (e) => {
+                            const btn = e.target.closest(".cmdspp-page-number");
+                            if (!btn || btn.disabled || btn.classList.contains("active")) return;
+
+                            const pageNum = Number(btn.getAttribute("data-page"));
+                            if (!pageNum) return;
+
+                            self.goToPage(pageNum);
+                        };
+                    }
+                }
+            };
+        }
+
+        return {
+            // Returns the same instance for a given tableId across calls, so DEA/MCP/OTM
+            // tables on the same page keep fully independent state (records, page, actions).
+            getInstance: function (tableId, options) {
+                if (!instances[tableId]) {
+                    instances[tableId] = createInstance(tableId, options);
+                } else if (options && options.actions) {
+                    instances[tableId].actions = options.actions;
+                }
+                return instances[tableId];
+            }
+        };
+
+    })();
+
+</script>
