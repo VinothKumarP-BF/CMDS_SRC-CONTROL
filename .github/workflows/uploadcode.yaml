@@ -1,0 +1,80 @@
+name: Upload Power Pages to DEV
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  PAC_CLI_VERSION: "2.10.1"
+  SOURCE_BRANCH: Power_PageCode
+
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Power Pages Branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.SOURCE_BRANCH }}
+
+      - name: Install .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Install PAC CLI
+        shell: bash
+        run: |
+          dotnet tool install --global Microsoft.PowerApps.CLI.Tool --version "$PAC_CLI_VERSION"
+          echo "$HOME/.dotnet/tools" >> "$GITHUB_PATH"
+
+      - name: Verify PAC CLI
+        shell: bash
+        run: |
+          pac --version
+
+      - name: Authenticate to DEV
+        shell: bash
+        env:
+          ENVIRONMENT_URL: ${{ secrets.POC_DEV_ENV_URL }}
+          APPLICATION_ID: ${{ secrets.CLIENT_ID }}
+          CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
+          TENANT_ID: ${{ secrets.TENANT_ID }}
+        run: |
+          ENVIRONMENT_URL="$(printf '%s' "$ENVIRONMENT_URL" | tr -d '\r\n')"
+          APPLICATION_ID="$(printf '%s' "$APPLICATION_ID" | tr -d '\r\n')"
+          CLIENT_SECRET="$(printf '%s' "$CLIENT_SECRET" | tr -d '\r\n')"
+          TENANT_ID="$(printf '%s' "$TENANT_ID" | tr -d '\r\n')"
+
+          pac auth create \
+            --url "$ENVIRONMENT_URL" \
+            --applicationId "$APPLICATION_ID" \
+            --clientSecret "$CLIENT_SECRET" \
+            --tenant "$TENANT_ID"
+
+          pac auth who
+
+      - name: Verify Power Pages Files
+        shell: bash
+        run: |
+          if [ ! -d "./powerpages" ]; then
+            echo "Power Pages directory './powerpages' was not found."
+            exit 1
+          fi
+
+          echo "Power Pages directory found."
+          find "./powerpages" -maxdepth 2 -type f | head -50
+
+      - name: Upload Power Pages to DEV
+        shell: bash
+        env:
+          ENVIRONMENT_URL: ${{ secrets.POC_DEV_ENV_URL }}
+        run: |
+          ENVIRONMENT_URL="$(printf '%s' "$ENVIRONMENT_URL" | tr -d '\r\n')"
+
+          pac pages upload \
+            --path "./powerpages" \
+            --environment "$ENVIRONMENT_URL"
