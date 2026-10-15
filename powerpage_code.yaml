@@ -35,7 +35,7 @@ jobs:
           export PATH="$PATH:$HOME/.dotnet/tools"
 
           pac auth create \
-            --url "${{ secrets.TEST_ENV_URL }}" \
+            --url "${{ secrets.POC_DEV_ENV_URL }}" \
             --applicationId "${{ secrets.CLIENT_ID }}" \
             --clientSecret "${{ secrets.CLIENT_SECRET }}" \
             --tenant "${{ secrets.TENANT_ID }}"      
@@ -45,7 +45,7 @@ jobs:
           pac pages download \
             --path "." \
             --webSiteId "${{ secrets.POWERPAGES_WEBSITE_ID }}" \
-            --environment "${{ secrets.POWERPLATFORM_DEV_URL }}"
+            --environment "${{ secrets.POC_DEV_ENV_URL }}"
             
       - name: Commit changes
         run: |
