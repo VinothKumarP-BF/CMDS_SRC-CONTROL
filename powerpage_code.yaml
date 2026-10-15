@@ -3,32 +3,53 @@ on:
   workflow_dispatch:
 permissions:
   contents: write
+  
+env:
+  PAC_CLI_VERSION: "2.9.3"
+  SOURCE_BRANCH: Power_PageCode
+
 jobs:
   download:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
+
     steps:
-      - name: Checkout repository
+      - name: Checkout Managed Solutions Branch
         uses: actions/checkout@v4
         with:
-          ref: Power_PageCode
-      - name: Install Power Platform CLI
-        uses: microsoft/powerplatform-actions/actions-install@v1
-      - name: Authenticate
-        uses: microsoft/powerplatform-actions/actions-auth@v1
+          ref: ${{ env.SOURCE_BRANCH }}
+
+      - name: Checkout YAML Branch
+        uses: actions/checkout@v4
         with:
-          app-id: ${{ secrets.POWERPLATFORM_APP_ID }}
-          client-secret: ${{ secrets.POWERPLATFORM_CLIENT_SECRET }}
-          tenant-id: ${{ secrets.POWERPLATFORM_TENANT_ID }}
-          environment-url: ${{ secrets.POWERPLATFORM_DEV_URL }}
+          ref: yaml
+          path: yaml-config
+
+      - name: Install PAC CLI
+        shell: powershell
+        run: |
+          dotnet tool install --global Microsoft.PowerApps.CLI.Tool --version $env:PAC_CLI_VERSION
+          echo "$env:USERPROFILE\.dotnet\tools" | Out-File -FilePath $env:GITHUB_PATH -Append
+
+      - name: Authenticate Test
+        run: |
+          export PATH="$PATH:$HOME/.dotnet/tools"
+
+          pac auth create \
+            --url "${{ secrets.TEST_ENV_URL }}" \
+            --applicationId "${{ secrets.CLIENT_ID }}" \
+            --clientSecret "${{ secrets.CLIENT_SECRET }}" \
+            --tenant "${{ secrets.TENANT_ID }}"      
+            
       - name: Download Power Pages
         run: |
           pac pages download \
             --path "." \
             --webSiteId "${{ secrets.POWERPAGES_WEBSITE_ID }}" \
             --environment "${{ secrets.POWERPLATFORM_DEV_URL }}"
+            
       - name: Commit changes
         run: |
-          git config user.name "github-actions[bot]"
+          git config user.name "github-actions"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add .
           git diff --cached --quiet || (
