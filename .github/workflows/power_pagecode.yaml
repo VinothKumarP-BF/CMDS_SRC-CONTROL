@@ -52,7 +52,7 @@ jobs:
         run: |
           pac pages download \
             --path "." \
-            --webSiteId "${{ secrets.POWERPAGES_WEBSITE_ID }}"
+            --webSiteId "${{ secrets.POWERPAGES_WEBSITE_ID }}" \
             --overwrite
 
       - name: Commit changes
