@@ -1979,7 +1979,7 @@ adx_webpage:
   IsDeleted: false
 - RecordId: 1d491d9f-dad1-4beb-8f1f-8c03a2194402
   DisplayName: Home
-  CheckSum: c6938bc1fe2c885a97b647bd6f53f71220bb3d09a08eaee51a94c3b1a8b7ed34
+  CheckSum: e6f466f16f0a039f46d2158f8af4373e2b0f6a3482cbca355e74e657c392de44
   IsDeleted: false
 - RecordId: 1d725ec3-a9ee-fbab-45d6-fe9f5775d220
   DisplayName: Electronic Claims Submission
@@ -2169,6 +2169,10 @@ adx_webpage:
   DisplayName: Enrollment-PP
   CheckSum: cefad4ffe541796e27ae1c06a68ce23468bda71322a997d39d33c223d8dce001
   IsDeleted: false
+- RecordId: bf5c7066-43c9-f111-aaaf-002248084dbd
+  DisplayName: forgot-password-test
+  CheckSum: be7e1ff27f60583987d4bc3e35176bb59db977ada3776f436c5c01b5b2bbb3a4
+  IsDeleted: false
 - RecordId: c051ddfc-9ca4-d66c-6a99-6dce5f2382c3
   DisplayName: Registration
   CheckSum: 5706d9b98e73501f5e200036b1fcb73a8b93e3bdfd2f3d7b72e5c994c8eb717a
@@ -2176,6 +2180,10 @@ adx_webpage:
 - RecordId: c50dad1e-ee7f-3658-f17b-735a2ea22198
   DisplayName: Attestationcompleted
   CheckSum: e73b87331724686dee9e1f0bc63ee82758001800a4da03e44f5f5939821d6ec7
+  IsDeleted: false
+- RecordId: c85c7066-43c9-f111-aaaf-002248084dbd
+  DisplayName: forgot-password-test
+  CheckSum: d459e960f91d20d29c94e5f0d86468e8fbd59c03c90b9bf5be09cc64620eea47
   IsDeleted: false
 - RecordId: cc2bfc47-6ca0-fe82-7cf5-45242183bb22
   DisplayName: Service Location
