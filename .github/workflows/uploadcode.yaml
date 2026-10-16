@@ -60,30 +60,37 @@ jobs:
           CLIENT_ID: ${{ secrets.CLIENT_ID }}
           CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
         run: |
-          URL="${ENVIRONMENT_URL%/}"
-          WEBSITE_ID="${WEBSITE_ID//[{}]/}"
+          URL="$(printf '%s' "$ENVIRONMENT_URL" | tr -d '\r\n' | sed 's:/*$::')"
+          TENANT_ID="$(printf '%s' "$TENANT_ID" | tr -d '\r\n')"
+          CLIENT_ID="$(printf '%s' "$CLIENT_ID" | tr -d '\r\n')"
+          CLIENT_SECRET="$(printf '%s' "$CLIENT_SECRET" | tr -d '\r\n')"
+          WEBSITE_ID="$(printf '%s' "$WEBSITE_ID" | tr -d '\r\n{}')"
 
-          TOKEN=$(curl -fsS \
+          TOKEN_RESPONSE=$(curl -sS \
             -X POST \
             "https://login.microsoftonline.com/$TENANT_ID/oauth2/v2.0/token" \
             -H "Content-Type: application/x-www-form-urlencoded" \
             --data-urlencode "grant_type=client_credentials" \
             --data-urlencode "client_id=$CLIENT_ID" \
             --data-urlencode "client_secret=$CLIENT_SECRET" \
-            --data-urlencode "scope=$URL/.default" |
-            jq -er '.access_token')
+            --data-urlencode "scope=$URL/.default")
 
-          COMPONENT_TYPE=$(curl -fsS -G \
+          TOKEN=$(echo "$TOKEN_RESPONSE" | jq -r '.access_token // empty')
+
+          if [ -z "$TOKEN" ]; then
+            echo "$TOKEN_RESPONSE" | jq .
+            exit 1
+          fi
+
+          COMPONENT_TYPE=$(curl -sS -G \
             "$URL/api/data/v9.2/solutioncomponentdefinitions" \
             -H "Authorization: Bearer $TOKEN" \
             -H "Accept: application/json" \
-            --data-urlencode '$select=name,solutioncomponenttype' \
-            --data-urlencode "\$filter=startswith(name,'powerpage')" |
-            jq -er '.value[] |
-              select((.name | ascii_downcase) == "powerpagecomponent") |
-              .solutioncomponenttype')
+            --data-urlencode '$select=solutioncomponenttype' \
+            --data-urlencode "\$filter=name eq 'powerpagecomponent'" |
+            jq -er '.value[0].solutioncomponenttype')
 
-          SOLUTION_ID=$(curl -fsS -G \
+          SOLUTION_ID=$(curl -sS -G \
             "$URL/api/data/v9.2/solutions" \
             -H "Authorization: Bearer $TOKEN" \
             -H "Accept: application/json" \
@@ -91,7 +98,7 @@ jobs:
             --data-urlencode "\$filter=uniquename eq '$SOLUTION_NAME'" |
             jq -er '.value[0].solutionid')
 
-          EXISTING_IDS=$(curl -fsS -G \
+          EXISTING_IDS=$(curl -sS -G \
             "$URL/api/data/v9.2/solutioncomponents" \
             -H "Authorization: Bearer $TOKEN" \
             -H "Accept: application/json" \
@@ -100,7 +107,7 @@ jobs:
             jq -r '.value[]?.objectid' |
             tr '[:upper:]' '[:lower:]')
 
-          curl -fsS -G \
+          curl -sS -G \
             "$URL/api/data/v9.2/powerpagecomponents" \
             -H "Authorization: Bearer $TOKEN" \
             -H "Accept: application/json" \
