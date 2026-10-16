@@ -9,42 +9,94 @@ permissions:
 env:
   PAC_CLI_VERSION: "2.9.3"
   SOURCE_BRANCH: Power_PageCode
+  SITE_PATH: "./cmds-next-gen-provider-barreldev"
+  ENVIRONMENT_URL: ${{ secrets.POC_DEV_ENV_URL }}
+  WEBSITE_ID: ${{ secrets.POWERPAGES_WEBSITE_ID }}
+  SOLUTION_NAME: CMdsNextGenPP_AppExperience
 
 jobs:
-  download:
+  upload:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Managed Solutions Branch
+      - name: Checkout Power Pages Branch
         uses: actions/checkout@v4
         with:
           ref: ${{ env.SOURCE_BRANCH }}
-          fetch-depth: 0
 
       - name: Install .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '8.0.x'
+          dotnet-version: "8.0.x"
 
       - name: Install PAC CLI
         shell: bash
         run: |
-          dotnet tool install --global Microsoft.PowerApps.CLI.Tool --version $PAC_CLI_VERSION
-          echo "$HOME/.dotnet/tools" >> $GITHUB_PATH
+          dotnet tool install --global Microsoft.PowerApps.CLI.Tool --version "$PAC_CLI_VERSION"
+          echo "$HOME/.dotnet/tools" >> "$GITHUB_PATH"
 
-      - name: Authenticate Test
+      - name: Authenticate
         shell: bash
         run: |
           pac auth create \
-            --url "${{ secrets.POC_DEV_ENV_URL }}" \
+            --url "$ENVIRONMENT_URL" \
             --applicationId "${{ secrets.CLIENT_ID }}" \
             --clientSecret "${{ secrets.CLIENT_SECRET }}" \
-            --tenant "${{ secrets.TENANT_ID }}"
+            --tenant "${{ secrets.TENANT_ID }}" \
+            --accept-cleartext-caching
 
-      - name: Upload Power Pages to DEV
+      - name: Upload Power Pages
         shell: bash
         run: |
           pac pages upload \
-            --path "./cmds-next-gen-provider-barreldev" \
-            --environment "${{ secrets.POC_DEV_ENV_URL }}" \
+            --path "$SITE_PATH" \
+            --environment "$ENVIRONMENT_URL" \
             --modelVersion Enhanced
+
+      - name: Add Missing Components to Solution
+        shell: bash
+        run: |
+          URL="${ENVIRONMENT_URL%/}"
+          WEBSITE_ID="${WEBSITE_ID//[{}]/}"
+          TOKEN="$(pac auth token)"
+
+          COMPONENT_TYPE=$(curl -sG \
+            "$URL/api/data/v9.2/solutioncomponentdefinitions" \
+            -H "Authorization: Bearer $TOKEN" \
+            --data-urlencode '$select=solutioncomponenttype' \
+            --data-urlencode "\$filter=name eq 'powerpagecomponent'" |
+            jq -r '.value[0].solutioncomponenttype')
+
+          SOLUTION_ID=$(curl -sG \
+            "$URL/api/data/v9.2/solutions" \
+            -H "Authorization: Bearer $TOKEN" \
+            --data-urlencode '$select=solutionid' \
+            --data-urlencode "\$filter=uniquename eq '$SOLUTION_NAME'" |
+            jq -r '.value[0].solutionid')
+
+          EXISTING_IDS=$(curl -sG \
+            "$URL/api/data/v9.2/solutioncomponents" \
+            -H "Authorization: Bearer $TOKEN" \
+            --data-urlencode '$select=objectid' \
+            --data-urlencode "\$filter=_solutionid_value eq $SOLUTION_ID and componenttype eq $COMPONENT_TYPE" |
+            jq -r '.value[].objectid' |
+            tr '[:upper:]' '[:lower:]')
+
+          curl -sG \
+            "$URL/api/data/v9.2/powerpagecomponents" \
+            -H "Authorization: Bearer $TOKEN" \
+            --data-urlencode '$select=powerpagecomponentid,name' \
+            --data-urlencode "\$filter=_powerpagesiteid_value eq $WEBSITE_ID" |
+            jq -r '.value[] | [.powerpagecomponentid, .name] | @tsv' |
+            while IFS=$'\t' read -r COMPONENT_ID COMPONENT_NAME; do
+              COMPONENT_ID="${COMPONENT_ID,,}"
+
+              if ! grep -Fxq "$COMPONENT_ID" <<< "$EXISTING_IDS"; then
+                echo "Adding $COMPONENT_NAME to solution"
+
+                pac solution add-solution-component \
+                  -sn "$SOLUTION_NAME" \
+                  -c "$COMPONENT_ID" \
+                  -ct "$COMPONENT_TYPE"
+              fi
+            done
