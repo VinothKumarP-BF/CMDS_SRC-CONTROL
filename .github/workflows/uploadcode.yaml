@@ -123,6 +123,6 @@ jobs:
                 pac solution add-solution-component \
                   -sn "$SOLUTION_NAME" \
                   -c "$COMPONENT_ID" \
-                  -ct "$COMPONENT_TYPE"
+                  -ct "powerpagecomponent"
               fi
             done
