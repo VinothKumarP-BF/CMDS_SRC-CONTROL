@@ -55,43 +55,62 @@ jobs:
 
       - name: Add Missing Components to Solution
         shell: bash
+        env:
+          TENANT_ID: ${{ secrets.TENANT_ID }}
+          CLIENT_ID: ${{ secrets.CLIENT_ID }}
+          CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
         run: |
           URL="${ENVIRONMENT_URL%/}"
           WEBSITE_ID="${WEBSITE_ID//[{}]/}"
-          TOKEN="$(pac auth token)"
 
-          COMPONENT_TYPE=$(curl -sG \
+          TOKEN=$(curl -fsS \
+            -X POST \
+            "https://login.microsoftonline.com/$TENANT_ID/oauth2/v2.0/token" \
+            -H "Content-Type: application/x-www-form-urlencoded" \
+            --data-urlencode "grant_type=client_credentials" \
+            --data-urlencode "client_id=$CLIENT_ID" \
+            --data-urlencode "client_secret=$CLIENT_SECRET" \
+            --data-urlencode "scope=$URL/.default" |
+            jq -er '.access_token')
+
+          COMPONENT_TYPE=$(curl -fsS -G \
             "$URL/api/data/v9.2/solutioncomponentdefinitions" \
             -H "Authorization: Bearer $TOKEN" \
-            --data-urlencode '$select=solutioncomponenttype' \
-            --data-urlencode "\$filter=name eq 'powerpagecomponent'" |
-            jq -r '.value[0].solutioncomponenttype')
+            -H "Accept: application/json" \
+            --data-urlencode '$select=name,solutioncomponenttype' \
+            --data-urlencode "\$filter=startswith(name,'powerpage')" |
+            jq -er '.value[] |
+              select((.name | ascii_downcase) == "powerpagecomponent") |
+              .solutioncomponenttype')
 
-          SOLUTION_ID=$(curl -sG \
+          SOLUTION_ID=$(curl -fsS -G \
             "$URL/api/data/v9.2/solutions" \
             -H "Authorization: Bearer $TOKEN" \
+            -H "Accept: application/json" \
             --data-urlencode '$select=solutionid' \
             --data-urlencode "\$filter=uniquename eq '$SOLUTION_NAME'" |
-            jq -r '.value[0].solutionid')
+            jq -er '.value[0].solutionid')
 
-          EXISTING_IDS=$(curl -sG \
+          EXISTING_IDS=$(curl -fsS -G \
             "$URL/api/data/v9.2/solutioncomponents" \
             -H "Authorization: Bearer $TOKEN" \
+            -H "Accept: application/json" \
             --data-urlencode '$select=objectid' \
             --data-urlencode "\$filter=_solutionid_value eq $SOLUTION_ID and componenttype eq $COMPONENT_TYPE" |
-            jq -r '.value[].objectid' |
+            jq -r '.value[]?.objectid' |
             tr '[:upper:]' '[:lower:]')
 
-          curl -sG \
+          curl -fsS -G \
             "$URL/api/data/v9.2/powerpagecomponents" \
             -H "Authorization: Bearer $TOKEN" \
+            -H "Accept: application/json" \
             --data-urlencode '$select=powerpagecomponentid,name' \
             --data-urlencode "\$filter=_powerpagesiteid_value eq $WEBSITE_ID" |
             jq -r '.value[] | [.powerpagecomponentid, .name] | @tsv' |
             while IFS=$'\t' read -r COMPONENT_ID COMPONENT_NAME; do
               COMPONENT_ID="${COMPONENT_ID,,}"
 
-              if ! grep -Fxq "$COMPONENT_ID" <<< "$EXISTING_IDS"; then
+              if ! grep -Fqx "$COMPONENT_ID" <<< "$EXISTING_IDS"; then
                 echo "Adding $COMPONENT_NAME to solution"
 
                 pac solution add-solution-component \
